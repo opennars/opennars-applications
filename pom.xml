@@ -10,6 +10,23 @@
         <maven.compiler.source>1.8</maven.compiler.source>
         <maven.compiler.target>1.8</maven.compiler.target>
     </properties>
+    
+    <organization>
+        <name>OpenNARS</name>
+        <url>http://OpenNARS.org</url>
+    </organization>
+
+    <scm>
+        <connection>scm:git:https://github.com/opennars/opennars-applications.git</connection>
+        <developerConnection>scm:git:ssh://git@github.com/opennars/opennars-applications.git</developerConnection>
+        <url>https://github.com/opennars/opennars-applications</url>
+    </scm>
+
+    <issueManagement>
+        <system>github</system>
+        <url>https://github.com/opennars/opennars-applications/issues</url>
+    </issueManagement>
+    
     <dependencies>
         <dependency>
             <groupId>org.opennars</groupId>
@@ -22,6 +39,45 @@
             <version>2.2.1</version>
         </dependency>
     </dependencies>
+    
+    <build>
+        <defaultGoal>package</defaultGoal>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <configuration>
+                    <source>1.8</source>
+                    <target>1.8</target>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-javadoc-plugin</artifactId>
+                <configuration>
+                    <additionalparam>-Xdoclint:none</additionalparam>
+                </configuration>
+            </plugin>
+            <plugin>
+                    <groupId>org.codehaus.mojo</groupId>
+                    <artifactId>exec-maven-plugin</artifactId>
+                    <version>1.2.1</version>
+                    <executions>
+                        <execution>
+                            <goals>
+                                <goal>exec</goal>
+                            </goals>
+                        </execution>
+                    </executions>
+                    <configuration>
+                        <executable>com.opennars.applications.crossing.Crossing</executable>
+                        <mainClass></mainClass>
+                    </configuration>
+                </plugin>
+        </plugins>
+
+    </build>
+    
     <licenses>
         <license>
             <name>MIT</name>
