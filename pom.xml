@@ -10,6 +10,23 @@
         <maven.compiler.source>1.8</maven.compiler.source>
         <maven.compiler.target>1.8</maven.compiler.target>
     </properties>
+    
+    <organization>
+        <name>OpenNARS</name>
+        <url>http://OpenNARS.org</url>
+    </organization>
+
+    <scm>
+        <connection>scm:git:https://github.com/opennars/opennars-applications.git</connection>
+        <developerConnection>scm:git:ssh://git@github.com/opennars/opennars-applications.git</developerConnection>
+        <url>https://github.com/opennars/opennars-applications</url>
+    </scm>
+
+    <issueManagement>
+        <system>github</system>
+        <url>https://github.com/opennars/opennars-applications/issues</url>
+    </issueManagement>
+    
     <dependencies>
         <dependency>
             <groupId>org.opennars</groupId>
