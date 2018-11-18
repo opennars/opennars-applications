@@ -40,11 +40,22 @@ public class Util {
         double dy = posY - posY2;
         return Math.sqrt(dx * dx + dy * dy);
     }
-    
+
+    /*
     public static String positionToTerm(int X, int Y) {
         int posX = X / discretization;
         int posY = Y / discretization;
         return posX + "_" + posY;
+    }
+    */
+    public static Vec2Int discretizePosition(int X, int Y) {
+        final int posX = X / discretization;
+        final int posY = Y / discretization;
+        return new Vec2Int(posX, posY);
+    }
+
+    public static String positionToTermString(final Vec2Int vec) {
+        return vec.x + "_" + vec.y;
     }
     
     public static float truthToValue(TruthValue truth) {

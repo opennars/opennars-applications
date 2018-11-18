@@ -38,13 +38,17 @@ public class InformNARS {
         if(!useMultipleIDs) {
             id = "0";
         }
-        String pos = Util.positionToTerm((int) ent.posX-minX, (int) ent.posY-minY);
+
+        final int relativePosX = (int) ent.posX-minX;
+        final int relativePosY = (int) ent.posY-minY;
+        final Vec2Int discretizedPos = Util.discretizePosition(relativePosX, relativePosY);
+        String posAsString = Util.positionToTermString(discretizedPos);
         if (ent instanceof Car) {
-            inputs.add("<(*,car" + id + ","+ pos + ") --> at>. :|:");
+            inputs.add("<(*,car" + id + ","+ posAsString + ") --> at>. :|:");
             input += inputs.get(inputs.size()-1);
         }
-        if (ent instanceof Pedestrian) {
-            inputs.add("<(*,pedestrian" + id + "," + pos + ") --> at>. :|:");
+        else if (ent instanceof Pedestrian) {
+            inputs.add("<(*,pedestrian" + id + "," + posAsString + ") --> at>. :|:");
             input += inputs.get(inputs.size()-1);
         }
     }
