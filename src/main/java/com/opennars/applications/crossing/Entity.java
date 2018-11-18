@@ -57,9 +57,9 @@ public class Entity {
         applet.translate((float) posX, (float) posY);
         applet.rotate((float) angle);
         if(truth == null) {
-            applet.rect(0, 0, Util.discretization*scale, Util.discretization/2*scale);
+            applet.rect(0, 0, Grid.retSizeOfGridType(Grid.EnumGridSize.COARSE)*scale, Grid.retSizeOfGridType(Grid.EnumGridSize.COARSE)/2*scale);
         }
-        applet.ellipse(2.5f, 2.5f, Util.discretization*scale, Util.discretization*scale);
+        applet.ellipse(2.5f, 2.5f, Grid.retSizeOfGridType(Grid.EnumGridSize.COARSE)*scale, Grid.retSizeOfGridType(Grid.EnumGridSize.COARSE)*scale);
         applet.popMatrix();
         applet.fill(0);
         applet.text(String.valueOf(id), (float)posX, (float)posY);

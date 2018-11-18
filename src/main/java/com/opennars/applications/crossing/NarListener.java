@@ -23,13 +23,11 @@
  */
 package com.opennars.applications.crossing;
 
-import java.util.ArrayList;
 import java.util.List;
 import org.opennars.entity.Sentence;
 import org.opennars.entity.Stamp;
 import org.opennars.entity.Task;
 import org.opennars.entity.TruthValue;
-import org.opennars.interfaces.Timable;
 import org.opennars.io.Symbols;
 import org.opennars.io.events.EventEmitter;
 import org.opennars.io.events.Events;
@@ -38,7 +36,6 @@ import org.opennars.language.Inheritance;
 import org.opennars.language.Product;
 import org.opennars.language.Term;
 import org.opennars.main.Nar;
-import org.opennars.storage.Memory;
 
 public class NarListener implements EventEmitter.EventObserver {  
     public class Prediction
@@ -65,7 +62,7 @@ public class NarListener implements EventEmitter.EventObserver {
     }
     Term pedestrian = Term.get("pedestrian");
     Term car = Term.get("car");
-    Term at = Term.get("at");
+
     @Override
     public void event(Class event, Object[] args) {
         if(event == OutputHandler.DISAPPOINT.class) {
@@ -92,29 +89,51 @@ public class NarListener implements EventEmitter.EventObserver {
 
     public Prediction predictionFromTask(Task t) {
         Prediction prediction = null;
-        //format: "<(*,car,50_82) --> at>. %0.45;0.26%";
+        //format: "<(*,car,50_82) --> atCoarse>. %0.45;0.26%";
+        //format: "<(*,car,50_82) --> atFine>. %0.45;0.26%";
         if(t.sentence.term instanceof Inheritance) {
             Inheritance positionInh = (Inheritance) t.sentence.term;
             if(positionInh.getSubject() instanceof Product) {
                 Product prod = (Product) positionInh.getSubject();
+
+                final String scaleType = positionInh.getPredicate().toString();
+
+                Grid.EnumGridSize gridSizeType;
+                if (scaleType.equals("atCoarse")) {
+                    gridSizeType = Grid.EnumGridSize.COARSE;
+                }
+                else if (scaleType.equals ("atFine")) {
+                    gridSizeType = Grid.EnumGridSize.FINE;
+                }
+                else {
+                    // bail out
+                    return null;
+                }
+
+                final int gridsize = Grid.retSizeOfGridType(gridSizeType);
+
                 if(prod.size() == 2) {
                     Term type = prod.term[0];
                     String position = prod.term[1].toString();
                     if(position.contains("_")) {
                         try {
-                            int posX = camera.minX + Util.discretization * Integer.valueOf(position.split("_")[0]);
-                            int posY = camera.minY + Util.discretization * Integer.valueOf(position.split("_")[1]);
+                            int posX = camera.minX + gridsize * Integer.valueOf(position.split("_")[0]);
+                            int posY = camera.minY + gridsize * Integer.valueOf(position.split("_")[1]);
                             //int id = 0; //Integer.valueOf(idStr.toString()); often a dep var
                             Entity pred;
                             if(type.toString().startsWith(car.toString())) {
                                 String id = type.toString().substring(car.toString().length(), type.toString().length());
                                 pred = new Car(Integer.valueOf(id), posX, posY, 0, 0);
+
+                                // TODO< pass type of grid >
                                 prediction = new Prediction(pred, t.sentence.truth, t.sentence.getOccurenceTime());
                             }
                             else  
                             if(type.toString().startsWith(pedestrian.toString())) {
                                 String id = type.toString().substring(pedestrian.toString().length(), type.toString().length());
                                 pred = new Pedestrian(Integer.valueOf(id), posX, posY, 0, 0);
+
+                                // TODO< pass type of grid >
                                 prediction = new Prediction(pred, t.sentence.truth, t.sentence.getOccurenceTime());
                             }
                         } catch(Exception ex) {} //wrong format, it's not such a type of prediction but something else

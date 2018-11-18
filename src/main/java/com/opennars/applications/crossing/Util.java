@@ -33,7 +33,6 @@ import org.opennars.entity.TruthValue;
 public class Util {
 
     public static Random rnd = new Random();
-    public static final int discretization =10;
     
     public static double distance(double posX, double posY, double posX2, double posY2) {
         double dx = posX - posX2;
@@ -41,9 +40,9 @@ public class Util {
         return Math.sqrt(dx * dx + dy * dy);
     }
     
-    public static String positionToTerm(int X, int Y) {
-        int posX = X / discretization;
-        int posY = Y / discretization;
+    public static String positionToTerm(final int X, final int Y, final int discretization) {
+        final int posX = X / discretization;
+        final int posY = Y / discretization;
         return posX + "_" + posY;
     }
     
