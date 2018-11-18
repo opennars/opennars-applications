@@ -49,13 +49,12 @@ public class InformNARS {
         }
     }
 
-    String trafficLightInput = "";
-    String lastTrafficLightInput = "";
     public void informAboutTrafficLight(Nar nar, TrafficLight light, int minX, int minY) {
         //String id = String.valueOf(light.id);
         String colour = light.colour == 0 ? "green" : "red";
         String narsese = "<trafficLight --> ["+colour+"]>. :|:";
-        trafficLightInput = narsese;
+        inputs.add(narsese);
+        input+=narsese;
     }
     
     public boolean Input(Nar nar) {
@@ -66,11 +65,6 @@ public class InformNARS {
                 hadInput = true;
             }
             lastInput = input;
-        }
-        if(!trafficLightInput.equals(lastTrafficLightInput)) {
-            nar.addInput(trafficLightInput);
-            hadInput = true;
-            lastTrafficLightInput = trafficLightInput;
         }
         input = "";
         inputs.clear();
