@@ -39,11 +39,20 @@ public class Crossing extends PApplet {
     
     List<Prediction> predictions = new ArrayList<Prediction>();
     List<Prediction> disappointments = new ArrayList<Prediction>();
+
+    Heatmap heatmap = new Heatmap();
+    int heatmapTimer = 0;
+
     final int streetWidth = 40;
     final int fps = 50;
     @Override
     public void setup() {
-        cameras.add(new Camera(500+streetWidth/2, 500+streetWidth/2));
+        // 100x100 because the world has a size of 1000 and is divided by cellsize=10
+        heatmap.allocate(100, 100);
+        heatmap.cooldownFactor = 0.98;
+        heatmap.heatadditive = 1.0; // 1.0 because we don't care about the frequency of the first visiting object
+
+        cameras.add(new Camera(this,500+streetWidth/2, 500+streetWidth/2));
         try {
             nar = new Nar();
             nar.narParameters.VOLUME = 0;
@@ -95,6 +104,15 @@ public class Crossing extends PApplet {
     int perception_update = 1;
     @Override
     public void draw() {
+        heatmapTimer++;
+
+        if ((heatmapTimer % 60) == 0) {
+            heatmap.cooldown();
+        }
+
+
+
+
         viewport.Transform();
         background(64,128,64);
         fill(0);
@@ -115,6 +133,37 @@ public class Crossing extends PApplet {
             line(0, i, 1000, i);
             line(i, 0, i, 1000);
         }
+
+        // draw heatmap
+
+        /*
+        this.pushMatrix();
+        this.translate(0, 0);
+        this.stroke(0,0,0, 0.0f);
+        this.fill(255, 0, 0, 128.0f);//(float)heat*255.0f);
+        this.rect(0, 0, 300, 300);
+        this.popMatrix();
+
+        this.stroke(0);
+        */
+
+
+        for (int y=0;y<heatmap.map.length;y++) {
+            for (int x=0;x<heatmap.map[y].length;x++) {
+                final double heat = heatmap.map[y][x];
+
+                this.pushMatrix();
+                this.translate(x*10, y*10);
+                this.stroke(0,0,0, 0.0f);
+                this.fill(255, 0, 0, (float)heat*255.0f);
+                this.rect(0, 0, 10, 10);
+                this.popMatrix();
+
+                this.stroke(0);
+
+            }
+        }
+
         for (Entity e : entities) {
             e.draw(this, streets, trafficLights, entities, null, 0);
         }

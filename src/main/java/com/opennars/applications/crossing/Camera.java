@@ -14,12 +14,14 @@ import processing.core.PApplet;
  * @author patha
  */
 public class Camera {
+    private final Crossing crossing;
     int posX;
     int posY;
     int radius=60;
     int minX;
     int minY;
-    public Camera(int posX, int posY) {
+    public Camera(Crossing crossing, int posX, int posY) {
+        this.crossing = crossing;
         this.posX = posX;
         this.posY = posY;
         this.minX = posX-radius*2;
@@ -28,6 +30,12 @@ public class Camera {
     
     InformNARS informer = new InformNARS();
     boolean see(Nar nar, List<Entity> entities, List<TrafficLight> trafficLights) {
+        for (Entity ent : entities) {
+            int gridX = (int)ent.posX / Util.discretization;
+            int gridY = (int)ent.posY / Util.discretization;
+            crossing.heatmap.heatUpCell(gridY, gridX);
+        }
+
         //InformNARS.informAboutEntity(nar, chosen);
         for (Entity ent : entities) {
             if (Util.distance(posX, posY, ent.posX, ent.posY) < radius) {
