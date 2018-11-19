@@ -25,6 +25,8 @@ package com.opennars.applications.crossing;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import org.opennars.interfaces.pub.Reasoner;
 import org.opennars.main.Nar;
 
 public class InformNARS {
@@ -32,7 +34,9 @@ public class InformNARS {
     String input = "";
     List<String> inputs = new ArrayList<String>();
     //minX and minY define the lower end of the relative coordinate system
-    public void informAboutEntity(Nar nar, Entity ent, int minX, int minY) {
+    public void informAboutEntity(Crossing crossing, TrafficLight light, Nar nar, Entity ent, int minX, int minY) {
+        String lightState = light.colour == 0 ? "green" : "red";
+
         String id = String.valueOf(ent.id);
         boolean useMultipleIDs = true;
         if(!useMultipleIDs) {
@@ -40,11 +44,27 @@ public class InformNARS {
         }
         String pos = Util.positionToTerm((int) ent.posX-minX, (int) ent.posY-minY);
         if (ent instanceof Car) {
-            inputs.add("<(*,car" + id + ","+ pos + ") --> at>. :|:");
+            // is a anomaly if the system doesn't know about it
+            final boolean isAnomaly = !((new Qa()).check(nar, lightState, "car", id, pos));
+            if (isAnomaly) {
+                Anomaly anomaly = new Anomaly(ent.posX, ent.posY);
+                anomaly.remainingFramesToDisplay = 100;
+                crossing.anomalies.add(anomaly);
+            }
+
+            inputs.add("<(*,car" + id + ","+ pos + ", [" + lightState + "]) --> at>. :|:");
             input += inputs.get(inputs.size()-1);
         }
         if (ent instanceof Pedestrian) {
-            inputs.add("<(*,pedestrian" + id + "," + pos + ") --> at>. :|:");
+            // is a anomaly if the system doesn't know about it
+            final boolean isAnomaly = !((new Qa()).check(nar, lightState, "pedestrian", id, pos));
+            if (isAnomaly) {
+                Anomaly anomaly = new Anomaly(ent.posX, ent.posY);
+                anomaly.remainingFramesToDisplay = 100;
+                crossing.anomalies.add(anomaly);
+            }
+
+            inputs.add("<(*,pedestrian" + id + "," + pos + ", [" + lightState + "]) --> at>. :|:");
             input += inputs.get(inputs.size()-1);
         }
     }

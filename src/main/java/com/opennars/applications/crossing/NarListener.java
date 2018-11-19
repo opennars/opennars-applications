@@ -97,7 +97,7 @@ public class NarListener implements EventEmitter.EventObserver {
             Inheritance positionInh = (Inheritance) t.sentence.term;
             if(positionInh.getSubject() instanceof Product) {
                 Product prod = (Product) positionInh.getSubject();
-                if(prod.size() == 2) {
+                if(prod.size() == 3) {
                     Term type = prod.term[0];
                     String position = prod.term[1].toString();
                     if(position.contains("_")) {

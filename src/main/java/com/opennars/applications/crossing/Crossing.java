@@ -39,6 +39,9 @@ public class Crossing extends PApplet {
     
     List<Prediction> predictions = new ArrayList<Prediction>();
     List<Prediction> disappointments = new ArrayList<Prediction>();
+
+    List<Anomaly> anomalies = new ArrayList<>();
+
     final int streetWidth = 40;
     final int fps = 50;
     @Override
@@ -104,7 +107,7 @@ public class Crossing extends PApplet {
         if (t % perception_update == 0) {
             boolean hadInput = false;
             for(Camera c : cameras) {
-                hadInput = hadInput || c.see(nar, entities, trafficLights);
+                hadInput = hadInput || c.see(this, nar, entities, trafficLights);
             }
             if(hadInput) {
                 nar.addInput(questions);
@@ -142,6 +145,28 @@ public class Crossing extends PApplet {
                 e.draw(this, streets, trafficLights, entities, pred.truth, pred.time - nar.time());
             }
         }
+
+        if(showAnomalies) {
+            for (final Anomaly iAnomaly : anomalies) {
+                fill(255, 0, 0);
+                this.text("ANOMALY", (float)iAnomaly.posX, (float)iAnomaly.posY);
+            }
+        }
+
+        // update timing information of anomalies
+        for (final Anomaly iAnomaly : anomalies) {
+            iAnomaly.remainingFramesToDisplay--;
+        }
+
+        // remove to old anomalies
+        for (int i=anomalies.size()-1; i>=0;i--) {
+            final Anomaly iAnomaly = anomalies.get(i);
+            if (iAnomaly.remainingFramesToDisplay < 0) {
+                anomalies.remove(i);
+            }
+        }
+
+
         for(Camera c : cameras) {
             c.draw(this);
         }

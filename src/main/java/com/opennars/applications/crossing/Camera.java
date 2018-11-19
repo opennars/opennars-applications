@@ -27,11 +27,12 @@ public class Camera {
     }
     
     InformNARS informer = new InformNARS();
-    boolean see(Nar nar, List<Entity> entities, List<TrafficLight> trafficLights) {
+    boolean see(Crossing crossing, Nar nar, List<Entity> entities, List<TrafficLight> trafficLights) {
         //InformNARS.informAboutEntity(nar, chosen);
         for (Entity ent : entities) {
             if (Util.distance(posX, posY, ent.posX, ent.posY) < radius) {
-                informer.informAboutEntity(nar, ent, minX, minY);
+                // TODO< figure out correct index >
+                informer.informAboutEntity(crossing, crossing.trafficLights.get(1), nar, ent, minX, minY);
             }
         }
         for (TrafficLight ent : trafficLights) {
