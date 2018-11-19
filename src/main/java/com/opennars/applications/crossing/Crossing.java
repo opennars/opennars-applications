@@ -26,7 +26,10 @@ package com.opennars.applications.crossing;
 import com.opennars.applications.crossing.NarListener.Prediction;
 import com.opennars.sgui.NarSimpleGUI;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+
 import org.opennars.io.events.Events;
 import org.opennars.io.events.OutputHandler.DISAPPOINT;
 import org.opennars.main.Nar;
@@ -36,9 +39,10 @@ import processing.event.MouseEvent;
 public class Crossing extends PApplet {
     Nar nar;
     int entityID = 1;
-    
-    List<Prediction> predictions = new ArrayList<Prediction>();
+
     List<Prediction> disappointments = new ArrayList<Prediction>();
+    Map<Vec2Int, List<Prediction>> predictionsByMapPosition = new HashMap<>();
+
     final int streetWidth = 40;
     final int fps = 50;
     @Override
@@ -48,7 +52,7 @@ public class Crossing extends PApplet {
             nar = new Nar();
             nar.narParameters.VOLUME = 0;
             nar.narParameters.DURATION*=10;
-            NarListener listener = new NarListener(cameras.get(0), nar, predictions, disappointments);
+            NarListener listener = new NarListener(cameras.get(0), nar, predictionsByMapPosition, disappointments);
             nar.on(Events.TaskAdd.class, listener);
             nar.on(DISAPPOINT.class, listener);
         } catch (Exception ex) {
@@ -123,12 +127,31 @@ public class Crossing extends PApplet {
         }
         t++;
         nar.cycles(10);
-        removeOutdatedPredictions(predictions);
+        removeOutdatedPredictions(predictionsByMapPosition);
         removeOutdatedPredictions(disappointments);
-        for (Prediction pred : predictions) {
-            Entity e = pred.ent;
-            e.draw(this, streets, trafficLights, entities, pred.truth, pred.time - nar.time());
+
+        for (final Vec2Int gridPositionOfPrediction : predictionsByMapPosition.keySet()) {
+            final List<Prediction> predictionsOfCell = predictionsByMapPosition.get(gridPositionOfPrediction);
+
+            if (predictionsOfCell.size() == 0) {
+                continue;
+            }
+
+            Prediction highestPredictionOfCell = predictionsOfCell.get(0);
+            for (Prediction pred : predictionsByMapPosition.get(gridPositionOfPrediction)) {
+                double mulThis =  Util.truthToValue(pred.truth) * Util.timeToValue(pred.time - nar.time());
+                double mulHighest = Util.truthToValue(highestPredictionOfCell.truth) * Util.timeToValue(highestPredictionOfCell.time - nar.time());
+
+                if (mulThis > mulHighest) {
+                    highestPredictionOfCell = pred;
+                }
+            }
+
+            Entity e = highestPredictionOfCell.ent;
+            e.draw(this, streets, trafficLights, entities, highestPredictionOfCell.truth, highestPredictionOfCell.time - nar.time());
         }
+
+
         if(showAnomalies) {
             for (Prediction pred : disappointments) {
                 Entity e = pred.ent;
@@ -148,13 +171,20 @@ public class Crossing extends PApplet {
     }
 
     public void removeOutdatedPredictions(List<Prediction> predictions) {
-        List<Prediction> toDelete = new ArrayList<Prediction>();
-        for(Prediction pred : predictions) {
-            if(pred.time <= nar.time()) {
+        List<Prediction> toDelete = new ArrayList<>();
+        for (Prediction pred : predictions) {
+            if (pred.time <= nar.time()) {
                 toDelete.add(pred);
             }
         }
         predictions.removeAll(toDelete);
+
+    }
+
+    public void removeOutdatedPredictions(Map<Vec2Int, List<Prediction>> predictionsByMapPosition) {
+        for (final Vec2Int gridPositionOfPrediction : predictionsByMapPosition.keySet()) {
+            removeOutdatedPredictions(predictionsByMapPosition.get(gridPositionOfPrediction));
+        }
     }
     
     float mouseScroll = 0;
