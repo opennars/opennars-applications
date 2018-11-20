@@ -104,7 +104,7 @@ public class Crossing extends PApplet {
         if (t % perception_update == 0) {
             boolean hadInput = false;
             for(Camera c : cameras) {
-                final boolean force = (t % 10) == 0;
+                final boolean force = false; // not required HACK
                 hadInput = hadInput || c.see(nar, entities, trafficLights, force);
             }
             if(hadInput) {
@@ -116,6 +116,7 @@ public class Crossing extends PApplet {
             line(0, i, 1000, i);
             line(i, 0, i, 1000);
         }
+
         for (Entity e : entities) {
             e.draw(this, streets, trafficLights, entities, null, 0);
         }
@@ -127,6 +128,7 @@ public class Crossing extends PApplet {
         for (Entity ie : entities) {
             ie.tick();
         }
+
 
         t++;
         nar.cycles(10);

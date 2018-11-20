@@ -43,6 +43,9 @@ public class Entity {
 
     public boolean isPredicted = false;
 
+    public double lastPosX = 0;
+    public double lastPosY = 0;
+
     public Entity() {
     }
 
@@ -62,8 +65,14 @@ public class Entity {
         normalness *= 0.91;
     }
 
+    boolean hasMoved() {
+        double dist = velocity;
+        return dist >= 0.1;
+    }
+
     public boolean isAnomaly() {
-        return normalness < 0.2;
+        // exception: is not a anomaly if it hasn't moved
+        return normalness < 0.3 && hasMoved();
     }
 
     public void draw(PApplet applet, List<Street> streets, List<TrafficLight> trafficLights, List<Entity> entities, TruthValue truth, long time) {
