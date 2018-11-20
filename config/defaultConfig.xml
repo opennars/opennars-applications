@@ -4,7 +4,7 @@
     <!-- NarParameters -->
     <conf name="NOVELTY_HORIZON" value="100000"/>
     <conf name="DECISION_THRESHOLD" value="0.51"/>
-    <conf name="CONCEPT_BAG_SIZE" value="80000"/>
+    <conf name="CONCEPT_BAG_SIZE" value="120000"/>
     <conf name="CONCEPT_BAG_LEVELS" value="1000"/>
     
     <conf name="DURATION" value="5"/>
@@ -38,7 +38,7 @@
     <conf name="TASK_LINK_BAG_SIZE" value="100"/>
     <conf name="TASK_LINK_BAG_LEVELS" value="10"/>
     
-    <conf name="TERM_LINK_BAG_SIZE" value="500"/>
+    <conf name="TERM_LINK_BAG_SIZE" value="100"/>
     <conf name="TERM_LINK_BAG_LEVELS" value="10"/>
     <conf name="TERM_LINK_MAX_MATCHED" value="10"/>
     
@@ -126,5 +126,4 @@
     <plugins>
     </plugins>
 </config>
-
 
