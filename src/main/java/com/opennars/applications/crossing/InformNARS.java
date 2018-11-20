@@ -56,10 +56,11 @@ public class InformNARS {
         inputs.add(narsese);
         input+=narsese;
     }
-    
-    public boolean Input(Nar nar) {
+
+    // /param force are the inputs forced to be fed into the reasoner
+    public boolean Input(Nar nar, final boolean force) {
         boolean hadInput = false;
-        if(!input.equals(lastInput)) {
+        if(!input.equals(lastInput)||force) {
             for(String inp : inputs) {
                 nar.addInput(inp);
                 hadInput = true;

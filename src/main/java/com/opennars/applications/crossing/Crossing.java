@@ -104,7 +104,8 @@ public class Crossing extends PApplet {
         if (t % perception_update == 0) {
             boolean hadInput = false;
             for(Camera c : cameras) {
-                hadInput = hadInput || c.see(nar, entities, trafficLights);
+                final boolean force = (t % 10) == 0;
+                hadInput = hadInput || c.see(nar, entities, trafficLights, force);
             }
             if(hadInput) {
                 nar.addInput(questions);

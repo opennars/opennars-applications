@@ -27,7 +27,7 @@ public class Camera {
     }
     
     InformNARS informer = new InformNARS();
-    boolean see(Nar nar, List<Entity> entities, List<TrafficLight> trafficLights) {
+    boolean see(Nar nar, List<Entity> entities, List<TrafficLight> trafficLights, final boolean force) {
         //InformNARS.informAboutEntity(nar, chosen);
         for (Entity ent : entities) {
             if (Util.distance(posX, posY, ent.posX, ent.posY) < radius) {
@@ -40,7 +40,7 @@ public class Camera {
                 break;
             }
         }
-        return informer.Input(nar);
+        return informer.Input(nar, force);
     }
     
     public void draw(PApplet applet) {
