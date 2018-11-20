@@ -33,7 +33,7 @@ import org.opennars.entity.TruthValue;
 public class Util {
 
     public static Random rnd = new Random();
-    public static final int discretization =10;
+    public static final int discretization = 10;
     
     public static double distance(double posX, double posY, double posX2, double posY2) {
         double dx = posX - posX2;

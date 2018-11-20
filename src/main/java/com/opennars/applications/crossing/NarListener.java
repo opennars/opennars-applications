@@ -25,6 +25,8 @@ package com.opennars.applications.crossing;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+
 import org.opennars.entity.Sentence;
 import org.opennars.entity.Stamp;
 import org.opennars.entity.Task;
@@ -52,13 +54,13 @@ public class NarListener implements EventEmitter.EventObserver {
             this.truth = truth;
         }
     }
-    
-    List<NarListener.Prediction> predictions;
+
+    Map<Vec2Int, List<Prediction>> predictionsByMapPosition;
     List<NarListener.Prediction> disappointments;
     Nar nar;
     Camera camera;
-    public NarListener(Camera camera, Nar nar, List<NarListener.Prediction> predictions, List<NarListener.Prediction> disappointments) {
-        this.predictions = predictions;
+    public NarListener(Camera camera, Nar nar, Map<Vec2Int, List<Prediction>> predictionsByMapPosition, List<NarListener.Prediction> disappointments) {
+        this.predictionsByMapPosition = predictionsByMapPosition;
         this.disappointments = disappointments;
         this.nar = nar;
         this.camera = camera;
@@ -82,12 +84,55 @@ public class NarListener implements EventEmitter.EventObserver {
         if (event == Events.TaskAdd.class) {
             Task t = (Task) args[0];
             if (/*t.sentence.getOccurenceTime() > nar.time() && */t.sentence.isJudgment() && t.sentence.getTruth().getExpectation() >= nar.narParameters.DEFAULT_CONFIRMATION_EXPECTATION) {
-                Prediction result = predictionFromTask(t);
-                if(result != null) {
-                    predictions.add(result);
+                predictionFromTaskAndAddToPredictions(t);
+            }
+        }
+    }
+
+    public void predictionFromTaskAndAddToPredictions(Task t) {
+        Prediction prediction = null;
+        int posX=0, posY=0;
+
+        //format: "<(*,car,50_82) --> at>. %0.45;0.26%";
+        if(t.sentence.term instanceof Inheritance) {
+            Inheritance positionInh = (Inheritance) t.sentence.term;
+            if(positionInh.getSubject() instanceof Product) {
+                Product prod = (Product) positionInh.getSubject();
+                if(prod.size() == 2) {
+                    Term type = prod.term[0];
+                    String position = prod.term[1].toString();
+                    if(position.contains("_")) {
+                        try {
+                            posX = camera.minX + Util.discretization * Integer.valueOf(position.split("_")[0]);
+                            posY = camera.minY + Util.discretization * Integer.valueOf(position.split("_")[1]);
+                            //int id = 0; //Integer.valueOf(idStr.toString()); often a dep var
+                            Entity pred;
+                            if(type.toString().startsWith(car.toString())) {
+                                String id = type.toString().substring(car.toString().length(), type.toString().length());
+                                pred = new Car(Integer.valueOf(id), posX, posY, 0, 0);
+                                prediction = new Prediction(pred, t.sentence.truth, t.sentence.getOccurenceTime());
+                            }
+                            else
+                            if(type.toString().startsWith(pedestrian.toString())) {
+                                String id = type.toString().substring(pedestrian.toString().length(), type.toString().length());
+                                pred = new Pedestrian(Integer.valueOf(id), posX, posY, 0, 0);
+                                prediction = new Prediction(pred, t.sentence.truth, t.sentence.getOccurenceTime());
+                            }
+                        } catch(Exception ex) {} //wrong format, it's not such a type of prediction but something else
+                    }
                 }
             }
         }
+
+        if (prediction == null) {
+            return;
+        }
+
+        if (!predictionsByMapPosition.containsKey(new Vec2Int(posX, posY))) {
+            predictionsByMapPosition.put(new Vec2Int(posX, posY), new ArrayList<>());
+        }
+        List<Prediction> predictions = predictionsByMapPosition.get(new Vec2Int(posX, posY));
+        predictions.add(prediction);
     }
 
     public Prediction predictionFromTask(Task t) {
