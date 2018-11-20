@@ -48,7 +48,7 @@ public class Crossing extends PApplet {
             nar = new Nar();
             nar.narParameters.VOLUME = 0;
             nar.narParameters.DURATION*=10;
-            NarListener listener = new NarListener(cameras.get(0), nar, predictions, disappointments);
+            NarListener listener = new NarListener(cameras.get(0), nar, predictions, disappointments, entities);
             nar.on(Events.TaskAdd.class, listener);
             nar.on(DISAPPOINT.class, listener);
         } catch (Exception ex) {
@@ -121,6 +121,12 @@ public class Crossing extends PApplet {
         for (TrafficLight tl : trafficLights) {
             tl.draw(this, t);
         }
+
+        // tick
+        for (Entity ie : entities) {
+            ie.tick();
+        }
+
         t++;
         nar.cycles(10);
         removeOutdatedPredictions(predictions);

@@ -38,7 +38,11 @@ public class Entity {
     public float maxSpeed = 2.0f;
     public static boolean pedestrianIgnoreTrafficLight = false;
     public static boolean carIgnoreTrafficLight = false;
-    
+
+    public double normalness = 0.0;
+
+    public boolean isPredicted = false;
+
     public Entity() {
     }
 
@@ -48,6 +52,18 @@ public class Entity {
         this.posY = posY;
         this.velocity = velocity;
         this.angle = angle;
+    }
+
+    public void tick() {
+        // decay normalness
+
+        // 0.96 is to slow
+        //normalness *= 0.8; is to fast
+        normalness *= 0.91;
+    }
+
+    public boolean isAnomaly() {
+        return normalness < 0.2;
     }
 
     public void draw(PApplet applet, List<Street> streets, List<TrafficLight> trafficLights, List<Entity> entities, TruthValue truth, long time) {
