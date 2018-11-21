@@ -57,7 +57,7 @@ public class Entity {
         this.angle = angle;
     }
 
-    public void tick() {
+    public void tick(List<Street> streets, List<TrafficLight> trafficLights, List<Entity> entities, TruthValue truth, long time) {
         // decay normalness
 
         // 0.96 is to slow
@@ -76,7 +76,7 @@ public class Entity {
     }
 
     // mess of draw and tick for refactoring
-    private void drawTick(List<Street> streets, List<TrafficLight> trafficLights, List<Entity> entities, TruthValue truth, long time) {
+    protected void drawTickInternal(List<Street> streets, List<TrafficLight> trafficLights, List<Entity> entities, TruthValue truth, long time) {
         if(truth != null) {
             return;
         }
@@ -148,7 +148,5 @@ public class Entity {
         applet.popMatrix();
         applet.fill(0);
         applet.text(String.valueOf(id), (float)posX, (float)posY);
-
-        drawTick(streets, trafficLights, entities, truth, time);
     }
 }

@@ -40,12 +40,11 @@ public class Pedestrian extends Entity {
         maxSpeed = 1;
     }
 
-    public void draw(PApplet applet, List<Street> streets, List<TrafficLight> trafficLights, List<Entity> entities, TruthValue truth, long time) {
-        prevX = posX;
-        prevY = posY;
-        float mul = Util.truthToValue(truth) * Util.timeToValue(time);
-        applet.fill(0, 255, 255, mul*255.0f);
-        super.draw(applet, streets, trafficLights, entities, truth, time);
+    public void tick(List<Street> streets, List<TrafficLight> trafficLights, List<Entity> entities, TruthValue truth, long time) {
+        super.tick(streets, trafficLights, entities, truth, time);
+
+        super.drawTickInternal(streets, trafficLights, entities, truth, time);
+
         angle+=(Util.rnd.nextFloat()*0.1-0.05);
         //ok pedestrian, don't go on grass
         boolean forPedestrians = false;
@@ -60,5 +59,14 @@ public class Pedestrian extends Entity {
             this.posX = prevX;
             this.posY = prevY;
         }
+    }
+
+    public void draw(PApplet applet, List<Street> streets, List<TrafficLight> trafficLights, List<Entity> entities, TruthValue truth, long time) {
+        prevX = posX;
+        prevY = posY;
+        float mul = Util.truthToValue(truth) * Util.timeToValue(time);
+        applet.fill(0, 255, 255, mul*255.0f);
+        super.draw(applet, streets, trafficLights, entities, truth, time);
+
     }
 }

@@ -126,7 +126,7 @@ public class Crossing extends PApplet {
 
         // tick
         for (Entity ie : entities) {
-            ie.tick();
+            ie.tick(streets, trafficLights, entities, null, 0);
         }
 
 
