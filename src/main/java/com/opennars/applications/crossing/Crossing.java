@@ -154,6 +154,7 @@ public class Crossing extends PApplet {
         for(Camera c : cameras) {
             c.draw(this);
         }
+        System.out.println("Concepts: " + nar.memory.concepts.size());
     }
 
     public void removeOutdatedPredictions(List<Prediction> predictions) {
