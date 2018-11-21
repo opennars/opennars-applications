@@ -65,13 +65,13 @@ public class Crossing extends PApplet {
         trafficLights.add(new TrafficLight(trafficLightID++, trafficLightRadius/2, 500, 500 - trafficLightRadius, 1));
         int cars = 4; //cars and pedestrians
         for (float i = 0; i < cars/2; i += 1.05) {
-            entities.add(new Car(entityID++, 500 + streetWidth - Util.discretization+1, 900 - i * 100, 0.3, -PI / 2));
-            entities.add(new Car(entityID++, 500 + Util.discretization, 900 - i * 100, 0.3, PI / 2));
+            entities.add(makeEntity("car", entityID++, 500 + streetWidth - Util.discretization+1, 900 - i * 100, 0.3, -PI / 2));
+            entities.add(makeEntity("car", entityID++, 500 + Util.discretization, 900 - i * 100, 0.3, PI / 2));
         }
         int pedestrians = 4;//4;
         for (float i = 0; i < pedestrians/2; i += 1.05) {
-            entities.add(new Pedestrian(entityID++, 900 - i * 100, 500 + streetWidth - Util.discretization, 0.3, 0));
-            entities.add(new Pedestrian(entityID++, 900 - i * 100, 500 + Util.discretization, 0.3, -PI));
+            entities.add(makeEntity("pedestrian", entityID++, 900 - i * 100, 500 + streetWidth - Util.discretization, 0.3, 0));
+            entities.add(makeEntity("pedestrian", entityID++, 900 - i * 100, 500 + Util.discretization, 0.3, -PI));
         }
         /*for (TrafficLight l : trafficLights) { //it can't move anyway, so why would the coordinates matter to NARS?
             String pos = Util.positionToTerm(l.posX, l.posY);
@@ -189,6 +189,27 @@ public class Crossing extends PApplet {
     public void mouseDragged() {
         viewport.mouseDragged();
     }
+
+    public static Entity makeEntity(final String tag,  int id, double posX, double posY, double velocity, double angle) {
+        if (tag.equals("car")) {
+            Entity entity = new Entity(id, posX, posY, velocity, angle, "car", new BehaviourComponent(BehaviourComponent.EnumType.CAR));
+            entity.behaviour.maxSpeed = 2;
+            return entity;
+        }
+        else if (tag.equals("pedestrian")) {
+            final float pedestrianScale = 0.75f;
+
+            Entity entity = new Entity(id, posX, posY, velocity, angle, "pedestrian", new BehaviourComponent(BehaviourComponent.EnumType.PEDESTRIAN));
+            entity.behaviour.initialAngle = angle;
+            entity.behaviour.maxSpeed = 1;
+            entity.scale = pedestrianScale;
+            return entity;
+        }
+        else {
+            return null;
+        }
+    }
+
 
     public static void main(String[] args) {
         /* Set the Nimbus look and feel */

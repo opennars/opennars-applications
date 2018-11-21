@@ -115,14 +115,14 @@ public class NarListener implements EventEmitter.EventObserver {
                             Entity pred;
                             if(type.toString().startsWith(car.toString())) {
                                 String id = type.toString().substring(car.toString().length(), type.toString().length());
-                                pred = new Car(Integer.valueOf(id), posX, posY, 0, 0);
+                                pred = Crossing.makeEntity("car", Integer.valueOf(id), posX, posY, 0, 0);
                                 pred.isPredicted = true;
                                 prediction = new Prediction(pred, t.sentence.truth, t.sentence.getOccurenceTime(), "car");
                             }
                             else  
                             if(type.toString().startsWith(pedestrian.toString())) {
                                 String id = type.toString().substring(pedestrian.toString().length(), type.toString().length());
-                                pred = new Pedestrian(Integer.valueOf(id), posX, posY, 0, 0);
+                                pred = Crossing.makeEntity("pedestrian", Integer.valueOf(id), posX, posY, 0, 0);
                                 pred.isPredicted = true;
                                 prediction = new Prediction(pred, t.sentence.truth, t.sentence.getOccurenceTime(), "pedestrian");
                             }
