@@ -40,27 +40,6 @@ public class Pedestrian extends Entity {
         maxSpeed = 1;
     }
 
-    public void tick(List<Street> streets, List<TrafficLight> trafficLights, List<Entity> entities, TruthValue truth, long time) {
-        super.tick(streets, trafficLights, entities, truth, time);
-
-        super.drawTickInternal(streets, trafficLights, entities, truth, time);
-
-        angle+=(Util.rnd.nextFloat()*0.1-0.05);
-        //ok pedestrian, don't go on grass
-        boolean forPedestrians = false;
-        for(Street street : streets) {
-            if(!street.forCarsOnly && this.posX > street.startX && this.posX < street.endX && this.posY > street.startY && this.posY < street.endY) {
-                forPedestrians = true;
-                break;
-            }
-        }
-        if(!forPedestrians) {
-            this.angle = this.initialAngle;
-            this.posX = prevX;
-            this.posY = prevY;
-        }
-    }
-
     public void draw(PApplet applet, List<Street> streets, List<TrafficLight> trafficLights, List<Entity> entities, TruthValue truth, long time) {
         prevX = posX;
         prevY = posY;
