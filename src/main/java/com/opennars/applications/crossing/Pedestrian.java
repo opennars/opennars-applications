@@ -32,8 +32,8 @@ public class Pedestrian extends Entity {
     public Pedestrian(int id, double posX, double posY, double velocity, double angle) {
         super(id, posX, posY, velocity, angle, new BehaviourComponent(BehaviourComponent.EnumType.PEDESTRIAN));
         behaviour.initialAngle = angle;
+        behaviour.maxSpeed = 1;
         scale = pedestrianScale;
-        maxSpeed = 1;
     }
 
     public void draw(PApplet applet, List<Street> streets, List<TrafficLight> trafficLights, List<Entity> entities, TruthValue truth, long time) {

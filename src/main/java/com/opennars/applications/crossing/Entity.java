@@ -42,7 +42,6 @@ public class Entity {
     public double angle;
     public int id;
     public float scale = 1.0f;
-    public float maxSpeed = 2.0f;
     public static boolean pedestrianIgnoreTrafficLight = false;
     public static boolean carIgnoreTrafficLight = false;
 

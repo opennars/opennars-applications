@@ -31,7 +31,7 @@ public class Car extends Entity {
 
     public Car(int id, double posX, double posY, double velocity, double angle) {
         super(id, posX, posY, velocity, angle, new BehaviourComponent(BehaviourComponent.EnumType.CAR));
-        maxSpeed = 2;
+        behaviour.maxSpeed = 2;
     }
 
     public void draw(PApplet applet, List<Street> streets, List<TrafficLight> trafficLights, List<Entity> entities, TruthValue truth, long time) {

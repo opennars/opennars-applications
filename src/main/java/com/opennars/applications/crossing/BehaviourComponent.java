@@ -36,6 +36,8 @@ public class BehaviourComponent {
     // initial angle (for the pedestriant)
     public double initialAngle;
 
+    public float maxSpeed = 2.0f;
+
 
 
     public BehaviourComponent(final EnumType type) {
@@ -102,7 +104,7 @@ public class BehaviourComponent {
             }
         }
 
-        if (accelerate && entity.velocity < entity.maxSpeed) {
+        if (accelerate && entity.velocity < entity.behaviour.maxSpeed) {
             entity.velocity += 0.02;
         }
 
