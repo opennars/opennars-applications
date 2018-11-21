@@ -90,7 +90,7 @@ public class BehaviourComponent {
             }
         }
         for (Entity e : entities) {
-            boolean collidable = !(entity instanceof Pedestrian && e instanceof Pedestrian);
+            boolean collidable = !(entity.tag.equals("pedestrian") && e.tag.equals("pedestrian"));
             if (e != entity && collidable) {
                 double nearEnough = 10;
                 for (double k = 0; k < nearEnough; k += 0.1) {

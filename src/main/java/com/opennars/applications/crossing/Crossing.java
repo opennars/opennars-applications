@@ -141,10 +141,10 @@ public class Crossing extends PApplet {
         if(showAnomalies) {
             for (Prediction pred : disappointments) {
                 Entity e = pred.ent;
-                if(e instanceof Car) {
+                if(e.tag.equals("car")) {
                     fill(255,0,0);
                 }
-                if(e instanceof Pedestrian) {
+                if(e.tag.equals("pedestrian")) {
                     fill(0,0,255);
                 }
                 this.text("ANOMALY", (float)e.posX, (float)e.posY);
