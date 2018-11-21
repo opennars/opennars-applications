@@ -34,8 +34,6 @@ public class Util {
 
     public static Random rnd = new Random();
 
-    public static double hexagonWidth = 10.0;
-    public static double hexagonHeight = 10.0;
 
     public static int discretization = 10;
 
@@ -46,7 +44,7 @@ public class Util {
     }
     
     public static String positionToTerm(int x, int y) {
-        final Vec2Int pos = (new HexagonMapping(hexagonWidth, hexagonHeight)).map(x, y);
+        final Vec2Int pos = Crossing.hexagonMapping.map(x, y);
         return pos.x + "_" + pos.y;
     }
     

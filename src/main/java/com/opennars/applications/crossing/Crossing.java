@@ -34,6 +34,11 @@ import processing.core.PApplet;
 import processing.event.MouseEvent;
 
 public class Crossing extends PApplet {
+    public static double hexagonWidth = 10.0;
+    public static double hexagonHeight = 10.0;
+
+    static HexagonMapping hexagonMapping = new HexagonMapping(hexagonWidth, hexagonHeight);
+
     Nar nar;
     int entityID = 1;
     
