@@ -82,7 +82,7 @@ public class BehaviourComponent {
         for (TrafficLight l : trafficLights) {
             if (Util.distance(entity.posX, entity.posY, l.posX, l.posY) < l.radius) {
                 if (l.colour == l.RED) {
-                    if (Util.rnd.nextFloat() > 0.3 && ((entity instanceof Car && !entity.carIgnoreTrafficLight) || (entity instanceof Pedestrian && !entity.pedestrianIgnoreTrafficLight))) {
+                    if (Util.rnd.nextFloat() > 0.3 && ((entity.tag.equals("car") && !entity.carIgnoreTrafficLight) || (entity.tag.equals("pedestrian") && !entity.pedestrianIgnoreTrafficLight))) {
                         entity.velocity *= 0.5;
                         accelerate = false;
                     }
