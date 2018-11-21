@@ -33,6 +33,10 @@ public class Entity {
 
     public BehaviourComponent behaviour;
 
+
+    public double prevX = 0;
+    public double prevY = 0;
+
     public double posX, posY;
     public double velocity;
     public double angle;
@@ -67,6 +71,10 @@ public class Entity {
         // 0.96 is to slow
         //normalness *= 0.8; is to fast
         normalness *= 0.91;
+
+        // store old position
+        prevX = posX;
+        prevY = posY;
 
 
         behaviour.tick(this, streets, trafficLights, entities, truth, time);
