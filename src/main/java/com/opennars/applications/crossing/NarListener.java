@@ -109,8 +109,13 @@ public class NarListener implements EventEmitter.EventObserver {
                     String position = prod.term[1].toString();
                     if(position.contains("_")) {
                         try {
-                            int posX = camera.minX + Util.discretization * Integer.valueOf(position.split("_")[0]);
-                            int posY = camera.minY + Util.discretization * Integer.valueOf(position.split("_")[1]);
+
+                            final int mappingCoordinateOfProductX =  Integer.valueOf(position.split("_")[0]);
+                            final int mappingCoordinateOfProductY =  Integer.valueOf(position.split("_")[1]);
+                            final double[] mappedCoordinate = Crossing.hexagonMapping.calcPositionOfHexagon(mappingCoordinateOfProductX, mappingCoordinateOfProductY);
+
+                            int posX = camera.minX + (int)mappedCoordinate[0];//camera.minX + Util.discretization * Integer.valueOf(position.split("_")[0]);
+                            int posY = camera.minY + (int)mappedCoordinate[1];//camera.minY + Util.discretization * Integer.valueOf(position.split("_")[1]);
                             //int id = 0; //Integer.valueOf(idStr.toString()); often a dep var
                             Entity pred;
                             if(type.toString().startsWith(car.toString())) {

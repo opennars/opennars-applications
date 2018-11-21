@@ -116,11 +116,14 @@ public class Crossing extends PApplet {
                 nar.addInput(questions);
             }
         }
-        for (int i = 0; i < 1000; i += Util.discretization) {
-            stroke(128);
-            line(0, i, 1000, i);
-            line(i, 0, i, 1000);
+
+        for (int y=50;y<100;y++) {
+            for (int x=25;x<75;x++) {
+                final double[] pos = hexagonMapping.calcPositionOfHexagon(x, y);
+                drawHexagon(pos[0], pos[1]);
+            }
         }
+
 
         for (Entity e : entities) {
             e.draw(this, streets, trafficLights, entities, null, 0);
@@ -160,6 +163,17 @@ public class Crossing extends PApplet {
             c.draw(this);
         }
         System.out.println("Concepts: " + nar.memory.concepts.size());
+    }
+
+    private void drawHexagon(final double x, final double y) {
+        stroke(128);
+
+        for (int i=0; i < relatives.length; i++) {
+            final double[] aRel = relatives[i];
+            final double[] bRel = relatives[(i+1) % relatives.length];
+
+            line((float)(x + aRel[0]), (float)(y + aRel[1]), (float)(x + bRel[0]), (float)(y + bRel[1]));
+        }
     }
 
     public void removeOutdatedPredictions(List<Prediction> predictions) {
@@ -218,4 +232,17 @@ public class Crossing extends PApplet {
         new IncidentSimulator().show();
         PApplet.runSketch(args2, mp);
     }
+
+
+    final double[][] relatives = new double[][]{
+        {hexagonMapping.width * -0.5, hexagonMapping.height * -0.25},
+        {hexagonMapping.width * -0.5, hexagonMapping.height * 0.25},
+
+        {0.0, hexagonMapping.height * 0.5},
+
+        {hexagonMapping.width * 0.5, hexagonMapping.height * 0.25},
+        {hexagonMapping.width * 0.5, hexagonMapping.height * -0.25},
+
+        {0.0, hexagonMapping.height * -0.5},
+    };
 }
