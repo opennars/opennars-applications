@@ -34,7 +34,7 @@ public class Pedestrian extends Entity {
     double prevY = 0;
     public final static float pedestrianScale = 0.75f;
     public Pedestrian(int id, double posX, double posY, double velocity, double angle) {
-        super(id, posX, posY, velocity, angle);
+        super(id, posX, posY, velocity, angle, new BehaviourComponent(BehaviourComponent.EnumType.PEDESTRIAN));
         initialAngle = angle;
         scale = pedestrianScale;
         maxSpeed = 1;

@@ -30,14 +30,8 @@ import processing.core.PApplet;
 public class Car extends Entity {
 
     public Car(int id, double posX, double posY, double velocity, double angle) {
-        super(id, posX, posY, velocity, angle);
+        super(id, posX, posY, velocity, angle, new BehaviourComponent(BehaviourComponent.EnumType.CAR));
         maxSpeed = 2;
-    }
-
-    public void tick(List<Street> streets, List<TrafficLight> trafficLights, List<Entity> entities, TruthValue truth, long time) {
-        super.tick(streets, trafficLights, entities, truth, time);
-
-        super.drawTickInternal(streets, trafficLights, entities, truth, time);
     }
 
     public void draw(PApplet applet, List<Street> streets, List<TrafficLight> trafficLights, List<Entity> entities, TruthValue truth, long time) {

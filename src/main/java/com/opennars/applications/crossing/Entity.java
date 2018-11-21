@@ -30,6 +30,9 @@ import processing.core.PApplet;
 public class Entity {
 
     public static int entityID = 0;
+
+    public BehaviourComponent behaviour;
+
     public double posX, posY;
     public double velocity;
     public double angle;
@@ -49,12 +52,13 @@ public class Entity {
     public Entity() {
     }
 
-    public Entity(int id, double posX, double posY, double velocity, double angle) {
+    public Entity(int id, double posX, double posY, double velocity, double angle, final BehaviourComponent behaviour) {
         this.id = id;
         this.posX = posX;
         this.posY = posY;
         this.velocity = velocity;
         this.angle = angle;
+        this.behaviour = behaviour;
     }
 
     public void tick(List<Street> streets, List<TrafficLight> trafficLights, List<Entity> entities, TruthValue truth, long time) {
@@ -63,6 +67,9 @@ public class Entity {
         // 0.96 is to slow
         //normalness *= 0.8; is to fast
         normalness *= 0.91;
+
+
+        behaviour.tick(this, streets, trafficLights, entities, truth, time);
     }
 
     boolean hasMoved() {
