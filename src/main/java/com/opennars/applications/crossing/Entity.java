@@ -75,19 +75,8 @@ public class Entity {
         return normalness < 0.3 && hasMoved();
     }
 
-    public void draw(PApplet applet, List<Street> streets, List<TrafficLight> trafficLights, List<Entity> entities, TruthValue truth, long time) {
-        applet.pushMatrix();
-        //float posXDiscrete = (((int) this.posX)/Util.discretization * Util.discretization);
-        //float posYDiscrete = (((int) this.posY)/Util.discretization * Util.discretization);
-        applet.translate((float) posX, (float) posY);
-        applet.rotate((float) angle);
-        if(truth == null) {
-            applet.rect(0, 0, Util.discretization*scale, Util.discretization/2*scale);
-        }
-        applet.ellipse(2.5f, 2.5f, Util.discretization*scale, Util.discretization*scale);
-        applet.popMatrix();
-        applet.fill(0);
-        applet.text(String.valueOf(id), (float)posX, (float)posY);
+    // mess of draw and tick for refactoring
+    private void drawTick(List<Street> streets, List<TrafficLight> trafficLights, List<Entity> entities, TruthValue truth, long time) {
         if(truth != null) {
             return;
         }
@@ -144,5 +133,22 @@ public class Entity {
             posX = epsilon;
             //this.id = entityID++;
         }
+    }
+
+    public void draw(PApplet applet, List<Street> streets, List<TrafficLight> trafficLights, List<Entity> entities, TruthValue truth, long time) {
+        applet.pushMatrix();
+        //float posXDiscrete = (((int) this.posX)/Util.discretization * Util.discretization);
+        //float posYDiscrete = (((int) this.posY)/Util.discretization * Util.discretization);
+        applet.translate((float) posX, (float) posY);
+        applet.rotate((float) angle);
+        if(truth == null) {
+            applet.rect(0, 0, Util.discretization*scale, Util.discretization/2*scale);
+        }
+        applet.ellipse(2.5f, 2.5f, Util.discretization*scale, Util.discretization*scale);
+        applet.popMatrix();
+        applet.fill(0);
+        applet.text(String.valueOf(id), (float)posX, (float)posY);
+
+        drawTick(streets, trafficLights, entities, truth, time);
     }
 }
