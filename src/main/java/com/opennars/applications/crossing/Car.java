@@ -30,7 +30,7 @@ import processing.core.PApplet;
 public class Car extends Entity {
 
     public Car(int id, double posX, double posY, double velocity, double angle) {
-        super(id, posX, posY, velocity, angle, new BehaviourComponent(BehaviourComponent.EnumType.CAR));
+        super(id, posX, posY, velocity, angle, "car", new BehaviourComponent(BehaviourComponent.EnumType.CAR));
         behaviour.maxSpeed = 2;
     }
 

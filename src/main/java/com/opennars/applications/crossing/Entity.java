@@ -52,15 +52,18 @@ public class Entity {
     public double lastPosX = 0;
     public double lastPosY = 0;
 
+    public String tag; // tag used to identify the type of the entity
+
     public Entity() {
     }
 
-    public Entity(int id, double posX, double posY, double velocity, double angle, final BehaviourComponent behaviour) {
+    public Entity(int id, double posX, double posY, double velocity, double angle, final String tag, final BehaviourComponent behaviour) {
         this.id = id;
         this.posX = posX;
         this.posY = posY;
         this.velocity = velocity;
         this.angle = angle;
+        this.tag = tag;
         this.behaviour = behaviour;
     }
 
