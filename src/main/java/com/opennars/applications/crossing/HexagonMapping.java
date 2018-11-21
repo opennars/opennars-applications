@@ -32,6 +32,14 @@ public class HexagonMapping {
         this.height = height;
     }
 
+    public double[] calcPositionOfHexagon(final int x, final int y) {
+        final double offsetX = (y % 2) == 0 ? 0.0 : -0.5*width;
+
+        double resultX = (x + 1) * width + offsetX;
+        double resultY = 0.5*height + 0.75*height*y;
+        return new double[]{resultX, resultY};
+    }
+
     public Vec2Int map(final double x, final double y) {
         final int ix = (int)(x / (width*2.0));
         final int iy = (int)(y / (height*1.5));
