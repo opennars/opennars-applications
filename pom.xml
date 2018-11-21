@@ -2,7 +2,7 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.opennars</groupId>
-    <artifactId>Applications</artifactId>
+    <artifactId>opennars-applications</artifactId>
     <version>1.0-SNAPSHOT</version>
     <packaging>jar</packaging>
     <properties>
@@ -59,21 +59,39 @@
                 </configuration>
             </plugin>
             <plugin>
-                    <groupId>org.codehaus.mojo</groupId>
-                    <artifactId>exec-maven-plugin</artifactId>
-                    <version>1.2.1</version>
-                    <executions>
-                        <execution>
-                            <goals>
-                                <goal>exec</goal>
-                            </goals>
-                        </execution>
-                    </executions>
-                    <configuration>
-                        <executable>com.opennars.applications.crossing.Crossing</executable>
-                        <mainClass></mainClass>
-                    </configuration>
-                </plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                <version>2.5</version>
+                <configuration>
+                <!-- Configures the created archive -->
+                    <archive>
+                    <!-- Configures the content of the created manifest -->
+                        <manifest>
+                        <!-- Adds the classpath to the created manifest -->
+                            <addClasspath>true</addClasspath>
+                            <!--
+                            Specifies that all dependencies of our application are found
+                            from the lib directory.
+                            -->
+                            <classpathPrefix>lib/</classpathPrefix>
+                            <!-- Configures the main class of the application -->
+                            <mainClass>com.opennars.applications.crossing.Crossing</mainClass>
+                        </manifest>
+                    </archive>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-shade-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>shade</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
         </plugins>
 
     </build>
