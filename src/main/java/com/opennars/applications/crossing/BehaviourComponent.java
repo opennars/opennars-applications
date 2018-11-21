@@ -33,6 +33,10 @@ import java.util.List;
 public class BehaviourComponent {
     private final EnumType type;
 
+    // initial angle (for the pedestriant)
+    public double initialAngle;
+
+
 
     public BehaviourComponent(final EnumType type) {
         this.type = type;
@@ -57,13 +61,12 @@ public class BehaviourComponent {
                 }
             }
 
-            /* TODO
+
             if(!forPedestrians) {
                 entity.angle = initialAngle;
-                entity.posX = prevX;
-                entity.posY = prevY;
+                entity.posX = entity.prevX;
+                entity.posY = entity.prevY;
             }
-             */
         }
     }
 
