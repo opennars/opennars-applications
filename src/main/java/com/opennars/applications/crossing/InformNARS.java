@@ -39,11 +39,11 @@ public class InformNARS {
             id = "0";
         }
         String pos = Util.positionToTerm((int) ent.posX-minX, (int) ent.posY-minY);
-        if (ent instanceof Car) {
+        if (ent.tag.equals("car")) {
             inputs.add("<(*,car" + id + ","+ pos + ") --> at>. :|:");
             input += inputs.get(inputs.size()-1);
         }
-        if (ent instanceof Pedestrian) {
+        if (ent.tag.equals("pedestrian")) {
             inputs.add("<(*,pedestrian" + id + "," + pos + ") --> at>. :|:");
             input += inputs.get(inputs.size()-1);
         }

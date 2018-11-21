@@ -30,12 +30,18 @@ import processing.core.PApplet;
 public class Entity {
 
     public static int entityID = 0;
+
+    public BehaviourComponent behaviour;
+
+
+    public double prevX = 0;
+    public double prevY = 0;
+
     public double posX, posY;
     public double velocity;
     public double angle;
     public int id;
     public float scale = 1.0f;
-    public float maxSpeed = 2.0f;
     public static boolean pedestrianIgnoreTrafficLight = false;
     public static boolean carIgnoreTrafficLight = false;
 
@@ -46,23 +52,34 @@ public class Entity {
     public double lastPosX = 0;
     public double lastPosY = 0;
 
+    public String tag; // tag used to identify the type of the entity
+
     public Entity() {
     }
 
-    public Entity(int id, double posX, double posY, double velocity, double angle) {
+    public Entity(int id, double posX, double posY, double velocity, double angle, final String tag, final BehaviourComponent behaviour) {
         this.id = id;
         this.posX = posX;
         this.posY = posY;
         this.velocity = velocity;
         this.angle = angle;
+        this.tag = tag;
+        this.behaviour = behaviour;
     }
 
-    public void tick() {
+    public void tick(List<Street> streets, List<TrafficLight> trafficLights, List<Entity> entities, TruthValue truth, long time) {
         // decay normalness
 
         // 0.96 is to slow
         //normalness *= 0.8; is to fast
         normalness *= 0.91;
+
+        // store old position
+        prevX = posX;
+        prevY = posY;
+
+
+        behaviour.tick(this, streets, trafficLights, entities, truth, time);
     }
 
     boolean hasMoved() {
@@ -75,7 +92,24 @@ public class Entity {
         return normalness < 0.3 && hasMoved();
     }
 
+
     public void draw(PApplet applet, List<Street> streets, List<TrafficLight> trafficLights, List<Entity> entities, TruthValue truth, long time) {
+        float mul = Util.truthToValue(truth) * Util.timeToValue(time);
+        applet.fill(255, 0, 255, mul*255.0f);
+
+        if (!isPredicted && isAnomaly()) {
+            applet.stroke(255,0,0);
+        }
+        else {
+            applet.stroke(127);
+        }
+
+        drawInternal(applet, streets, trafficLights, entities, truth, time);
+
+        applet.stroke(127);
+    }
+
+    public void drawInternal(PApplet applet, List<Street> streets, List<TrafficLight> trafficLights, List<Entity> entities, TruthValue truth, long time) {
         applet.pushMatrix();
         //float posXDiscrete = (((int) this.posX)/Util.discretization * Util.discretization);
         //float posYDiscrete = (((int) this.posY)/Util.discretization * Util.discretization);
@@ -88,61 +122,5 @@ public class Entity {
         applet.popMatrix();
         applet.fill(0);
         applet.text(String.valueOf(id), (float)posX, (float)posY);
-        if(truth != null) {
-            return;
-        }
-
-        boolean accelerate = true;
-        for (TrafficLight l : trafficLights) {
-            if (Util.distance(posX, posY, l.posX, l.posY) < l.radius) {
-                if (l.colour == l.RED) {
-                    if (Util.rnd.nextFloat() > 0.3 && ((this instanceof Car && !carIgnoreTrafficLight) || (this instanceof Pedestrian && !pedestrianIgnoreTrafficLight))) {
-                        velocity *= 0.5;
-                        accelerate = false;
-                    }
-                }
-            }
-        }
-        for (Entity e : entities) {
-            boolean collidable = !(this instanceof Pedestrian && e instanceof Pedestrian);
-            if (e != this && collidable) {
-                double nearEnough = 10;
-                for (double k = 0; k < nearEnough; k += 0.1) {
-                    double pXNew = posX + k * Math.cos(angle);
-                    double pYNew = posY + k * Math.sin(angle);
-                    if (Util.distance(pXNew, pYNew, e.posX, e.posY) < nearEnough) {
-                        velocity *= 0.8;
-                        accelerate = false;
-                    }
-                }
-            }
-        }
-
-        if (accelerate && velocity < maxSpeed) {
-            velocity += 0.02;
-        }
-
-        double aX = Math.cos(angle);
-        double aY = Math.sin(angle);
-        posX += aX * velocity;
-        posY += aY * velocity;
-
-        double epsilon = 1;
-        if (posY < 0) {
-            posY = 1000 - epsilon;
-            //this.id = entityID++;
-        }
-        if (posY > 1000) {
-            posY = epsilon;
-            //this.id = entityID++;
-        }
-        if (posX < 0) {
-            posX = 1000 - epsilon;
-            //this.id = entityID++;
-        }
-        if (posX > 1000) {
-            posX = epsilon;
-            //this.id = entityID++;
-        }
     }
 }
