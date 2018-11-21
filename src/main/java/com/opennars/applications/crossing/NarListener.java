@@ -40,28 +40,33 @@ import org.opennars.language.Term;
 import org.opennars.main.Nar;
 import org.opennars.storage.Memory;
 
-public class NarListener implements EventEmitter.EventObserver {  
+public class NarListener implements EventEmitter.EventObserver {
     public class Prediction
     {
         public Entity ent;
         public long time;
         public TruthValue truth;
-        public Prediction(Entity ent, TruthValue truth, long time) {
+        public String type;
+        public Prediction(Entity ent, TruthValue truth, long time, String type) {
             this.ent = ent;
             this.time = time;
             this.truth = truth;
+            this.type = type;
         }
     }
-    
+
+    List<Entity> entities;
+
     List<NarListener.Prediction> predictions;
     List<NarListener.Prediction> disappointments;
     Nar nar;
     Camera camera;
-    public NarListener(Camera camera, Nar nar, List<NarListener.Prediction> predictions, List<NarListener.Prediction> disappointments) {
+    public NarListener(Camera camera, Nar nar, List<NarListener.Prediction> predictions, List<NarListener.Prediction> disappointments, List<Entity> entities) {
         this.predictions = predictions;
         this.disappointments = disappointments;
         this.nar = nar;
         this.camera = camera;
+        this.entities = entities;
     }
     Term pedestrian = Term.get("pedestrian");
     Term car = Term.get("car");
@@ -85,6 +90,8 @@ public class NarListener implements EventEmitter.EventObserver {
                 Prediction result = predictionFromTask(t);
                 if(result != null) {
                     predictions.add(result);
+
+                    broadcastPrediction(result);
                 }
             }
         }
@@ -109,13 +116,15 @@ public class NarListener implements EventEmitter.EventObserver {
                             if(type.toString().startsWith(car.toString())) {
                                 String id = type.toString().substring(car.toString().length(), type.toString().length());
                                 pred = new Car(Integer.valueOf(id), posX, posY, 0, 0);
-                                prediction = new Prediction(pred, t.sentence.truth, t.sentence.getOccurenceTime());
+                                pred.isPredicted = true;
+                                prediction = new Prediction(pred, t.sentence.truth, t.sentence.getOccurenceTime(), "car");
                             }
                             else  
                             if(type.toString().startsWith(pedestrian.toString())) {
                                 String id = type.toString().substring(pedestrian.toString().length(), type.toString().length());
                                 pred = new Pedestrian(Integer.valueOf(id), posX, posY, 0, 0);
-                                prediction = new Prediction(pred, t.sentence.truth, t.sentence.getOccurenceTime());
+                                pred.isPredicted = true;
+                                prediction = new Prediction(pred, t.sentence.truth, t.sentence.getOccurenceTime(), "pedestrian");
                             }
                         } catch(Exception ex) {} //wrong format, it's not such a type of prediction but something else
                     }
@@ -123,5 +132,24 @@ public class NarListener implements EventEmitter.EventObserver {
             }
         }
         return prediction;
+    }
+
+    public void broadcastPrediction(Prediction prediction) {
+        for (final Entity iEntity: entities) {
+            if (prediction.ent.id != iEntity.id) {
+                continue;
+            }
+
+            // distance of prediction
+            final double dist = Util.distance(iEntity.posX, iEntity.posY, prediction.ent.posX, prediction.ent.posY);
+            if (dist > 17) {
+                continue;
+            }
+
+            iEntity.normalness += 0.03;
+
+            // we found one - done
+            return;
+        }
     }
 }

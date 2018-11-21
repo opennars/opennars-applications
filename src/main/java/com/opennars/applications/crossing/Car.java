@@ -37,6 +37,16 @@ public class Car extends Entity {
     public void draw(PApplet applet, List<Street> streets, List<TrafficLight> trafficLights, List<Entity> entities, TruthValue truth, long time) {
         float mul = Util.truthToValue(truth) * Util.timeToValue(time);
         applet.fill(255, 0, 255, mul*255.0f);
+
+        if (!isPredicted && isAnomaly()) {
+            applet.stroke(255,0,0);
+        }
+        else {
+            applet.stroke(127);
+        }
+
         super.draw(applet, streets, trafficLights, entities, truth, time);
+
+        applet.stroke(127);
     }
 }

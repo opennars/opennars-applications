@@ -48,7 +48,7 @@ public class Crossing extends PApplet {
             nar = new Nar();
             nar.narParameters.VOLUME = 0;
             nar.narParameters.DURATION*=10;
-            NarListener listener = new NarListener(cameras.get(0), nar, predictions, disappointments);
+            NarListener listener = new NarListener(cameras.get(0), nar, predictions, disappointments, entities);
             nar.on(Events.TaskAdd.class, listener);
             nar.on(DISAPPOINT.class, listener);
         } catch (Exception ex) {
@@ -104,7 +104,8 @@ public class Crossing extends PApplet {
         if (t % perception_update == 0) {
             boolean hadInput = false;
             for(Camera c : cameras) {
-                hadInput = hadInput || c.see(nar, entities, trafficLights);
+                final boolean force = false; // not required HACK
+                hadInput = hadInput || c.see(nar, entities, trafficLights, force);
             }
             if(hadInput) {
                 nar.addInput(questions);
@@ -115,12 +116,20 @@ public class Crossing extends PApplet {
             line(0, i, 1000, i);
             line(i, 0, i, 1000);
         }
+
         for (Entity e : entities) {
             e.draw(this, streets, trafficLights, entities, null, 0);
         }
         for (TrafficLight tl : trafficLights) {
             tl.draw(this, t);
         }
+
+        // tick
+        for (Entity ie : entities) {
+            ie.tick();
+        }
+
+
         t++;
         nar.cycles(10);
         removeOutdatedPredictions(predictions);
