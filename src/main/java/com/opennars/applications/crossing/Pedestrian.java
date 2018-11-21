@@ -35,10 +35,10 @@ public class Pedestrian extends Entity {
         behaviour.maxSpeed = 1;
         scale = pedestrianScale;
     }
-
+    /*
     public void draw(PApplet applet, List<Street> streets, List<TrafficLight> trafficLights, List<Entity> entities, TruthValue truth, long time) {
         float mul = Util.truthToValue(truth) * Util.timeToValue(time);
         applet.fill(0, 255, 255, mul*255.0f);
         super.draw(applet, streets, trafficLights, entities, truth, time);
-    }
+    }*/
 }

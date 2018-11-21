@@ -92,7 +92,24 @@ public class Entity {
         return normalness < 0.3 && hasMoved();
     }
 
+
     public void draw(PApplet applet, List<Street> streets, List<TrafficLight> trafficLights, List<Entity> entities, TruthValue truth, long time) {
+        float mul = Util.truthToValue(truth) * Util.timeToValue(time);
+        applet.fill(255, 0, 255, mul*255.0f);
+
+        if (!isPredicted && isAnomaly()) {
+            applet.stroke(255,0,0);
+        }
+        else {
+            applet.stroke(127);
+        }
+
+        drawInternal(applet, streets, trafficLights, entities, truth, time);
+
+        applet.stroke(127);
+    }
+
+    public void drawInternal(PApplet applet, List<Street> streets, List<TrafficLight> trafficLights, List<Entity> entities, TruthValue truth, long time) {
         applet.pushMatrix();
         //float posXDiscrete = (((int) this.posX)/Util.discretization * Util.discretization);
         //float posYDiscrete = (((int) this.posY)/Util.discretization * Util.discretization);
