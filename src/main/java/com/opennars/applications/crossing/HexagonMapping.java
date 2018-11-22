@@ -25,10 +25,11 @@ package com.opennars.applications.crossing;
 
 public class HexagonMapping {
     private final double[][] positions;
+    private final double[] distances;
 
     public double width; // width of hexagon
     public double height; // height of hexagon
-
+    
     public HexagonMapping(final double width, final double height) {
         this.width = width;
         this.height = height;
@@ -44,6 +45,8 @@ public class HexagonMapping {
                 {0.5 * width, 1.25 * height},
                 {1.5 * width, 1.25 * height},
         };
+
+        distances = new double[positions.length];
     }
 
     public double[] calcPositionOfHexagon(final int x, final int y) {
@@ -69,8 +72,6 @@ public class HexagonMapping {
         // see https://www.redblobgames.com/grids/hexagons/ for illustration
 
 
-
-        double[] distances = new double[positions.length];
 
         for(int i=0;i<positions.length;i++) {
             distances[i] = Util.distance(x, y, positions[i][0], positions[i][0]);
