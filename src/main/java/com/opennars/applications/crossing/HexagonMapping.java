@@ -29,7 +29,7 @@ public class HexagonMapping {
 
     public double width; // width of hexagon
     public double height; // height of hexagon
-    
+
     public HexagonMapping(final double width, final double height) {
         this.width = width;
         this.height = height;
