@@ -24,12 +24,26 @@
 package com.opennars.applications.crossing;
 
 public class HexagonMapping {
+    private final double[][] positions;
+
     public double width; // width of hexagon
     public double height; // height of hexagon
 
     public HexagonMapping(final double width, final double height) {
         this.width = width;
         this.height = height;
+
+        positions = new double[][]{
+                {0.5 * width, -0.25 * height},
+                {1.5 * width, -0.25 * height},
+
+                {0.0, 0.5 * height},
+                {width, 0.5 * height},
+                {width + width, 0.5 * height},
+
+                {0.5 * width, 1.25 * height},
+                {1.5 * width, 1.25 * height},
+        };
     }
 
     public double[] calcPositionOfHexagon(final int x, final int y) {
@@ -54,17 +68,7 @@ public class HexagonMapping {
     private Vec2Int mapGroupToRelCell(final double x, final double y)  {
         // see https://www.redblobgames.com/grids/hexagons/ for illustration
 
-        double[][] positions = new double[][]{
-                {0.5 * width, -0.25 * height},
-                {1.5 * width, -0.25 * height},
 
-                {0.0, 0.5 * height},
-                {width, 0.5 * height},
-                {width + width, 0.5 * height},
-
-                {0.5 * width, 1.25 * height},
-                {1.5 * width, 1.25 * height},
-        };
 
         double[] distances = new double[positions.length];
 
