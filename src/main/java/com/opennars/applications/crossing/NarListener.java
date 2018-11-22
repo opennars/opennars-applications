@@ -23,13 +23,11 @@
  */
 package com.opennars.applications.crossing;
 
-import java.util.ArrayList;
 import java.util.List;
 import org.opennars.entity.Sentence;
 import org.opennars.entity.Stamp;
 import org.opennars.entity.Task;
 import org.opennars.entity.TruthValue;
-import org.opennars.interfaces.Timable;
 import org.opennars.io.Symbols;
 import org.opennars.io.events.EventEmitter;
 import org.opennars.io.events.Events;
@@ -38,7 +36,6 @@ import org.opennars.language.Inheritance;
 import org.opennars.language.Product;
 import org.opennars.language.Term;
 import org.opennars.main.Nar;
-import org.opennars.storage.Memory;
 
 public class NarListener implements EventEmitter.EventObserver {
     public class Prediction
@@ -61,6 +58,9 @@ public class NarListener implements EventEmitter.EventObserver {
     List<NarListener.Prediction> disappointments;
     Nar nar;
     Camera camera;
+
+    Crossing crossing;
+
     public NarListener(Camera camera, Nar nar, List<NarListener.Prediction> predictions, List<NarListener.Prediction> disappointments, List<Entity> entities) {
         this.predictions = predictions;
         this.disappointments = disappointments;
@@ -110,12 +110,21 @@ public class NarListener implements EventEmitter.EventObserver {
                     if(position.contains("_")) {
                         try {
 
-                            final int mappingCoordinateOfProductX =  Integer.valueOf(position.split("_")[0]);
-                            final int mappingCoordinateOfProductY =  Integer.valueOf(position.split("_")[1]);
+                            final int mappingCoordinateOfProductX = Integer.valueOf(position.split("_")[0]);
+                            final int mappingCoordinateOfProductY = Integer.valueOf(position.split("_")[1]);
                             final double[] mappedCoordinate = Crossing.hexagonMapping.calcPositionOfHexagon(mappingCoordinateOfProductX, mappingCoordinateOfProductY);
 
                             int posX = camera.minX + (int)mappedCoordinate[0];//camera.minX + Util.discretization * Integer.valueOf(position.split("_")[0]);
                             int posY = camera.minY + (int)mappedCoordinate[1];//camera.minY + Util.discretization * Integer.valueOf(position.split("_")[1]);
+
+                            // HACK
+                            // Robert< no idea where the offset is comming from - seems to be only a visual issue >
+                            posY -= 10;
+
+                            // used for debugging the "real position"
+                            //crossing.rect((float)posX, (float)posY, 3, 3);
+                            crossing.debugObjects.add(new DebugObject(posX, posY));
+
                             //int id = 0; //Integer.valueOf(idStr.toString()); often a dep var
                             Entity pred;
                             if(type.toString().startsWith(car.toString())) {

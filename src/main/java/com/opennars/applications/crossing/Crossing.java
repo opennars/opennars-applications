@@ -54,6 +54,7 @@ public class Crossing extends PApplet {
             nar.narParameters.VOLUME = 0;
             nar.narParameters.DURATION*=10;
             NarListener listener = new NarListener(cameras.get(0), nar, predictions, disappointments, entities);
+            listener.crossing = this;
             nar.on(Events.TaskAdd.class, listener);
             nar.on(DISAPPOINT.class, listener);
         } catch (Exception ex) {
@@ -83,7 +84,31 @@ public class Crossing extends PApplet {
             String narsese = "<(*,{" + l.id + "}," + pos + ") --> at>.";
             nar.addInput(narsese);
         }*/
-        
+
+
+        /**
+         * test if the hexagon mapping works as expected
+         */
+        /*
+        for(int y=500;y<500+60; y+=1) {
+            for(int x=500;x<500+60; x+= 1) {
+
+                Vec2Int mapped = hexagonMapping.map(x, y);
+
+                int color = mapped.hashCode() % 4;
+
+                DebugObject d = new DebugObject(x, y);
+                d.colorR = (float)color / 4.0f;
+
+                debugObjects.add(d);
+            }
+        }
+        */
+
+
+
+
+
         size(1000, 1000);
         frameRate(fps);
         new NarSimpleGUI(nar);
@@ -93,6 +118,9 @@ public class Crossing extends PApplet {
     List<TrafficLight> trafficLights = new ArrayList<TrafficLight>();
     List<Entity> entities = new ArrayList<Entity>();
     List<Camera> cameras = new ArrayList<Camera>();
+
+    List<DebugObject> debugObjects = new ArrayList<>();
+
     int t = 0;
     public static boolean showAnomalies = false;
 
@@ -117,8 +145,8 @@ public class Crossing extends PApplet {
             }
         }
 
-        for (int y=50;y<100;y++) {
-            for (int x=25;x<75;x++) {
+        for (int y=50;y<80;y++) {
+            for (int x=40;x<65;x++) {
                 final double[] pos = hexagonMapping.calcPositionOfHexagon(x, y);
                 drawHexagon(pos[0], pos[1]);
             }
@@ -130,6 +158,12 @@ public class Crossing extends PApplet {
         }
         for (TrafficLight tl : trafficLights) {
             tl.draw(this, t);
+        }
+
+        for (final DebugObject iDebug : debugObjects) {
+            this.stroke(0, 0); // no stroke
+            this.fill(iDebug.colorR * 255.0f, 0, 0);
+            this.rect((float)(iDebug.posX-0.5), (float)(iDebug.posY-0.5), 1, 1);
         }
 
         // tick
@@ -166,11 +200,15 @@ public class Crossing extends PApplet {
     }
 
     private void drawHexagon(final double x, final double y) {
+        stroke(0);
+        // used for debugging the "real position"
+        rect((float)x-1.5f, (float)y-1.5f, 3, 3);
+
         stroke(128);
 
-        for (int i=0; i < relatives.length; i++) {
-            final double[] aRel = relatives[i];
-            final double[] bRel = relatives[(i+1) % relatives.length];
+        for (int i=0; i < hexagonMapping.verticesRelative.length; i++) {
+            final double[] aRel = hexagonMapping.verticesRelative[i];
+            final double[] bRel = hexagonMapping.verticesRelative[(i+1) % hexagonMapping.verticesRelative.length];
 
             line((float)(x + aRel[0]), (float)(y + aRel[1]), (float)(x + bRel[0]), (float)(y + bRel[1]));
         }
@@ -234,15 +272,5 @@ public class Crossing extends PApplet {
     }
 
 
-    final double[][] relatives = new double[][]{
-        {hexagonMapping.width * -0.5, hexagonMapping.height * -0.25},
-        {hexagonMapping.width * -0.5, hexagonMapping.height * 0.25},
 
-        {0.0, hexagonMapping.height * 0.5},
-
-        {hexagonMapping.width * 0.5, hexagonMapping.height * 0.25},
-        {hexagonMapping.width * 0.5, hexagonMapping.height * -0.25},
-
-        {0.0, hexagonMapping.height * -0.5},
-    };
 }

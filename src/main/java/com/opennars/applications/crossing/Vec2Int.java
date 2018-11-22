@@ -34,7 +34,7 @@ public class Vec2Int {
 
     @Override
     public int hashCode() {
-        return x * 5000 + y;
+        return x + y * 13;
     }
 
     @Override

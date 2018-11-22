@@ -93,7 +93,7 @@ public class Entity {
         applet.text(String.valueOf(id), (float)posX, (float)posY);
 
         // used for debugging the "real position"
-        applet.rect((float)posX, (float)posY, 3, 3);
+        applet.rect((float)posX-1.5f, (float)posY-1.5f, 3, 3);
 
 
         if(truth != null) {
