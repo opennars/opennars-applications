@@ -26,6 +26,7 @@ package com.opennars.applications.pong;
 import com.opennars.applications.componentbased.Entity;
 import com.opennars.applications.crossing.Viewport;
 import com.opennars.applications.pong.components.BallRenderComponent;
+import com.opennars.applications.pong.components.MappedPositionInformer;
 import com.opennars.sgui.NarSimpleGUI;
 import org.opennars.interfaces.pub.Reasoner;
 import org.opennars.io.events.Events;
@@ -85,6 +86,7 @@ public class Pong extends PApplet {
 
         Entity ballEntity = new Entity(entityID++, posX, posY, velocity, angle, "ball");
         ballEntity.renderable = new BallRenderComponent();
+        ballEntity.components.add(new MappedPositionInformer());
 
         entities.add(ballEntity);
     }
