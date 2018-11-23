@@ -91,6 +91,15 @@ public class Pong extends PApplet {
 
     void tick() {
         informReasoner.informAboutEntities(entities);
+
+        if (t % perception_update == 0) {
+            final boolean force = false; // not required HACK
+            final boolean hasInput = informReasoner.Input(reasoner, force);
+
+            if(hasInput) {
+                reasoner.addInput(questions);
+            }
+        }
     }
 
     @Override
@@ -101,19 +110,6 @@ public class Pong extends PApplet {
         background(64,128,64);
         fill(0);
 
-        if (t % perception_update == 0) {
-            boolean hadInput = false;
-
-            /* TODO< refactor >
-            for(Camera c : cameras) {
-                final boolean force = false; // not required HACK
-                hadInput = hadInput || c.see(nar, entities, trafficLights, force);
-            }
-             */
-            if(hadInput) {
-                reasoner.addInput(questions);
-            }
-        }
 
         for (Entity e : entities) {
             e.render(this);
