@@ -2,9 +2,14 @@ package com.opennars.applications.componentbased;
 
 import processing.core.PApplet;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class Entity {
     public BehaviourComponent behaviour;
     public RenderableComponent renderable;
+
+    public List<Component> components = new ArrayList<>();
 
     public double posX, posY;
     public double velocity;
