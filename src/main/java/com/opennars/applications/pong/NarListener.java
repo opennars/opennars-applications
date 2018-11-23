@@ -73,22 +73,26 @@ public class NarListener implements EventEmitter.EventObserver {
                     String position = prod.term[1].toString();
                     if(position.contains("_")) {
                         try {
+                            final String id = type.toString().substring(car.toString().length(), type.toString().length());
+
                             final int unmappedX = Integer.valueOf(position.split("_")[0];
                             final int unmappedY = Integer.valueOf(position.split("_")[0];
 
                             int posX = unmappedX;
                             int posY = unmappedY;
+
+
+
                             //int id = 0; //Integer.valueOf(idStr.toString()); often a dep var
                             Entity pred;
                             if(type.toString().startsWith(car.toString())) {
-                                String id = type.toString().substring(car.toString().length(), type.toString().length());
+
                                 pred = new Car(Integer.valueOf(id), posX, posY, 0, 0);
                                 pred.isPredicted = true;
                                 prediction = new Prediction(pred, t.sentence.truth, t.sentence.getOccurenceTime(), "car");
                             }
                             else
                             if(type.toString().startsWith(pedestrian.toString())) {
-                                String id = type.toString().substring(pedestrian.toString().length(), type.toString().length());
                                 pred = new Pedestrian(Integer.valueOf(id), posX, posY, 0, 0);
                                 pred.isPredicted = true;
                                 prediction = new Prediction(pred, t.sentence.truth, t.sentence.getOccurenceTime(), "pedestrian");
