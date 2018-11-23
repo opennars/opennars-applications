@@ -3,8 +3,8 @@ package com.opennars.applications.componentbased;
 import processing.core.PApplet;
 
 public class Entity {
-    public Behaviour behaviour;
-    public Renderable renderable;
+    public BehaviourComponent behaviour;
+    public RenderableComponent renderable;
 
     public double posX, posY;
     public double velocity;
@@ -24,7 +24,7 @@ public class Entity {
     public Entity() {
     }
 
-    public Entity(final int id, final double posX, final double posY, final double velocity, final double angle, final String tag, final Behaviour behaviour) {
+    public Entity(final int id, final double posX, final double posY, final double velocity, final double angle, final String tag, final BehaviourComponent behaviour) {
         this.id = id;
         this.tag = tag;
 

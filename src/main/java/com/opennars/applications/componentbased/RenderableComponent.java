@@ -2,6 +2,6 @@ package com.opennars.applications.componentbased;
 
 import processing.core.PApplet;
 
-public interface Renderable {
+public interface RenderableComponent {
     void render(final PApplet applet);
 }
