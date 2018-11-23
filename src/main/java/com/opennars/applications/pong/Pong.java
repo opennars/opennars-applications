@@ -92,8 +92,8 @@ public class Pong extends PApplet {
         final double angle = 0.0;
 
         Entity ballEntity = new Entity(entityID++, posX, posY, velocity, angle, "ball");
-        ballEntity.velocityX = 100.0;
-        ballEntity.velocityY = 0; //23.7;
+        ballEntity.velocityX = 110.0;
+        ballEntity.velocityY = 23.0; //23.7;
 
         ballEntity.renderable = new BallRenderComponent();
         ballEntity.behaviour = new BallBehaviour();
@@ -138,7 +138,7 @@ public class Pong extends PApplet {
         tick();
 
         viewport.Transform();
-        background(64,128,64);
+        background(255);
         fill(0);
 
 

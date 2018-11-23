@@ -36,12 +36,15 @@ public class GridMapper {
     }
 
     public Vec2Int mapStringToPosition(final String encoding) {
-        int posX = Integer.valueOf(encoding.split("_")[0]);
-        int posY = Integer.valueOf(encoding.split("_")[1]);
+        double posX = Integer.valueOf(encoding.split("_")[0]);
+        double posY = Integer.valueOf(encoding.split("_")[1]);
+
+        posX += 0.5;
+        posY += 0.5;
 
         posX *= cellsize;
         posY *= cellsize;
 
-        return new Vec2Int(posX, posY);
+        return new Vec2Int((int)posX, (int)posY);
     }
 }

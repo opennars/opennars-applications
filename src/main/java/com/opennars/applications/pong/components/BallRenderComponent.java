@@ -39,7 +39,7 @@ public class BallRenderComponent implements RenderableComponent {
         applet.translate((float)entity.posX, (float)entity.posY);
         applet.rotate((float)entity.directionAngle);
 
-        applet.fill(255, 0, 255, (float) translucency *255.0f);
+        applet.fill(255, 0, 0, (float) translucency *255.0f);
         applet.stroke(0, 0,0, (float) translucency *255.0f);
         applet.ellipse(0, 0, (float)size, (float)size);
 
