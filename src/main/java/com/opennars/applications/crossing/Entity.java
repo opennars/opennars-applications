@@ -81,13 +81,21 @@ public class Entity {
         //float posYDiscrete = (((int) this.posY)/Util.discretization * Util.discretization);
         applet.translate((float) posX, (float) posY);
         applet.rotate((float) angle);
+
         if(truth == null) {
-            applet.rect(0, 0, Util.discretization*scale, Util.discretization/2*scale);
+            final float width = Util.discretization/2*scale;
+            applet.rect(0.0f*Util.discretization*scale, -0.5f*width, Util.discretization*scale, width);
         }
-        applet.ellipse(2.5f, 2.5f, Util.discretization*scale, Util.discretization*scale);
+        applet.ellipse(0, 0, Util.discretization*scale, Util.discretization*scale);
+
         applet.popMatrix();
         applet.fill(0);
         applet.text(String.valueOf(id), (float)posX, (float)posY);
+
+        // used for debugging the "real position"
+        applet.rect((float)posX-1.5f, (float)posY-1.5f, 3, 3);
+
+
         if(truth != null) {
             return;
         }
