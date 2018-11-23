@@ -70,13 +70,13 @@ public class Pong extends PApplet {
         }
 
         for (Entity e : entities) {
-            e.draw(this, streets, trafficLights, entities, null, 0);
+            e.render(this);
         }
 
         // tick
-        for (Entity ie : entities) {
-            ie.tick();
-        }
+        //for (Entity ie : entities) {
+        //    ie.tick();
+        //}
 
 
         t++;
@@ -85,7 +85,7 @@ public class Pong extends PApplet {
         removeOutdatedPredictions(disappointments);
         for (Prediction pred : predictions) {
             Entity e = pred.ent;
-            e.draw(this, streets, trafficLights, entities, pred.truth, pred.time - reasoner.time());
+            e.render(this);
         }
         if(showAnomalies) {
             for (NarListener.Prediction pred : disappointments) {
