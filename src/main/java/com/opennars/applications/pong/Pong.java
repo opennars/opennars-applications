@@ -73,6 +73,7 @@ public class Pong extends PApplet {
             e.render(this);
         }
 
+        // REFACTOR< TODO< use tick of entity >
         // tick
         //for (Entity ie : entities) {
         //    ie.tick();
@@ -88,6 +89,8 @@ public class Pong extends PApplet {
             e.render(this);
         }
         if(showAnomalies) {
+            // REFACTOR< TODO< render >
+            /*
             for (NarListener.Prediction pred : disappointments) {
                 Entity e = pred.ent;
                 if(e instanceof Car) {
@@ -99,6 +102,7 @@ public class Pong extends PApplet {
                 this.text("ANOMALY", (float)e.posX, (float)e.posY);
                 e.draw(this, streets, trafficLights, entities, pred.truth, pred.time - ((Reasoner)reasoner).time());
             }
+             */
         }
 
         System.out.println("Concepts: " + ((Nar)reasoner).memory.concepts.size());
