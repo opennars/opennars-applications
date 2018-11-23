@@ -1,7 +1,9 @@
 package com.opennars.applications.pong;
 
-import com.opennars.applications.crossing.*;
+import com.opennars.applications.componentbased.Entity;
+import com.opennars.applications.crossing.Viewport;
 import com.opennars.sgui.NarSimpleGUI;
+import org.opennars.interfaces.pub.Reasoner;
 import org.opennars.io.events.Events;
 import org.opennars.io.events.OutputHandler;
 import org.opennars.main.Nar;
@@ -12,90 +14,63 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class Pong extends PApplet {
-    Nar nar;
+    Reasoner reasoner;
     int entityID = 1;
 
-    List<NarListener.Prediction> predictions = new ArrayList<NarListener.Prediction>();
-    List<NarListener.Prediction> disappointments = new ArrayList<NarListener.Prediction>();
+    List<Prediction> predictions = new ArrayList<>();
+    List<Prediction> disappointments = new ArrayList<>();
 
-    final int fps = 50;
-    @Override
-    public void setup() {
-        try {
-            nar = new Nar();
-            nar.narParameters.VOLUME = 0;
-            nar.narParameters.DURATION*=10;
-            NarListener listener = new NarListener(cameras.get(0), nar, predictions, disappointments, entities);
-            nar.on(Events.TaskAdd.class, listener);
-            nar.on(OutputHandler.DISAPPOINT.class, listener);
-        } catch (Exception ex) {
-            System.out.println(ex);
-            System.exit(1);
-        }
-        int trafficLightRadius = 25;
-        streets.add(new Street(false, 0, 500, 1000, 500 + streetWidth));
-        streets.add(new Street(true, 500, 0, 500 + streetWidth, 1000));
-        int trafficLightID = 1;
-        trafficLights.add(new TrafficLight(trafficLightID++, trafficLightRadius, 500 + streetWidth + trafficLightRadius, 500 + streetWidth/2, 0));
-        trafficLights.add(new TrafficLight(trafficLightID++, trafficLightRadius, 500 - trafficLightRadius, 500 + streetWidth/2, 0));
-        trafficLights.add(new TrafficLight(trafficLightID++, trafficLightRadius/2, 500 + streetWidth, 500 + streetWidth + trafficLightRadius, 1));
-        trafficLights.add(new TrafficLight(trafficLightID++, trafficLightRadius/2, 500, 500 - trafficLightRadius, 1));
-        int cars = 4; //cars and pedestrians
-        for (float i = 0; i < cars/2; i += 1.05) {
-            entities.add(new Car(entityID++, 500 + streetWidth - Util.discretization+1, 900 - i * 100, 0.3, -PI / 2));
-            entities.add(new Car(entityID++, 500 + Util.discretization, 900 - i * 100, 0.3, PI / 2));
-        }
-        int pedestrians = 4;//4;
-        for (float i = 0; i < pedestrians/2; i += 1.05) {
-            entities.add(new Pedestrian(entityID++, 900 - i * 100, 500 + streetWidth - Util.discretization, 0.3, 0));
-            entities.add(new Pedestrian(entityID++, 900 - i * 100, 500 + Util.discretization, 0.3, -PI));
-        }
-        /*for (TrafficLight l : trafficLights) { //it can't move anyway, so why would the coordinates matter to NARS?
-            String pos = Util.positionToTerm(l.posX, l.posY);
-            String narsese = "<(*,{" + l.id + "}," + pos + ") --> at>.";
-            reasoner.addInput(narsese);
-        }*/
 
-        size(1000, 1000);
-        frameRate(fps);
-        new NarSimpleGUI(nar);
-    }
-
-    List<Entity> entities = new ArrayList<Entity>();
+    List<Entity> entities = new ArrayList<>();
     int t = 0;
     public static boolean showAnomalies = false;
 
     String questions = "<trafficLight --> [?whatColor]>? :|:";
     int perception_update = 1;
+
+
+    final int fps = 50;
+    @Override
+    public void setup() {
+        try {
+            reasoner = new Nar();
+            ((Nar)reasoner).narParameters.VOLUME = 0;
+            ((Nar)reasoner).narParameters.DURATION*=10;
+            NarListener listener = new NarListener(reasoner, predictions, disappointments, entities);
+            reasoner.on(Events.TaskAdd.class, listener);
+            reasoner.on(OutputHandler.DISAPPOINT.class, listener);
+        } catch (Exception ex) {
+            System.out.println(ex);
+            System.exit(1);
+        }
+
+        size(1000, 1000);
+        frameRate(fps);
+        new NarSimpleGUI((Nar)reasoner);
+    }
+
     @Override
     public void draw() {
         viewport.Transform();
         background(64,128,64);
         fill(0);
-        for (Street s : streets) {
-            s.draw(this);
-        }
+
         if (t % perception_update == 0) {
             boolean hadInput = false;
+
+            /* TODO< refactor >
             for(Camera c : cameras) {
                 final boolean force = false; // not required HACK
                 hadInput = hadInput || c.see(nar, entities, trafficLights, force);
             }
+             */
             if(hadInput) {
-                nar.addInput(questions);
+                reasoner.addInput(questions);
             }
-        }
-        for (int i = 0; i < 1000; i += Util.discretization) {
-            stroke(128);
-            line(0, i, 1000, i);
-            line(i, 0, i, 1000);
         }
 
         for (Entity e : entities) {
             e.draw(this, streets, trafficLights, entities, null, 0);
-        }
-        for (TrafficLight tl : trafficLights) {
-            tl.draw(this, t);
         }
 
         // tick
@@ -105,12 +80,12 @@ public class Pong extends PApplet {
 
 
         t++;
-        nar.cycles(10);
+        reasoner.cycles(10);
         removeOutdatedPredictions(predictions);
         removeOutdatedPredictions(disappointments);
-        for (NarListener.Prediction pred : predictions) {
+        for (Prediction pred : predictions) {
             Entity e = pred.ent;
-            e.draw(this, streets, trafficLights, entities, pred.truth, pred.time - nar.time());
+            e.draw(this, streets, trafficLights, entities, pred.truth, pred.time - reasoner.time());
         }
         if(showAnomalies) {
             for (NarListener.Prediction pred : disappointments) {
@@ -122,19 +97,17 @@ public class Pong extends PApplet {
                     fill(0,0,255);
                 }
                 this.text("ANOMALY", (float)e.posX, (float)e.posY);
-                e.draw(this, streets, trafficLights, entities, pred.truth, pred.time - nar.time());
+                e.draw(this, streets, trafficLights, entities, pred.truth, pred.time - ((Reasoner)reasoner).time());
             }
         }
-        for(Camera c : cameras) {
-            c.draw(this);
-        }
-        System.out.println("Concepts: " + nar.memory.concepts.size());
+
+        System.out.println("Concepts: " + ((Nar)reasoner).memory.concepts.size());
     }
 
-    public void removeOutdatedPredictions(List<NarListener.Prediction> predictions) {
-        List<NarListener.Prediction> toDelete = new ArrayList<NarListener.Prediction>();
-        for(NarListener.Prediction pred : predictions) {
-            if(pred.time <= nar.time()) {
+    public void removeOutdatedPredictions(List<Prediction> predictions) {
+        List<Prediction> toDelete = new ArrayList<>();
+        for(Prediction pred : predictions) {
+            if(pred.time <= reasoner.time()) {
                 toDelete.add(pred);
             }
         }
@@ -182,9 +155,8 @@ public class Pong extends PApplet {
         }
         //</editor-fold>
         //</editor-fold>
-        String[] args2 = {"Crossing"};
-        Crossing mp = new Crossing();
-        new IncidentSimulator().show();
+        String[] args2 = {"Pong"};
+        Pong mp = new Pong();
         PApplet.runSketch(args2, mp);
     }
 }

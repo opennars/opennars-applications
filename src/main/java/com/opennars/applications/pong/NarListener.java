@@ -14,23 +14,24 @@ import org.opennars.io.events.OutputHandler;
 import org.opennars.language.Inheritance;
 import org.opennars.language.Product;
 import org.opennars.language.Term;
+import org.opennars.main.Nar;
 
 import java.util.List;
 
 public class NarListener implements EventEmitter.EventObserver {
 
-
     List<Entity> entities;
 
-    List<com.opennars.applications.crossing.NarListener.Prediction> predictions;
-    List<com.opennars.applications.crossing.NarListener.Prediction> disappointments;
+    List<Prediction> predictions;
+    List<Prediction> disappointments;
     Reasoner reasoner;
-    public NarListener(Reasoner reasoner, List<com.opennars.applications.crossing.NarListener.Prediction> predictions, List<com.opennars.applications.crossing.NarListener.Prediction> disappointments, List<Entity> entities) {
+    public NarListener(Reasoner reasoner, List<Prediction> predictions, List<Prediction> disappointments, List<Entity> entities) {
         this.predictions = predictions;
         this.disappointments = disappointments;
         this.reasoner = reasoner;
         this.entities = entities;
     }
+
     Term pedestrian = Term.get("pedestrian");
     Term car = Term.get("car");
     Term at = Term.get("at");
@@ -38,9 +39,9 @@ public class NarListener implements EventEmitter.EventObserver {
     public void event(Class event, Object[] args) {
         if(event == OutputHandler.DISAPPOINT.class) {
             Term term = (Term) args[0];
-            Sentence s = new Sentence(term, Symbols.JUDGMENT_MARK, new TruthValue(0.0f,0.9f, reasoner.narParameters), new Stamp(reasoner, reasoner.memory));
+            Sentence s = new Sentence(term, Symbols.JUDGMENT_MARK, new TruthValue(0.0f,0.9f, ((Nar)reasoner).narParameters), new Stamp(reasoner, ((Nar)reasoner).memory));
             Task t = new Task(s, null, Task.EnumType.DERIVED);
-            com.opennars.applications.crossing.NarListener.Prediction result = predictionFromTask(t);
+            Prediction result = predictionFromTask(t);
             if(result != null) {
                 int showFor = 100; //how long the disappointment should be displayed in the GUI
                 result.time = reasoner.time() + showFor;
@@ -49,8 +50,8 @@ public class NarListener implements EventEmitter.EventObserver {
         }
         if (event == Events.TaskAdd.class) {
             Task t = (Task) args[0];
-            if (/*t.sentence.getOccurenceTime() > reasoner.time() && */t.sentence.isJudgment() && t.sentence.getTruth().getExpectation() >= reasoner.narParameters.DEFAULT_CONFIRMATION_EXPECTATION) {
-                com.opennars.applications.crossing.NarListener.Prediction result = predictionFromTask(t);
+            if (/*t.sentence.getOccurenceTime() > reasoner.time() && */t.sentence.isJudgment() && t.sentence.getTruth().getExpectation() >= ((Nar)reasoner).narParameters.DEFAULT_CONFIRMATION_EXPECTATION) {
+                Prediction result = predictionFromTask(t);
                 if(result != null) {
                     predictions.add(result);
 
@@ -60,8 +61,8 @@ public class NarListener implements EventEmitter.EventObserver {
         }
     }
 
-    public com.opennars.applications.crossing.NarListener.Prediction predictionFromTask(Task t) {
-        com.opennars.applications.crossing.NarListener.Prediction prediction = null;
+    public Prediction predictionFromTask(Task t) {
+        Prediction prediction = null;
         //format: "<(*,car,50_82) --> at>. %0.45;0.26%";
         if(t.sentence.term instanceof Inheritance) {
             Inheritance positionInh = (Inheritance) t.sentence.term;
@@ -80,14 +81,14 @@ public class NarListener implements EventEmitter.EventObserver {
                                 String id = type.toString().substring(car.toString().length(), type.toString().length());
                                 pred = new Car(Integer.valueOf(id), posX, posY, 0, 0);
                                 pred.isPredicted = true;
-                                prediction = new com.opennars.applications.crossing.NarListener.Prediction(pred, t.sentence.truth, t.sentence.getOccurenceTime(), "car");
+                                prediction = new Prediction(pred, t.sentence.truth, t.sentence.getOccurenceTime(), "car");
                             }
                             else
                             if(type.toString().startsWith(pedestrian.toString())) {
                                 String id = type.toString().substring(pedestrian.toString().length(), type.toString().length());
                                 pred = new Pedestrian(Integer.valueOf(id), posX, posY, 0, 0);
                                 pred.isPredicted = true;
-                                prediction = new com.opennars.applications.crossing.NarListener.Prediction(pred, t.sentence.truth, t.sentence.getOccurenceTime(), "pedestrian");
+                                prediction = new Prediction(pred, t.sentence.truth, t.sentence.getOccurenceTime(), "pedestrian");
                             }
                         } catch(Exception ex) {} //wrong format, it's not such a type of prediction but something else
                     }
@@ -97,7 +98,7 @@ public class NarListener implements EventEmitter.EventObserver {
         return prediction;
     }
 
-    public void broadcastPrediction(com.opennars.applications.crossing.NarListener.Prediction prediction) {
+    public void broadcastPrediction(Prediction prediction) {
         for (final Entity iEntity: entities) {
             if (prediction.ent.id != iEntity.id) {
                 continue;

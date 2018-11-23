@@ -1,6 +1,6 @@
 package com.opennars.applications.pong;
 
-import com.opennars.applications.crossing.Entity;
+import com.opennars.applications.componentbased.Entity;
 import org.opennars.entity.TruthValue;
 
 public class Prediction {
