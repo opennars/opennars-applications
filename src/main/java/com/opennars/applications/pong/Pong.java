@@ -24,6 +24,7 @@
 package com.opennars.applications.pong;
 
 import com.opennars.applications.componentbased.Entity;
+import com.opennars.applications.crossing.Util;
 import com.opennars.applications.crossing.Viewport;
 import com.opennars.applications.pong.components.BallBehaviour;
 import com.opennars.applications.pong.components.BallRenderComponent;
@@ -147,6 +148,14 @@ public class Pong extends PApplet {
 
         for (Prediction pred : predictions) {
             Entity e = pred.ent;
+
+            float transparency = Util.truthToValue(pred.truth) * Util.timeToValue(pred.time - reasoner.time());
+
+            // HACK< we need to cast to some class with translucency >
+
+            BallRenderComponent ballRender = (BallRenderComponent)e.renderable;
+            ballRender.translucency = transparency;
+
             e.render(this);
         }
         if(showAnomalies) {

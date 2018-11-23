@@ -111,7 +111,8 @@ public class ReasonerListener implements EventEmitter.EventObserver {
                             Entity predictedEntity = new Entity(Integer.valueOf(id), mappedPosition.x, mappedPosition.y, 0, 0, tag);
                             predictedEntity.isPredicted = true;
 
-                            predictedEntity.renderable = new BallRenderComponent();
+                            BallRenderComponent ballRenderComponent = new BallRenderComponent();
+                            predictedEntity.renderable = ballRenderComponent;
 
                             prediction = new Prediction(predictedEntity, t.sentence.truth, t.sentence.getOccurenceTime(), tag);
                         } catch(Exception ex) {} //wrong format, it's not such a type of prediction but something else

@@ -28,6 +28,8 @@ import com.opennars.applications.componentbased.RenderableComponent;
 import processing.core.PApplet;
 
 public class BallRenderComponent implements RenderableComponent {
+    public double translucency = 1.0;
+
     @Override
     public void render(final Entity entity, PApplet applet) {
         final double size = 5;
@@ -36,13 +38,7 @@ public class BallRenderComponent implements RenderableComponent {
         applet.translate((float)entity.posX, (float)entity.posY);
         applet.rotate((float)entity.directionAngle);
 
-        /* TODO< we need to render based on truth somehow
-        if(truth == null) {
-            final float width = Util.discretization/2*scale;
-            applet.rect(0.0f*Util.discretization*scale, -0.5f*width, Util.discretization*scale, width);
-        }
-        */
-        applet.fill(255);
+        applet.fill(255, 0, 255, (float) translucency *255.0f);
         applet.ellipse(0, 0, (float)size, (float)size);
 
         applet.popMatrix();
