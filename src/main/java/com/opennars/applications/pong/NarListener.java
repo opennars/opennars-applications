@@ -81,6 +81,8 @@ public class NarListener implements EventEmitter.EventObserver {
                             int posX = unmappedX;
                             int posY = unmappedY;
 
+                            // REFACTOR TODO< create predictions from raw entities without rendering or behaviour >
+                            /*
                             Entity pred;
                             if(type.toString().startsWith(car.toString())) {
 
@@ -94,6 +96,7 @@ public class NarListener implements EventEmitter.EventObserver {
                                 pred.isPredicted = true;
                                 prediction = new Prediction(pred, t.sentence.truth, t.sentence.getOccurenceTime(), "pedestrian");
                             }
+                            */
                         } catch(Exception ex) {} //wrong format, it's not such a type of prediction but something else
                     }
                 }
