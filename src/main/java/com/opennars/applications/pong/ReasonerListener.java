@@ -26,6 +26,7 @@ package com.opennars.applications.pong;
 import com.opennars.applications.common.Vec2Int;
 import com.opennars.applications.componentbased.Entity;
 import com.opennars.applications.crossing.Util;
+import com.opennars.applications.pong.components.BallRenderComponent;
 import org.opennars.entity.Sentence;
 import org.opennars.entity.Stamp;
 import org.opennars.entity.Task;
@@ -99,28 +100,20 @@ public class ReasonerListener implements EventEmitter.EventObserver {
                     String position = prod.term[1].toString();
                     if(position.contains("_")) {
                         try {
-                            final String id = type.toString().substring(car.toString().length(), type.toString().length());
+                            final String tag = "ball"; // HACK
+
+                            String id = type.toString().substring(car.toString().length(), type.toString().length());
+                            id = "0"; // HACK
 
                             final Vec2Int mappedPosition = mapper.mapStringToPosition(position);
 
-                            int here = 5;
+                            // add prediction
+                            Entity predictedEntity = new Entity(Integer.valueOf(id), mappedPosition.x, mappedPosition.y, 0, 0, tag);
+                            predictedEntity.isPredicted = true;
 
-                            // REFACTOR TODO< create predictions from raw entities without rendering or behaviour >
-                            /*
-                            Entity pred;
-                            if(type.toString().startsWith(car.toString())) {
+                            predictedEntity.renderable = new BallRenderComponent();
 
-                                pred = new Car(Integer.valueOf(id), posX, posY, 0, 0);
-                                pred.isPredicted = true;
-                                prediction = new Prediction(pred, t.sentence.truth, t.sentence.getOccurenceTime(), "car");
-                            }
-                            else
-                            if(type.toString().startsWith(pedestrian.toString())) {
-                                pred = new Pedestrian(Integer.valueOf(id), posX, posY, 0, 0);
-                                pred.isPredicted = true;
-                                prediction = new Prediction(pred, t.sentence.truth, t.sentence.getOccurenceTime(), "pedestrian");
-                            }
-                            */
+                            prediction = new Prediction(predictedEntity, t.sentence.truth, t.sentence.getOccurenceTime(), tag);
                         } catch(Exception ex) {} //wrong format, it's not such a type of prediction but something else
                     }
                 }
