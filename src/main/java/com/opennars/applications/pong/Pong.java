@@ -86,14 +86,14 @@ public class Pong extends PApplet {
     }
 
     void setupScene() {
-        final double posX = 0.0;
-        final double posY = 0.0;
+        final double posX = 1.0;
+        final double posY = 1.0;
         final double velocity = 0.0;
         final double angle = 0.0;
 
         Entity ballEntity = new Entity(entityID++, posX, posY, velocity, angle, "ball");
-        ballEntity.velocityX = 8.0;
-        ballEntity.velocityY = 5.7;
+        ballEntity.velocityX = 100.0;
+        ballEntity.velocityY = 0; //23.7;
 
         ballEntity.renderable = new BallRenderComponent();
         ballEntity.behaviour = new BallBehaviour();
@@ -114,7 +114,7 @@ public class Pong extends PApplet {
 
 
         t++;
-        reasoner.cycles(10);
+        reasoner.cycles(50);
         removeOutdatedPredictions(predictions);
         removeOutdatedPredictions(disappointments);
 
@@ -126,7 +126,7 @@ public class Pong extends PApplet {
             final boolean hasInput = informReasoner.Input(reasoner, force);
 
             if(hasInput) {
-                reasoner.addInput(questions);
+                //reasoner.addInput(questions);
             }
         }
 

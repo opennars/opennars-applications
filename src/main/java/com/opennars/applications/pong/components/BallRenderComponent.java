@@ -29,6 +29,7 @@ import processing.core.PApplet;
 
 public class BallRenderComponent implements RenderableComponent {
     public double translucency = 1.0;
+    public boolean showId = false;
 
     @Override
     public void render(final Entity entity, PApplet applet) {
@@ -44,9 +45,13 @@ public class BallRenderComponent implements RenderableComponent {
 
         applet.popMatrix();
         applet.fill(0);
-        applet.text(String.valueOf(entity.id), (float)entity.posX, (float)entity.posY);
+
+        if (showId) {
+            applet.text(String.valueOf(entity.id), (float)entity.posX, (float)entity.posY);
+        }
 
         // used for debugging the "real position"
-        applet.rect((float)entity.posX, (float)entity.posY, 3, 3);
+        //COMMENTED BECAUSE NO DEBUG
+        //applet.rect((float)entity.posX, (float)entity.posY, 3, 3);
     }
 }
