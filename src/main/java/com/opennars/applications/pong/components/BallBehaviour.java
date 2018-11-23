@@ -11,5 +11,13 @@ public class BallBehaviour implements BehaviourComponent {
 
         entity.posX += (entity.velocityX * dt);
         entity.posY += (entity.velocityY * dt);
+
+
+        if(entity.posX > 50.0) {
+            // reset to origin
+
+            entity.posX = 0.0;
+            entity.posY = 0.0;
+        }
     }
 }
