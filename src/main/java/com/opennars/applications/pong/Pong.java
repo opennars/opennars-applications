@@ -52,6 +52,8 @@ public class Pong extends PApplet {
     String questions = "<trafficLight --> [?whatColor]>? :|:";
     int perception_update = 1;
 
+    InformReasoner informReasoner = new InformReasoner();
+
 
     final int fps = 50;
     @Override
@@ -87,8 +89,14 @@ public class Pong extends PApplet {
         entities.add(ballEntity);
     }
 
+    void tick() {
+        informReasoner.informAboutEntities(entities);
+    }
+
     @Override
     public void draw() {
+        tick();
+
         viewport.Transform();
         background(64,128,64);
         fill(0);
