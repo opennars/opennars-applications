@@ -56,15 +56,20 @@ public class Pong extends PApplet {
 
     InformReasoner informReasoner = new InformReasoner();
 
+    GridMapper mapper = new GridMapper();
+
+
 
     final int fps = 50;
     @Override
     public void setup() {
+        mapper.cellsize = 10;
+
         try {
             reasoner = new Nar();
             ((Nar)reasoner).narParameters.VOLUME = 0;
             ((Nar)reasoner).narParameters.DURATION*=10;
-            ReasonerListener listener = new ReasonerListener(reasoner, predictions, disappointments, entities);
+            ReasonerListener listener = new ReasonerListener(reasoner, predictions, disappointments, entities, mapper);
             reasoner.on(Events.TaskAdd.class, listener);
             reasoner.on(OutputHandler.DISAPPOINT.class, listener);
         } catch (Exception ex) {
@@ -91,7 +96,7 @@ public class Pong extends PApplet {
 
         ballEntity.renderable = new BallRenderComponent();
         ballEntity.behaviour = new BallBehaviour();
-        ballEntity.components.add(new MappedPositionInformer());
+        ballEntity.components.add(new MappedPositionInformer(mapper));
 
         entities.add(ballEntity);
     }

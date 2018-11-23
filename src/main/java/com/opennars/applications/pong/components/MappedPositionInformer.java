@@ -28,7 +28,11 @@ import com.opennars.applications.componentbased.InformReasonerComponent;
 import com.opennars.applications.pong.GridMapper;
 
 public class MappedPositionInformer implements InformReasonerComponent {
-    public GridMapper mapper = new GridMapper();
+    public GridMapper mapper;
+
+    public MappedPositionInformer(final GridMapper mapper) {
+        this.mapper = mapper;
+    }
 
     @Override
     public String informAboutEntity(Entity entity) {

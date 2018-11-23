@@ -23,6 +23,7 @@
  */
 package com.opennars.applications.pong;
 
+import com.opennars.applications.common.Vec2Int;
 import com.opennars.applications.componentbased.Entity;
 import com.opennars.applications.crossing.Util;
 import org.opennars.entity.Sentence;
@@ -43,16 +44,18 @@ import java.util.List;
 
 public class ReasonerListener implements EventEmitter.EventObserver {
 
+    public GridMapper mapper;
     List<Entity> entities;
 
     List<Prediction> predictions;
     List<Prediction> disappointments;
     Reasoner reasoner;
-    public ReasonerListener(Reasoner reasoner, List<Prediction> predictions, List<Prediction> disappointments, List<Entity> entities) {
+    public ReasonerListener(Reasoner reasoner, List<Prediction> predictions, List<Prediction> disappointments, List<Entity> entities, GridMapper mapper) {
         this.predictions = predictions;
         this.disappointments = disappointments;
         this.reasoner = reasoner;
         this.entities = entities;
+        this.mapper = mapper;
     }
 
     Term pedestrian = Term.get("pedestrian");
@@ -98,11 +101,9 @@ public class ReasonerListener implements EventEmitter.EventObserver {
                         try {
                             final String id = type.toString().substring(car.toString().length(), type.toString().length());
 
-                            final int unmappedX = Integer.valueOf(position.split("_")[0]);
-                            final int unmappedY = Integer.valueOf(position.split("_")[0]);
+                            final Vec2Int mappedPosition = mapper.mapStringToPosition(position);
 
-                            int posX = unmappedX;
-                            int posY = unmappedY;
+                            int here = 5;
 
                             // REFACTOR TODO< create predictions from raw entities without rendering or behaviour >
                             /*

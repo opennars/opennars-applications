@@ -23,6 +23,7 @@
  */
 package com.opennars.applications.pong;
 
+import com.opennars.applications.common.Vec2Int;
 import com.opennars.applications.componentbased.Entity;
 
 public class GridMapper {
@@ -32,5 +33,15 @@ public class GridMapper {
         int posX = (int)(entity.posX / cellsize);
         int posY = (int)(entity.posY / cellsize);
         return posX + "_" + posY;
+    }
+
+    public Vec2Int mapStringToPosition(final String encoding) {
+        int posX = Integer.valueOf(encoding.split("_")[0]);
+        int posY = Integer.valueOf(encoding.split("_")[1]);
+
+        posX *= cellsize;
+        posY *= cellsize;
+
+        return new Vec2Int(posX, posY);
     }
 }
