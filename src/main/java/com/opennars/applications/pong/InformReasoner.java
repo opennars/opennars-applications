@@ -18,6 +18,9 @@ public class InformReasoner {
         if(!useMultipleIDs) {
             id = "0";
         }
+
+        // TODO< we need to invoke the mapper here >
+
         String pos = Util.positionToTerm((int) entity.posX-minX, (int) entity.posY-minY);
         if (entity instanceof Car) {
             inputs.add("<(*,car" + id + ","+ pos + ") --> at>. :|:");
