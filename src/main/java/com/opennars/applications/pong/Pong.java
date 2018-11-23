@@ -37,7 +37,7 @@ public class Pong extends PApplet {
             reasoner = new Nar();
             ((Nar)reasoner).narParameters.VOLUME = 0;
             ((Nar)reasoner).narParameters.DURATION*=10;
-            NarListener listener = new NarListener(reasoner, predictions, disappointments, entities);
+            ReasonerListener listener = new ReasonerListener(reasoner, predictions, disappointments, entities);
             reasoner.on(Events.TaskAdd.class, listener);
             reasoner.on(OutputHandler.DISAPPOINT.class, listener);
         } catch (Exception ex) {
@@ -106,7 +106,7 @@ public class Pong extends PApplet {
         if(showAnomalies) {
             // REFACTOR< TODO< render >
             /*
-            for (NarListener.Prediction pred : disappointments) {
+            for (ReasonerListener.Prediction pred : disappointments) {
                 Entity e = pred.ent;
                 if(e instanceof Car) {
                     fill(255,0,0);

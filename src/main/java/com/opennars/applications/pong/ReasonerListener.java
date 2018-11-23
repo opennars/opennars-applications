@@ -18,14 +18,14 @@ import org.opennars.main.Nar;
 
 import java.util.List;
 
-public class NarListener implements EventEmitter.EventObserver {
+public class ReasonerListener implements EventEmitter.EventObserver {
 
     List<Entity> entities;
 
     List<Prediction> predictions;
     List<Prediction> disappointments;
     Reasoner reasoner;
-    public NarListener(Reasoner reasoner, List<Prediction> predictions, List<Prediction> disappointments, List<Entity> entities) {
+    public ReasonerListener(Reasoner reasoner, List<Prediction> predictions, List<Prediction> disappointments, List<Entity> entities) {
         this.predictions = predictions;
         this.disappointments = disappointments;
         this.reasoner = reasoner;
