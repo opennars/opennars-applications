@@ -39,4 +39,13 @@ public class Entity {
     public void render(final PApplet applet) {
         renderable.render(this, applet);
     }
+
+    public Component retComponentByName(String name) {
+        for (final Component iComponent : components) {
+            if (iComponent.retName().equals(name)) {
+                return iComponent;
+            }
+        }
+        return null;
+    }
 }
