@@ -1,6 +1,7 @@
 package com.opennars.applications.pong;
 
 import com.opennars.applications.componentbased.Entity;
+import com.opennars.applications.pong.components.MappedPositionInformer;
 import org.opennars.interfaces.NarseseConsumer;
 
 import java.util.ArrayList;
@@ -12,22 +13,14 @@ public class InformReasoner {
     List<String> inputs = new ArrayList<>();
 
     //minX and minY define the lower end of the relative coordinate system
-    public void informAboutEntity(Entity entity) {
-        String id = String.valueOf(entity.id);
-        boolean useMultipleIDs = true;
-        if(!useMultipleIDs) {
-            id = "0";
-        }
+    public void informAboutEntities(List<Entity> entities) {
+        for (final Entity iEntity : entities) {
+            final MappedPositionInformer informer = (MappedPositionInformer)iEntity.retComponentByName("MappedPositionInformer");
+            if (informer == null) {
+                continue;
+            }
 
-        // TODO< we need to invoke the mapper here >
-
-        String pos = Util.positionToTerm((int) entity.posX-minX, (int) entity.posY-minY);
-        if (entity instanceof Car) {
-            inputs.add("<(*,car" + id + ","+ pos + ") --> at>. :|:");
-            input += inputs.get(inputs.size()-1);
-        }
-        if (entity instanceof Pedestrian) {
-            inputs.add("<(*,pedestrian" + id + "," + pos + ") --> at>. :|:");
+            inputs.add(informer.informAboutEntity(iEntity));
             input += inputs.get(inputs.size()-1);
         }
     }
