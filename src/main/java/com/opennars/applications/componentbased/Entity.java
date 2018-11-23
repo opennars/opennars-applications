@@ -1,7 +1,10 @@
 package com.opennars.applications.componentbased;
 
+import processing.core.PApplet;
+
 public class Entity {
     public Behaviour behaviour;
+    public Renderable renderable;
 
     public double posX, posY;
     public double velocity;
@@ -30,5 +33,9 @@ public class Entity {
         this.velocity = velocity;
         this.angle = angle;
         this.behaviour = behaviour;
+    }
+
+    public void render(final PApplet applet) {
+        renderable.render(applet);
     }
 }
