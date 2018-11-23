@@ -2,6 +2,7 @@ package com.opennars.applications.pong;
 
 import com.opennars.applications.componentbased.Entity;
 import com.opennars.applications.crossing.Viewport;
+import com.opennars.applications.pong.components.BallRenderComponent;
 import com.opennars.sgui.NarSimpleGUI;
 import org.opennars.interfaces.pub.Reasoner;
 import org.opennars.io.events.Events;
@@ -44,9 +45,23 @@ public class Pong extends PApplet {
             System.exit(1);
         }
 
+        setupScene();
+
         size(1000, 1000);
         frameRate(fps);
         new NarSimpleGUI((Nar)reasoner);
+    }
+
+    void setupScene() {
+        final double posX = 0.0;
+        final double posY = 0.0;
+        final double velocity = 0.0;
+        final double angle = 0.0;
+
+        Entity ballEntity = new Entity(entityID++, posX, posY, velocity, angle, "ball");
+        ballEntity.renderable = new BallRenderComponent();
+
+        entities.add(ballEntity);
     }
 
     @Override

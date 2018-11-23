@@ -21,10 +21,7 @@ public class Entity {
     //public double lastPosX = 0;
     //public double lastPosY = 0;
 
-    public Entity() {
-    }
-
-    public Entity(final int id, final double posX, final double posY, final double velocity, final double angle, final String tag, final BehaviourComponent behaviour) {
+    public Entity(final int id, final double posX, final double posY, final double velocity, final double angle, final String tag) {
         this.id = id;
         this.tag = tag;
 
@@ -32,10 +29,9 @@ public class Entity {
         this.posY = posY;
         this.velocity = velocity;
         this.angle = angle;
-        this.behaviour = behaviour;
     }
 
     public void render(final PApplet applet) {
-        renderable.render(applet);
+        renderable.render(this, applet);
     }
 }
