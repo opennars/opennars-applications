@@ -90,6 +90,20 @@ public class Pong extends PApplet {
     }
 
     void tick() {
+
+        // REFACTOR< TODO< use tick of entity >
+        // tick
+        //for (Entity ie : entities) {
+        //    ie.tick();
+        //}
+
+
+        t++;
+        reasoner.cycles(10);
+        removeOutdatedPredictions(predictions);
+        removeOutdatedPredictions(disappointments);
+
+
         informReasoner.informAboutEntities(entities);
 
         if (t % perception_update == 0) {
@@ -100,6 +114,8 @@ public class Pong extends PApplet {
                 reasoner.addInput(questions);
             }
         }
+
+        System.out.println("Concepts: " + ((Nar)reasoner).memory.concepts.size());
     }
 
     @Override
@@ -115,17 +131,6 @@ public class Pong extends PApplet {
             e.render(this);
         }
 
-        // REFACTOR< TODO< use tick of entity >
-        // tick
-        //for (Entity ie : entities) {
-        //    ie.tick();
-        //}
-
-
-        t++;
-        reasoner.cycles(10);
-        removeOutdatedPredictions(predictions);
-        removeOutdatedPredictions(disappointments);
         for (Prediction pred : predictions) {
             Entity e = pred.ent;
             e.render(this);
@@ -147,7 +152,6 @@ public class Pong extends PApplet {
              */
         }
 
-        System.out.println("Concepts: " + ((Nar)reasoner).memory.concepts.size());
     }
 
     public void removeOutdatedPredictions(List<Prediction> predictions) {
