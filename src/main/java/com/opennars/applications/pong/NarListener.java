@@ -81,9 +81,6 @@ public class NarListener implements EventEmitter.EventObserver {
                             int posX = unmappedX;
                             int posY = unmappedY;
 
-
-
-                            //int id = 0; //Integer.valueOf(idStr.toString()); often a dep var
                             Entity pred;
                             if(type.toString().startsWith(car.toString())) {
 
