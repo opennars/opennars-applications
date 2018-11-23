@@ -1,4 +1,4 @@
 package com.opennars.applications.componentbased;
 
-public class Component {
+public interface Component {
 }
