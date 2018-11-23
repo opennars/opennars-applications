@@ -86,8 +86,8 @@ public class Pong extends PApplet {
         final double angle = 0.0;
 
         Entity ballEntity = new Entity(entityID++, posX, posY, velocity, angle, "ball");
-        ballEntity.velocityX = 1.0;
-        ballEntity.velocityY = 1.7;
+        ballEntity.velocityX = 8.0;
+        ballEntity.velocityY = 5.7;
 
         ballEntity.renderable = new BallRenderComponent();
         ballEntity.behaviour = new BallBehaviour();
@@ -100,9 +100,11 @@ public class Pong extends PApplet {
 
         // REFACTOR< TODO< use tick of entity >
         // tick
-        //for (Entity ie : entities) {
-        //    ie.tick();
-        //}
+        for (Entity ie : entities) {
+            if (ie.behaviour != null) {
+                ie.behaviour.tick(ie);
+            }
+        }
 
 
         t++;
