@@ -34,7 +34,7 @@ public class BallRenderComponent implements RenderableComponent {
 
         applet.pushMatrix();
         applet.translate((float)entity.posX, (float)entity.posY);
-        applet.rotate((float)entity.angle);
+        applet.rotate((float)entity.directionAngle);
 
         /* TODO< we need to render based on truth somehow
         if(truth == null) {

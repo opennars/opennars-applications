@@ -35,8 +35,10 @@ public class Entity {
     public List<Component> components = new ArrayList<>();
 
     public double posX, posY;
-    public double velocity;
-    public double angle;
+    public double velocityX = 0, velocityY = 0;
+
+    public double directionVelocity;
+    public double directionAngle;
     public int id;
     public float scale = 1.0f;
 
@@ -55,8 +57,8 @@ public class Entity {
 
         this.posX = posX;
         this.posY = posY;
-        this.velocity = velocity;
-        this.angle = angle;
+        this.directionVelocity = velocity;
+        this.directionAngle = angle;
     }
 
     public void render(final PApplet applet) {
