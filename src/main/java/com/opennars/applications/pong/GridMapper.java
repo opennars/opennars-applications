@@ -21,31 +21,16 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package com.opennars.applications.pong.components;
+package com.opennars.applications.pong;
 
 import com.opennars.applications.componentbased.Entity;
-import com.opennars.applications.componentbased.InformReasonerComponent;
-import com.opennars.applications.pong.GridMapper;
 
-public class MappedPositionInformer implements InformReasonerComponent {
-    public GridMapper mapper = new GridMapper();
+public class GridMapper {
+    public int cellsize = 10;
 
-    @Override
-    public String informAboutEntity(Entity entity) {
-        String id = String.valueOf(entity.id);
-        boolean useMultipleIDs = true;
-        if(!useMultipleIDs) {
-            id = "0";
-        }
-
-        // TODO< we need to invoke the mapper here >
-        final String posAsString = mapper.mapPositionOfEntityToString(entity);
-
-        return "<(*," + entity.tag + id + ","+ posAsString + ") --> at>. :|:";
-    }
-
-    @Override
-    public String retName() {
-        return "MappedPositionInformer";
+    public String mapPositionOfEntityToString(final Entity entity) {
+        int posX = (int)(entity.posX / cellsize);
+        int posY = (int)(entity.posY / cellsize);
+        return posX + "_" + posY;
     }
 }
