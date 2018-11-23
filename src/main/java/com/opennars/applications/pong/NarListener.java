@@ -75,8 +75,8 @@ public class NarListener implements EventEmitter.EventObserver {
                         try {
                             final String id = type.toString().substring(car.toString().length(), type.toString().length());
 
-                            final int unmappedX = Integer.valueOf(position.split("_")[0];
-                            final int unmappedY = Integer.valueOf(position.split("_")[0];
+                            final int unmappedX = Integer.valueOf(position.split("_")[0]);
+                            final int unmappedY = Integer.valueOf(position.split("_")[0]);
 
                             int posX = unmappedX;
                             int posY = unmappedY;
