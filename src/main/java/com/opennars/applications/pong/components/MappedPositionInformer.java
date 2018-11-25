@@ -30,6 +30,9 @@ import com.opennars.applications.pong.GridMapper;
 public class MappedPositionInformer implements InformReasonerComponent {
     public GridMapper mapper;
 
+    // used to override name (and id) of the mapped object
+    public String nameOverride = "";
+
     public MappedPositionInformer(final GridMapper mapper) {
         this.mapper = mapper;
     }
@@ -45,7 +48,9 @@ public class MappedPositionInformer implements InformReasonerComponent {
         // TODO< we need to invoke the mapper here >
         final String posAsString = mapper.mapPositionOfEntityToString(entity);
 
-        return "<(*," + entity.tag + id + ","+ posAsString + ") --> at>. :|:";
+        final String objectNameAndId = nameOverride.isEmpty() ? entity.tag + id : nameOverride;
+
+        return "<(*," + objectNameAndId + ","+ posAsString + ") --> at>. :|:";
     }
 
     @Override
