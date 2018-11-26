@@ -90,36 +90,60 @@ public class ReasonerListener implements EventEmitter.EventObserver {
 
     public Prediction predictionFromTask(Task t) {
         Prediction prediction = null;
-        //format: "<(*,car,50_82) --> at>. %0.45;0.26%";
-        if(t.sentence.term instanceof Inheritance) {
-            Inheritance positionInh = (Inheritance) t.sentence.term;
-            if(positionInh.getSubject() instanceof Product) {
-                Product prod = (Product) positionInh.getSubject();
-                if(prod.size() == 2) {
-                    Term type = prod.term[0];
-                    String position = prod.term[1].toString();
-                    if(position.contains("_")) {
-                        try {
-                            final String tag = "ball"; // HACK
+        if(!(t.sentence.term instanceof Inheritance)) {
+            return null;
+        }
 
-                            String id = type.toString().substring(car.toString().length(), type.toString().length());
-                            id = "0"; // HACK
+        Inheritance positionInh = (Inheritance) t.sentence.term;
 
-                            final Vec2Int mappedPosition = mapper.mapStringToPosition(position);
+        final String position = positionInh.getSubject().toString();
+        if(position.contains("_")) {
+            try {
+                final String tag = "ball"; // HACK
 
-                            // add prediction
-                            Entity predictedEntity = new Entity(Integer.valueOf(id), mappedPosition.x, mappedPosition.y, 0, 0, tag);
-                            predictedEntity.isPredicted = true;
+                String id = "0"; // HACK
 
-                            BallRenderComponent ballRenderComponent = new BallRenderComponent();
-                            predictedEntity.renderable = ballRenderComponent;
+                final Vec2Int mappedPosition = mapper.mapStringToPosition(position);
 
-                            prediction = new Prediction(predictedEntity, t.sentence.truth, t.sentence.getOccurenceTime(), tag);
-                        } catch(Exception ex) {} //wrong format, it's not such a type of prediction but something else
-                    }
+                // add prediction
+                Entity predictedEntity = new Entity(Integer.valueOf(id), mappedPosition.x, mappedPosition.y, 0, 0, tag);
+                predictedEntity.isPredicted = true;
+
+                BallRenderComponent ballRenderComponent = new BallRenderComponent();
+                predictedEntity.renderable = ballRenderComponent;
+
+                prediction = new Prediction(predictedEntity, t.sentence.truth, t.sentence.getOccurenceTime(), tag);
+            } catch(Exception ex) {} //wrong format, it's not such a type of prediction but something else
+        }
+
+        /* commented because it was the old handling
+        if(positionInh.getSubject() instanceof Product) {
+            Product prod = (Product) positionInh.getSubject();
+            if(prod.size() == 2) {
+                Term type = prod.term[0];
+                String position = prod.term[1].toString();
+                if(position.contains("_")) {
+                    try {
+                        final String tag = "ball"; // HACK
+
+                        String id = type.toString().substring(car.toString().length(), type.toString().length());
+                        id = "0"; // HACK
+
+                        final Vec2Int mappedPosition = mapper.mapStringToPosition(position);
+
+                        // add prediction
+                        Entity predictedEntity = new Entity(Integer.valueOf(id), mappedPosition.x, mappedPosition.y, 0, 0, tag);
+                        predictedEntity.isPredicted = true;
+
+                        BallRenderComponent ballRenderComponent = new BallRenderComponent();
+                        predictedEntity.renderable = ballRenderComponent;
+
+                        prediction = new Prediction(predictedEntity, t.sentence.truth, t.sentence.getOccurenceTime(), tag);
+                    } catch(Exception ex) {} //wrong format, it's not such a type of prediction but something else
                 }
             }
-        }
+        }*/
+
         return prediction;
     }
 

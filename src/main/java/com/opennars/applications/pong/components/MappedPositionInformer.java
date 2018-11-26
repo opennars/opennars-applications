@@ -50,7 +50,8 @@ public class MappedPositionInformer implements InformReasonerComponent {
 
         final String objectNameAndId = nameOverride.isEmpty() ? entity.tag + id : nameOverride;
 
-        return "<(*," + objectNameAndId + ","+ posAsString + ") --> at>. :|:";
+        //return "<(*," + objectNameAndId + ","+ posAsString + ") --> at>. :|:";
+        return "<" + posAsString + " --> at_" +posAsString  + ">. :|:";
     }
 
     @Override
