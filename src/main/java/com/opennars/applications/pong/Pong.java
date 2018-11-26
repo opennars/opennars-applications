@@ -35,6 +35,8 @@ import org.opennars.interfaces.pub.Reasoner;
 import org.opennars.io.events.Events;
 import org.opennars.io.events.OutputHandler;
 import org.opennars.main.Nar;
+import org.opennars.middle.operatorreflection.MethodInvocationOperator;
+import org.opennars.operator.Operator;
 import processing.core.PApplet;
 import processing.event.MouseEvent;
 
@@ -105,11 +107,12 @@ public class Pong extends PApplet {
             entities.add(ballEntity);
         }
 
+        Entity batEntity;
         {
             final double posX = 100.0;
             final double posY = 1.0;
 
-            Entity batEntity = new Entity(entityID++, posX, posY, 0.0, 0.0, "ball");
+            batEntity = new Entity(entityID++, posX, posY, 0.0, 0.0, "ball");
             batEntity.velocityX = 0.0;
             batEntity.velocityY = 0.0;
 
@@ -121,6 +124,27 @@ public class Pong extends PApplet {
             batEntity.components.add(positionInformerForBall);
 
             entities.add(batEntity);
+        }
+
+        {
+            Ops ops = new Ops();
+            ops.batEntity = batEntity;
+
+            try {
+                Operator opUp = new MethodInvocationOperator("^up", ops, ops.getClass().getMethod("up"), new Class[0]);
+                reasoner.addPlugin(opUp);
+                ((Nar) reasoner).memory.addOperator(opUp);
+
+                Operator opDown = new MethodInvocationOperator("^down", ops, ops.getClass().getMethod("down"), new Class[0]);
+                reasoner.addPlugin(opDown);
+                ((Nar) reasoner).memory.addOperator(opDown);
+            } catch (NoSuchMethodException e) {
+                e.printStackTrace();
+            }
+
+            // tell NARS that it has ops
+            reasoner.addInput("(^up, {SELF})!");
+            reasoner.addInput("(^down, {SELF})!");
         }
     }
 
