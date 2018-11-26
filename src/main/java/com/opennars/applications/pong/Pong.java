@@ -28,6 +28,7 @@ import com.opennars.applications.crossing.Util;
 import com.opennars.applications.crossing.Viewport;
 import com.opennars.applications.pong.components.BallBehaviour;
 import com.opennars.applications.pong.components.BallRenderComponent;
+import com.opennars.applications.pong.components.BatBehaviour;
 import com.opennars.applications.pong.components.MappedPositionInformer;
 import com.opennars.sgui.NarSimpleGUI;
 import org.opennars.interfaces.pub.Reasoner;
@@ -86,20 +87,41 @@ public class Pong extends PApplet {
     }
 
     void setupScene() {
-        final double posX = 1.0;
-        final double posY = 1.0;
-        final double velocity = 0.0;
-        final double angle = 0.0;
+        {
+            final double posX = 1.0;
+            final double posY = 1.0;
 
-        Entity ballEntity = new Entity(entityID++, posX, posY, velocity, angle, "ball");
-        ballEntity.velocityX = 110.0;
-        ballEntity.velocityY = 23.0; //23.7;
+            Entity ballEntity = new Entity(entityID++, posX, posY, 0.0, 0.0, "ball");
+            ballEntity.velocityX = 110.0;
+            ballEntity.velocityY = 23.0; //23.7;
 
-        ballEntity.renderable = new BallRenderComponent();
-        ballEntity.behaviour = new BallBehaviour();
-        ballEntity.components.add(new MappedPositionInformer(mapper));
+            ballEntity.renderable = new BallRenderComponent();
+            ballEntity.behaviour = new BallBehaviour();
 
-        entities.add(ballEntity);
+            MappedPositionInformer positionInformerForBall = new MappedPositionInformer(mapper);
+            positionInformerForBall.nameOverride = "dot";
+            ballEntity.components.add(positionInformerForBall);
+
+            entities.add(ballEntity);
+        }
+
+        {
+            final double posX = 100.0;
+            final double posY = 1.0;
+
+            Entity batEntity = new Entity(entityID++, posX, posY, 0.0, 0.0, "ball");
+            batEntity.velocityX = 0.0;
+            batEntity.velocityY = 0.0;
+
+            batEntity.renderable = new BallRenderComponent();
+            batEntity.behaviour = new BatBehaviour();
+
+            MappedPositionInformer positionInformerForBall = new MappedPositionInformer(mapper);
+            positionInformerForBall.nameOverride = "dot";
+            batEntity.components.add(positionInformerForBall);
+
+            entities.add(batEntity);
+        }
     }
 
     void tick() {
