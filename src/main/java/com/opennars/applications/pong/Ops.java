@@ -11,6 +11,7 @@ public class Ops {
         }
 
         batEntity.posY -= 10;
+        batEntity.posY = Math.max(batEntity.posY, 0.0);
     }
 
     public void down() {
@@ -19,5 +20,6 @@ public class Ops {
         }
 
         batEntity.posY += 10;
+        batEntity.posY = Math.min(batEntity.posY, 40.0);
     }
 }

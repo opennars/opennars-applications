@@ -48,6 +48,12 @@ public class InformReasoner {
         }
     }
 
+    public void informAboutReinforcmentGood() {
+        String narsese = "<{SELF} --> [good]>.:|:";
+        inputs.add(narsese);
+        input += inputs.get(inputs.size()-1);
+    }
+
     // /param force are the inputs forced to be fed into the reasoner
     public boolean Input(NarseseConsumer consumer, final boolean force) {
         boolean hadInput = false;

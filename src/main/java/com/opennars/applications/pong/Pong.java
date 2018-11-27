@@ -42,6 +42,7 @@ import processing.event.MouseEvent;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 
 public class Pong extends PApplet {
     Reasoner reasoner;
@@ -62,6 +63,11 @@ public class Pong extends PApplet {
 
     GridMapper mapper = new GridMapper();
 
+
+    Entity ballEntity;
+    Entity batEntity;
+
+    Random rng = new Random();
 
 
     final int fps = 50;
@@ -93,7 +99,7 @@ public class Pong extends PApplet {
             final double posX = 1.0;
             final double posY = 1.0;
 
-            Entity ballEntity = new Entity(entityID++, posX, posY, 0.0, 0.0, "ball");
+            ballEntity = new Entity(entityID++, posX, posY, 0.0, 0.0, "ball");
             ballEntity.velocityX = 110.0;
             ballEntity.velocityY = 23.0; //23.7;
 
@@ -107,7 +113,6 @@ public class Pong extends PApplet {
             entities.add(ballEntity);
         }
 
-        Entity batEntity;
         {
             final double posX = 100.0;
             final double posY = 1.0;
@@ -155,6 +160,34 @@ public class Pong extends PApplet {
         for (Entity ie : entities) {
             if (ie.behaviour != null) {
                 ie.behaviour.tick(ie);
+            }
+        }
+
+        if(t%16==0) {
+            reasoner.addInput("<{SELF} --> [good]>! :|:");
+        }
+
+        if(t%500==0) {
+            // feed random decision so NARS doesn't forget ops
+            switch (rng.nextInt( 2)) {
+                case 0:
+                reasoner.addInput("(^up, {SELF})!");
+                break;
+
+                case 1:
+                reasoner.addInput("(^down, {SELF})!");
+                break;
+
+                default:
+            }
+        }
+
+        // reinforce
+        {
+            final double absDiff = Math.abs(batEntity.posY - ballEntity.posY);
+
+            if (absDiff <= 25.0) {
+                informReasoner.informAboutReinforcmentGood();
             }
         }
 
