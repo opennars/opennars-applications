@@ -109,7 +109,6 @@ public class IdentityMappingGUI extends javax.swing.JFrame {
         nar.addPlugin(left);
         nar.addPlugin(right);
         nar.narParameters.VOLUME = 0;
-        nar.narParameters.ANTICIPATION_TOLERANCE = 50000.5f;
         //nar.narParameters.DURATION*=10;
         //nar.narParameters.ANTICIPATION_CONFIDENCE = 0.9f;
         //nar.narParameters.SEQUENCE_BAG_ATTEMPTS*=10;
