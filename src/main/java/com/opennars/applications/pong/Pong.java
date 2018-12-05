@@ -69,6 +69,8 @@ public class Pong extends PApplet {
 
     Random rng = new Random();
 
+    long timeoutForOps = 0;
+
 
     final int fps = 50;
     @Override
@@ -154,6 +156,7 @@ public class Pong extends PApplet {
     }
 
     void tick() {
+        timeoutForOps++;
 
         // REFACTOR< TODO< use tick of entity >
         // tick
@@ -167,9 +170,15 @@ public class Pong extends PApplet {
             reasoner.addInput("<{SELF} --> [good]>! :|:");
         }
 
-        if(t%500==0) {
+        if(timeoutForOps >= 0) {
+            System.out.println("[d] random op");
+
+            timeoutForOps = -1000;
+
             // feed random decision so NARS doesn't forget ops
-            switch (rng.nextInt( 2)) {
+            int rngValue = rng.nextInt( 3);
+            System.out.println(rngValue);
+            switch (rngValue) {
                 case 0:
                 reasoner.addInput("(^up, {SELF})!");
                 break;
@@ -209,7 +218,9 @@ public class Pong extends PApplet {
             }
         }
 
-        System.out.println("Concepts: " + ((Nar)reasoner).memory.concepts.size());
+        if (false) {
+            System.out.println("Concepts: " + ((Nar)reasoner).memory.concepts.size());
+        }
     }
 
     @Override
