@@ -33,6 +33,10 @@ public class MappedPositionInformer implements InformReasonerComponent {
     // used to override name (and id) of the mapped object
     public String nameOverride = "";
 
+    public boolean informOnlyOnChange = true;
+
+    private String oldInform = "";
+
     public MappedPositionInformer(final GridMapper mapper) {
         this.mapper = mapper;
     }
@@ -50,8 +54,19 @@ public class MappedPositionInformer implements InformReasonerComponent {
 
         final String objectNameAndId = nameOverride.isEmpty() ? entity.tag + id : nameOverride;
 
-        //return "<(*," + objectNameAndId + ","+ posAsString + ") --> at>. :|:";
-        return "<" + posAsString + " --> [at]>. :|:";
+
+        String informResult = "<" + posAsString + " --> [at]>. :|:";
+
+        if (informOnlyOnChange) {
+            if (informResult.equals(oldInform)) {
+                informResult = ""; // set it to empty because there was no change
+            }
+            else {
+                oldInform = informResult; // because we it was changed
+            }
+        }
+
+        return informResult;
     }
 
     @Override
