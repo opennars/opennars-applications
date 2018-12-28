@@ -100,7 +100,7 @@ public class IdentityMappingGUI extends javax.swing.JFrame {
         Timer timer = new Timer();
         try {
             Map<String, Object> parameterOverrides = new HashMap<String, Object>();
-            parameterOverrides.put("CONCEPT_BAG_SIZE", 80000);
+            parameterOverrides.put("CONCEPT_BAG_SIZE", 30000);
             nar1 = new Nar(parameterOverrides);
         } catch (Exception ex) {
             Logger.getLogger(IdentityMappingGUI.class.getName()).log(Level.SEVERE, null, ex);
