@@ -3,9 +3,9 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package com.opennars.applications.idmapping;
+package org.opennars.applications.idmapping;
 
-import com.opennars.sgui.NarSimpleGUI;
+import org.opennars.applications.gui.NarSimpleGUI;
 import java.awt.Color;
 import java.util.HashMap;
 import java.util.List;

@@ -21,25 +21,32 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package com.opennars.applications.crossing;
+package org.opennars.applications.crossing;
 
+import java.util.List;
+import org.opennars.entity.TruthValue;
 import processing.core.PApplet;
 
-public class Street {
+public class Car extends Entity {
 
-    public int startX, startY, endX, endY;
-    public boolean forCarsOnly = false;
-
-    public Street(boolean forCarsOnly, int startX, int startY, int endX, int endY) {
-        this.startX = startX;
-        this.startY = startY;
-        this.endX = endX;
-        this.endY = endY;
-        this.forCarsOnly = forCarsOnly;
+    public Car(int id, double posX, double posY, double velocity, double angle) {
+        super(id, posX, posY, velocity, angle);
+        maxSpeed = 2;
     }
 
-    public void draw(PApplet applet) {
-        applet.fill(188);
-        applet.rect(startX, startY, endX - startX, endY - startY);
+    public void draw(PApplet applet, List<Street> streets, List<TrafficLight> trafficLights, List<Entity> entities, TruthValue truth, long time) {
+        float mul = Util.truthToValue(truth) * Util.timeToValue(time);
+        applet.fill(255, 0, 255, mul*255.0f);
+
+        if (!isPredicted && isAnomaly()) {
+            applet.stroke(255,0,0);
+        }
+        else {
+            applet.stroke(127);
+        }
+
+        super.draw(applet, streets, trafficLights, entities, truth, time);
+
+        applet.stroke(127);
     }
 }

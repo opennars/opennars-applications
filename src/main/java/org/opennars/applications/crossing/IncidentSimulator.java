@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package com.opennars.applications.crossing;
+package org.opennars.applications.crossing;
 
 /**
  *
@@ -16,6 +16,7 @@ public class IncidentSimulator extends javax.swing.JFrame {
      */
     public IncidentSimulator() {
         initComponents();
+        jCheckBox3.setVisible(false);
     }
 
     /**
