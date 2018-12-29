@@ -21,10 +21,10 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package com.opennars.applications.crossing;
+package org.opennars.applications.crossing;
 
-import com.opennars.applications.crossing.NarListener.Prediction;
-import com.opennars.sgui.NarSimpleGUI;
+import org.opennars.applications.crossing.NarListener.Prediction;
+import org.opennars.applications.gui.NarSimpleGUI;
 import java.util.ArrayList;
 import java.util.List;
 import org.opennars.io.events.Events;

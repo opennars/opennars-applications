@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package com.opennars.applications.crossing;
+package org.opennars.applications.crossing;
 
 import java.util.List;
 import org.opennars.main.Nar;
