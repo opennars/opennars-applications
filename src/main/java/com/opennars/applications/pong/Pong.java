@@ -72,6 +72,8 @@ public class Pong extends PApplet {
 
     StaticInformer informer;
 
+    double pseudoscore = 0.0;
+
 
     final int fps = 50;
     @Override
@@ -270,7 +272,13 @@ public class Pong extends PApplet {
                 informReasoner.informAboutReinforcmentGood();
 
                 System.out.println("GOOD NARS");
+
+                pseudoscore += 1.0;
             }
+        }
+
+        if(t%600==0) {
+            System.out.println("[i] pseudoscore=" + Double.toString(pseudoscore) + " t=" + Integer.toString(t));
         }
 
         //if(t%2==0) {
