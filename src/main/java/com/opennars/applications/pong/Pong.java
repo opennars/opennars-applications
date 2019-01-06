@@ -76,7 +76,7 @@ public class Pong extends PApplet {
 
     double pseudoscore = 0.0;
 
-    int slowdownFactor = 2;
+    int slowdownFactor = 1;
 
 
     final int fps = 50;
@@ -202,7 +202,7 @@ public class Pong extends PApplet {
                 int quantizedBatX = (int)(batEntity.posX / 10.0);
                 int quantizedBatY = (int)(batEntity.posY / 10.0);
 
-                String narsese = "<(*, " + Integer.toString(quantizedBallX) + "_" + Integer.toString(quantizedBallY) + "," + Integer.toString(quantizedBatX) + "_" + Integer.toString(quantizedBatY) + ") --> [atTuple]>";
+                String narsese = "<(*, " + Integer.toString(quantizedBallY)  + "," + Integer.toString(quantizedBatY) + ") --> [atTuple]>";
 
                 narsese += ". :|:";
                 informer.addNarsese(narsese);
