@@ -173,6 +173,18 @@ public class Pong extends PApplet {
             }
         }
 
+        // respawn ball if it was not hit by the bat
+        {
+            final boolean inRange = ballEntity.posX < 120.0;
+            if (!inRange) {
+                ballEntity.posX = 1.0;
+                ballEntity.posY = 1.0 + rng.nextDouble() * (80.0 - 2.0);
+
+                // TODO< choose random y velocity >
+            }
+        }
+
+
         // inform
         {
             int quantizedBallY = (int)(ballEntity.posY / 10.0);
