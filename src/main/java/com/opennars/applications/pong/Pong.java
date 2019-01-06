@@ -214,6 +214,32 @@ public class Pong extends PApplet {
             }
 
 
+            { // inject random op from time to time by chance to avoid getting stuck in cycles from which the agent can't escape
+                int rngValue2 = rng.nextInt( 100);
+
+                int chance = 5; // in percentage
+
+                if (rngValue2 < chance) {
+                    System.out.println("[d] FORCED random op");
+
+                    int rngValue = rng.nextInt( 3);
+                    System.out.println(rngValue);
+                    switch (rngValue) {
+                        case 0:
+                            reasoner.addInput("(^up, {SELF})!");
+                            break;
+
+                        case 1:
+                            reasoner.addInput("(^down, {SELF})!");
+                            break;
+
+                        default:
+                    }
+                }
+            }
+
+
+
 
         }
 
@@ -233,7 +259,7 @@ public class Pong extends PApplet {
 
 
         t++;
-        reasoner.cycles(50);
+        reasoner.cycles(80);
         removeOutdatedPredictions(predictions);
         removeOutdatedPredictions(disappointments);
 
