@@ -30,6 +30,7 @@ import com.opennars.applications.pong.components.BallBehaviour;
 import com.opennars.applications.pong.components.BallRenderComponent;
 import com.opennars.applications.pong.components.BatBehaviour;
 import com.opennars.applications.pong.components.MappedPositionInformer;
+import com.opennars.applications.pong.tracker.Tracker;
 import com.opennars.sgui.NarSimpleGUI;
 import org.opennars.interfaces.pub.Reasoner;
 import org.opennars.io.events.Events;
@@ -80,6 +81,11 @@ public class Pong extends PApplet {
 
 
     final int fps = 50;
+
+    // tracker which is used to track the position of the ball
+    // TODO< implement very simple perception of ball >
+    Tracker tracker;
+
     @Override
     public void setup() {
         mapper.cellsize = 10;
@@ -96,6 +102,18 @@ public class Pong extends PApplet {
             System.exit(1);
         }
 
+        Reasoner reasonerOfTracker = null;
+        try {
+            reasonerOfTracker = new Nar();
+            ((Nar)reasonerOfTracker).narParameters.VOLUME = 0;
+            ((Nar)reasonerOfTracker).narParameters.DURATION*=10;
+        } catch (Exception ex) {
+            System.out.println(ex);
+            System.exit(1);
+        }
+
+        tracker = new Tracker(reasonerOfTracker);
+
         informer = new StaticInformer(reasoner);
 
         setupScene();
@@ -103,6 +121,8 @@ public class Pong extends PApplet {
         size(1000, 1000);
         frameRate(fps);
         new NarSimpleGUI((Nar)reasoner);
+
+        new NarSimpleGUI((Nar)reasonerOfTracker);
     }
 
     void setupScene() {
@@ -290,6 +310,49 @@ public class Pong extends PApplet {
             if(t%600==0) {
                 System.out.println("[i] pseudoscore=" + Double.toString(pseudoscore) + " t=" + Integer.toString(t));
             }
+
+
+            // keep tracker in area and respawn if necessary
+            {
+                if (tracker.posX < -40.0 || tracker.posX > 140.0 || tracker.posY < -30.0 || tracker.posY > 80.0 + 20.0) {
+                    // respawn
+
+                    tracker.posX = rng.nextInt(8) * 10.0;
+                    tracker.posY = rng.nextInt(7) * 10.0;
+                }
+            }
+
+            // inform the tracker about the perception
+            {
+                // inform it about the perception - which we fake by just comparing the positions
+                // TODO< do real
+
+                final double diffX = ballEntity.posX - tracker.posX;
+                final double diffY = ballEntity.posY - tracker.posY;
+
+                String code = "";
+
+                if (diffX > 15.0) {
+                    code +="r"; // entity on the right of the tracked position
+                }
+                else if(diffX < -15.0) {
+                    code += "l"; // entity on the left of the tracked position
+                }
+
+                /*
+                if (diffY > 15.0) {
+                    code += "d"; // entity bellow the tracked position
+                }
+                else if(diffY < -15.0) {
+                    code += "u"; // entity above the tracked position
+                }*/
+
+                if (code.isEmpty()) {
+                    code = "c";
+                }
+
+                tracker.informAndStep(code);
+            }
         }
 
         //if(t%2==0) {
@@ -361,6 +424,24 @@ public class Pong extends PApplet {
                 e.draw(this, streets, trafficLights, entities, pred.truth, pred.time - ((Reasoner)reasoner).time());
             }
              */
+        }
+
+
+
+        // draw tracker
+        {
+
+            pushMatrix();
+            translate((float)tracker.posX, (float)tracker.posY);
+
+            fill(255, 0, 0, 0.0f);
+            stroke(0, 0,0, (float)255.0f);
+
+            line(0, -50, 0, 50);
+            line(-50, 0, 50, 0);
+
+            popMatrix();
+            fill(0);
         }
 
     }
