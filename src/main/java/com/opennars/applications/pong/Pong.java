@@ -190,9 +190,12 @@ public class Pong extends PApplet {
         // inform
         {
             int quantizedBallY = (int)(ballEntity.posY / 10.0);
+            int quantizedBallX = (int)(ballEntity.posX / 10.0);
+
+            int quantizedBatX = (int)(batEntity.posX / 10.0);
             int quantizedBatY = (int)(batEntity.posY / 10.0);
 
-            String narsese = "<(*, " + Integer.toString(quantizedBallY) + "," + Integer.toString(quantizedBatY) + ") --> [atTuple]>";
+            String narsese = "<(*, " + Integer.toString(quantizedBallX) + "_" + Integer.toString(quantizedBallY) + "," + Integer.toString(quantizedBatX) + "_" + Integer.toString(quantizedBatY) + ") --> [atTuple]>";
 
             narsese += ". :|:";
             informer.addNarsese(narsese);
@@ -288,7 +291,7 @@ public class Pong extends PApplet {
 
 
         t++;
-        reasoner.cycles(40);
+        reasoner.cycles(25);
         removeOutdatedPredictions(predictions);
         removeOutdatedPredictions(disappointments);
 
