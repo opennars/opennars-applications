@@ -56,7 +56,6 @@ public class Pong extends PApplet {
     int t = 0;
     public static boolean showAnomalies = false;
 
-    String questions = "<trafficLight --> [?whatColor]>? :|:";
     int perception_update = 1;
 
     InformReasoner informReasoner = new InformReasoner();
@@ -70,6 +69,8 @@ public class Pong extends PApplet {
     Random rng = new Random();
 
     long timeoutForOps = 0;
+
+    StaticInformer informer;
 
 
     final int fps = 50;
@@ -88,6 +89,8 @@ public class Pong extends PApplet {
             System.out.println(ex);
             System.exit(1);
         }
+
+        informer = new StaticInformer(reasoner);
 
         setupScene();
 
@@ -108,16 +111,17 @@ public class Pong extends PApplet {
             ballEntity.renderable = new BallRenderComponent();
             ballEntity.behaviour = new BallBehaviour();
 
-            MappedPositionInformer positionInformerForBall = new MappedPositionInformer(mapper);
-            positionInformerForBall.nameOverride = "dot";
-            ballEntity.components.add(positionInformerForBall);
+            // NOTE< commented because we inform NARS about the ball position in a tuple now >
+            //MappedPositionInformer positionInformerForBall = new MappedPositionInformer(mapper);
+            //positionInformerForBall.nameOverride = "dot";
+            //ballEntity.components.add(positionInformerForBall);
 
             entities.add(ballEntity);
         }
 
         {
             final double posX = 100.0;
-            final double posY = 1.0;
+            final double posY = 30.0;
 
             batEntity = new Entity(entityID++, posX, posY, 0.0, 0.0, "ball");
             batEntity.velocityX = 0.0;
@@ -126,9 +130,9 @@ public class Pong extends PApplet {
             batEntity.renderable = new BallRenderComponent();
             batEntity.behaviour = new BatBehaviour();
 
-            MappedPositionInformer positionInformerForBall = new MappedPositionInformer(mapper);
-            positionInformerForBall.nameOverride = "dot";
-            batEntity.components.add(positionInformerForBall);
+            //MappedPositionInformer positionInformerForBall = new MappedPositionInformer(mapper);
+            //positionInformerForBall.nameOverride = "dot";
+            //batEntity.components.add(positionInformerForBall);
 
             entities.add(batEntity);
         }
@@ -136,6 +140,7 @@ public class Pong extends PApplet {
         {
             Ops ops = new Ops();
             ops.batEntity = batEntity;
+            ops.pong = this;
 
             try {
                 Operator opUp = new MethodInvocationOperator("^up", ops, ops.getClass().getMethod("up"), new Class[0]);
@@ -166,39 +171,64 @@ public class Pong extends PApplet {
             }
         }
 
-        if(t%16==0) {
-            reasoner.addInput("<{SELF} --> [good]>! :|:");
-        }
-
-        if(timeoutForOps >= 0) {
-            System.out.println("[d] random op");
-
-            timeoutForOps = -1000;
-
-            // feed random decision so NARS doesn't forget ops
-            int rngValue = rng.nextInt( 3);
-            System.out.println(rngValue);
-            switch (rngValue) {
-                case 0:
-                reasoner.addInput("(^up, {SELF})!");
-                break;
-
-                case 1:
-                reasoner.addInput("(^down, {SELF})!");
-                break;
-
-                default:
-            }
-        }
-
-        // reinforce
+        // inform
         {
-            final double absDiff = Math.abs(batEntity.posY - ballEntity.posY);
+            int quantizedBallY = (int)(ballEntity.posY / 10.0);
+            int quantizedBatY = (int)(batEntity.posY / 10.0);
 
-            if (absDiff <= 25.0) {
-                informReasoner.informAboutReinforcmentGood();
+            String narsese = "<(*, " + Integer.toString(quantizedBallY) + "," + Integer.toString(quantizedBatY) + ") --> [atTuple]>";
+
+            narsese += ". :|:";
+            informer.addNarsese(narsese);
+
+            informer.informWhenNecessary(false); // give chance to push collected narsese to narsese consumer(which is the Nar)
+        }
+
+
+        if(t%8==0) {
+            reasoner.addInput("<{SELF} --> [good]>!");
+
+
+
+
+            if(timeoutForOps >= 0) {
+                System.out.println("[d] random op");
+
+                timeoutForOps = -300;
+
+                // feed random decision so NARS doesn't forget ops
+                int rngValue = rng.nextInt( 3);
+                System.out.println(rngValue);
+                switch (rngValue) {
+                    case 0:
+                        reasoner.addInput("(^up, {SELF})!");
+                        break;
+
+                    case 1:
+                        reasoner.addInput("(^down, {SELF})!");
+                        break;
+
+                    default:
+                }
+            }
+
+
+
+        }
+
+        if(t%2==0) {
+            // reinforce more frequently
+            {
+                final double absDiff = Math.abs(batEntity.posY - ballEntity.posY);
+
+                if (absDiff <= 7.0) {
+                    informReasoner.informAboutReinforcmentGood();
+
+                    System.out.println("GOOD NARS");
+                }
             }
         }
+
 
 
         t++;

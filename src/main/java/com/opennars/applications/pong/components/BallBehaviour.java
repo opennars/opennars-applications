@@ -24,8 +24,8 @@ public class BallBehaviour implements BehaviourComponent {
             entity.velocityX *= -1;
         }
 
-        if(entity.posY > 40.0) {
-            entity.posY = 40.0 - Float.MIN_NORMAL;
+        if(entity.posY > 80.0) {
+            entity.posY = 80.0 - Float.MIN_NORMAL;
             entity.velocityY *= -1;
         }
         else if(entity.posY < 0.0) {

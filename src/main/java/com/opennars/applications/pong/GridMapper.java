@@ -31,6 +31,10 @@ public class GridMapper {
 
     public String mapPositionOfEntityToString(final Entity entity) {
         int posX = (int)(entity.posX / cellsize);
+
+        // HACK< we set posX to 0 to simplify the environment for NARS >
+        posX = 0;
+
         int posY = (int)(entity.posY / cellsize);
         return posX + "_" + posY;
     }
