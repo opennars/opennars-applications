@@ -6,6 +6,9 @@ import com.opennars.applications.componentbased.Entity;
 import java.util.Random;
 
 public class BallBehaviour implements BehaviourComponent {
+    public Entity batEntity;
+    public double batWidth = 26.0;
+
     @Override
     public void tick(Entity entity) {
         // TODO< parameter >
@@ -16,8 +19,16 @@ public class BallBehaviour implements BehaviourComponent {
 
 
         if(entity.posX > 100.0) {
-            entity.posX = 100.0 - Float.MIN_NORMAL;
-            entity.velocityX *= -1;
+            // check if it got reflected by bat
+
+            double absDiffTobBat = entity.posY - batEntity.posY;
+            absDiffTobBat = Math.abs(absDiffTobBat);
+
+            final boolean hitBat = absDiffTobBat <= batWidth / 2.0;
+            if (hitBat) {
+                entity.posX = 100.0 - Float.MIN_NORMAL;
+                entity.velocityX *= -1;
+            }
         }
         else if(entity.posX < 0.0) {
             entity.posX = Float.MIN_NORMAL;

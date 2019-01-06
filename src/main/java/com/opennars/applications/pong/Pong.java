@@ -101,25 +101,6 @@ public class Pong extends PApplet {
 
     void setupScene() {
         {
-            final double posX = 1.0;
-            final double posY = 1.0;
-
-            ballEntity = new Entity(entityID++, posX, posY, 0.0, 0.0, "ball");
-            ballEntity.velocityX = 110.0;
-            ballEntity.velocityY = 23.0; //23.7;
-
-            ballEntity.renderable = new BallRenderComponent();
-            ballEntity.behaviour = new BallBehaviour();
-
-            // NOTE< commented because we inform NARS about the ball position in a tuple now >
-            //MappedPositionInformer positionInformerForBall = new MappedPositionInformer(mapper);
-            //positionInformerForBall.nameOverride = "dot";
-            //ballEntity.components.add(positionInformerForBall);
-
-            entities.add(ballEntity);
-        }
-
-        {
             final double posX = 100.0;
             final double posY = 30.0;
 
@@ -136,6 +117,27 @@ public class Pong extends PApplet {
 
             entities.add(batEntity);
         }
+
+        {
+            final double posX = 1.0;
+            final double posY = 1.0;
+
+            ballEntity = new Entity(entityID++, posX, posY, 0.0, 0.0, "ball");
+            ballEntity.velocityX = 110.0;
+            ballEntity.velocityY = 23.0; //23.7;
+
+            ballEntity.renderable = new BallRenderComponent();
+            ballEntity.behaviour = new BallBehaviour();
+            ((BallBehaviour) ballEntity.behaviour).batEntity = batEntity;
+
+            // NOTE< commented because we inform NARS about the ball position in a tuple now >
+            //MappedPositionInformer positionInformerForBall = new MappedPositionInformer(mapper);
+            //positionInformerForBall.nameOverride = "dot";
+            //ballEntity.components.add(positionInformerForBall);
+
+            entities.add(ballEntity);
+        }
+
 
         {
             Ops ops = new Ops();
