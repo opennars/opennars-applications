@@ -188,13 +188,14 @@ public class Pong extends PApplet {
         if(t%8==0) {
             reasoner.addInput("<{SELF} --> [good]>!");
 
-
+            int explorativeTimeout = 200; // time after which a random op is injected when it didn't do anything sufficiently long
 
 
             if(timeoutForOps >= 0) {
                 System.out.println("[d] random op");
 
-                timeoutForOps = -300;
+
+                timeoutForOps = -explorativeTimeout;
 
                 // feed random decision so NARS doesn't forget ops
                 int rngValue = rng.nextInt( 3);
