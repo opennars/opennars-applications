@@ -54,6 +54,8 @@ public class Pong extends PApplet {
 
     List<Entity> entities = new ArrayList<>();
     int t = 0;
+    int t2 = 0;
+    int oldT = 0;
     public static boolean showAnomalies = false;
 
     int perception_update = 1;
@@ -73,6 +75,8 @@ public class Pong extends PApplet {
     StaticInformer informer;
 
     double pseudoscore = 0.0;
+
+    int slowdownFactor = 2;
 
 
     final int fps = 50;
@@ -125,8 +129,8 @@ public class Pong extends PApplet {
             final double posY = 1.0;
 
             ballEntity = new Entity(entityID++, posX, posY, 0.0, 0.0, "ball");
-            ballEntity.velocityX = 110.0;
-            ballEntity.velocityY = 23.0; //23.7;
+            ballEntity.velocityX = 110.0 / slowdownFactor;
+            ballEntity.velocityY = 23.0 / slowdownFactor; //23.7;
 
             ballEntity.renderable = new BallRenderComponent();
             ballEntity.behaviour = new BallBehaviour();
@@ -165,86 +169,65 @@ public class Pong extends PApplet {
     }
 
     void tick() {
-        timeoutForOps++;
+        if (t != oldT) {
+            oldT = t;
 
-        // REFACTOR< TODO< use tick of entity >
-        // tick
-        for (Entity ie : entities) {
-            if (ie.behaviour != null) {
-                ie.behaviour.tick(ie);
+            timeoutForOps++;
+
+            // REFACTOR< TODO< use tick of entity >
+            // tick
+            for (Entity ie : entities) {
+                if (ie.behaviour != null) {
+                    ie.behaviour.tick(ie);
+                }
             }
-        }
 
-        // respawn ball if it was not hit by the bat
-        {
-            final boolean inRange = ballEntity.posX < 120.0;
-            if (!inRange) {
-                ballEntity.posX = 1.0;
-                ballEntity.posY = 1.0 + rng.nextDouble() * (80.0 - 2.0);
+            // respawn ball if it was not hit by the bat
+            {
+                final boolean inRange = ballEntity.posX < 120.0;
+                if (!inRange) {
+                    ballEntity.posX = 1.0;
+                    ballEntity.posY = 1.0 + rng.nextDouble() * (80.0 - 2.0);
 
-                // TODO< choose random y velocity >
-            }
-        }
-
-
-        // inform
-        {
-            int quantizedBallY = (int)(ballEntity.posY / 10.0);
-            int quantizedBallX = (int)(ballEntity.posX / 10.0);
-
-            int quantizedBatX = (int)(batEntity.posX / 10.0);
-            int quantizedBatY = (int)(batEntity.posY / 10.0);
-
-            String narsese = "<(*, " + Integer.toString(quantizedBallX) + "_" + Integer.toString(quantizedBallY) + "," + Integer.toString(quantizedBatX) + "_" + Integer.toString(quantizedBatY) + ") --> [atTuple]>";
-
-            narsese += ". :|:";
-            informer.addNarsese(narsese);
-
-            informer.informWhenNecessary(false); // give chance to push collected narsese to narsese consumer(which is the Nar)
-        }
-
-        if(t%2==0) {
-            reasoner.addInput("<{SELF} --> [good]>!");
-        }
-
-
-        if(t%8==0) {
-
-
-            int explorativeTimeout = 60; // time after which a random op is injected when it didn't do anything sufficiently long
-
-
-            if(timeoutForOps >= 0) {
-                System.out.println("[d] random op");
-
-
-                timeoutForOps = -explorativeTimeout;
-
-                // feed random decision so NARS doesn't forget ops
-                int rngValue = rng.nextInt( 3);
-                System.out.println(rngValue);
-                switch (rngValue) {
-                    case 0:
-                        reasoner.addInput("(^up, {SELF})!");
-                        break;
-
-                    case 1:
-                        reasoner.addInput("(^down, {SELF})!");
-                        break;
-
-                    default:
+                    // TODO< choose random y velocity >
                 }
             }
 
 
-            { // inject random op from time to time by chance to avoid getting stuck in cycles from which the agent can't escape
-                int rngValue2 = rng.nextInt( 100);
+            // inform
+            {
+                int quantizedBallY = (int)(ballEntity.posY / 10.0);
+                int quantizedBallX = (int)(ballEntity.posX / 10.0);
 
-                int chance = 10; // in percentage
+                int quantizedBatX = (int)(batEntity.posX / 10.0);
+                int quantizedBatY = (int)(batEntity.posY / 10.0);
 
-                if (rngValue2 < chance) {
-                    System.out.println("[d] FORCED random op");
+                String narsese = "<(*, " + Integer.toString(quantizedBallX) + "_" + Integer.toString(quantizedBallY) + "," + Integer.toString(quantizedBatX) + "_" + Integer.toString(quantizedBatY) + ") --> [atTuple]>";
 
+                narsese += ". :|:";
+                informer.addNarsese(narsese);
+
+                informer.informWhenNecessary(false); // give chance to push collected narsese to narsese consumer(which is the Nar)
+            }
+
+            if(t%2==0) {
+                reasoner.addInput("<{SELF} --> [good]>!");
+            }
+
+
+            if(t%8==0) {
+
+
+                int explorativeTimeout = 60; // time after which a random op is injected when it didn't do anything sufficiently long
+
+
+                if(timeoutForOps >= 0) {
+                    System.out.println("[d] random op");
+
+
+                    timeoutForOps = -explorativeTimeout;
+
+                    // feed random decision so NARS doesn't forget ops
                     int rngValue = rng.nextInt( 3);
                     System.out.println(rngValue);
                     switch (rngValue) {
@@ -259,29 +242,54 @@ public class Pong extends PApplet {
                         default:
                     }
                 }
+
+
+                { // inject random op from time to time by chance to avoid getting stuck in cycles from which the agent can't escape
+                    int rngValue2 = rng.nextInt( 100);
+
+                    int chance = 0; // in percentage
+
+                    if (rngValue2 < chance) {
+                        System.out.println("[d] FORCED random op");
+
+                        int rngValue = rng.nextInt( 3);
+                        System.out.println(rngValue);
+                        switch (rngValue) {
+                            case 0:
+                                reasoner.addInput("(^up, {SELF})!");
+                                break;
+
+                            case 1:
+                                reasoner.addInput("(^down, {SELF})!");
+                                break;
+
+                            default:
+                        }
+                    }
+                }
+
+
+
+
             }
 
+            // reinforce more frequently
+            {
+                final double absDiffY = Math.abs(batEntity.posY - ballEntity.posY);
+                final double absDiffX = Math.abs(batEntity.posX - ballEntity.posX);
 
+                if (absDiffY <= 13.0 && absDiffX <= 15.0) {
+                    informReasoner.informAboutReinforcmentGood();
 
+                    System.out.println("GOOD NARS");
 
-        }
-
-        // reinforce more frequently
-        {
-            final double absDiffY = Math.abs(batEntity.posY - ballEntity.posY);
-            final double absDiffX = Math.abs(batEntity.posX - ballEntity.posX);
-
-            if (absDiffY <= 13.0 && absDiffX <= 15.0) {
-                informReasoner.informAboutReinforcmentGood();
-
-                System.out.println("GOOD NARS");
-
-                pseudoscore += 1.0;
+                    pseudoscore += 1.0;
+                }
             }
-        }
 
-        if(t%600==0) {
-            System.out.println("[i] pseudoscore=" + Double.toString(pseudoscore) + " t=" + Integer.toString(t));
+            if(t%600==0) {
+                System.out.println("[i] pseudoscore=" + Double.toString(pseudoscore) + " t=" + Integer.toString(t));
+            }
         }
 
         //if(t%2==0) {
@@ -289,9 +297,10 @@ public class Pong extends PApplet {
         //}
 
 
+        t2++;
+        t = t2/slowdownFactor;
 
-        t++;
-        reasoner.cycles(25);
+        reasoner.cycles(50);
         removeOutdatedPredictions(predictions);
         removeOutdatedPredictions(disappointments);
 
