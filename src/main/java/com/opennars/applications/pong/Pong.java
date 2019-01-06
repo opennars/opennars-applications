@@ -184,9 +184,13 @@ public class Pong extends PApplet {
             informer.informWhenNecessary(false); // give chance to push collected narsese to narsese consumer(which is the Nar)
         }
 
+        if(t%2==0) {
+            reasoner.addInput("<{SELF} --> [good]>!");
+        }
+
 
         if(t%8==0) {
-            reasoner.addInput("<{SELF} --> [good]>!");
+
 
             int explorativeTimeout = 200; // time after which a random op is injected when it didn't do anything sufficiently long
 
@@ -243,23 +247,26 @@ public class Pong extends PApplet {
 
         }
 
-        if(t%2==0) {
-            // reinforce more frequently
-            {
-                final double absDiff = Math.abs(batEntity.posY - ballEntity.posY);
+        // reinforce more frequently
+        {
+            final double absDiffY = Math.abs(batEntity.posY - ballEntity.posY);
+            final double absDiffX = Math.abs(batEntity.posX - ballEntity.posX);
 
-                if (absDiff <= 7.0) {
-                    informReasoner.informAboutReinforcmentGood();
+            if (absDiffY <= 13.0 && absDiffX <= 15.0) {
+                informReasoner.informAboutReinforcmentGood();
 
-                    System.out.println("GOOD NARS");
-                }
+                System.out.println("GOOD NARS");
             }
         }
+
+        //if(t%2==0) {
+        //
+        //}
 
 
 
         t++;
-        reasoner.cycles(80);
+        reasoner.cycles(40);
         removeOutdatedPredictions(predictions);
         removeOutdatedPredictions(disappointments);
 
