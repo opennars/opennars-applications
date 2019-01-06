@@ -237,7 +237,7 @@ public class Pong extends PApplet {
             { // inject random op from time to time by chance to avoid getting stuck in cycles from which the agent can't escape
                 int rngValue2 = rng.nextInt( 100);
 
-                int chance = 0; // in percentage
+                int chance = 15; // in percentage
 
                 if (rngValue2 < chance) {
                     System.out.println("[d] FORCED random op");
