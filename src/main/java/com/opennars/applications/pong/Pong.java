@@ -80,7 +80,7 @@ public class Pong extends PApplet {
     int slowdownFactor = 1;
 
 
-    final int fps = 50;
+    final int fps = 60;
 
     // tracker which is used to track the position of the ball
     // TODO< implement very simple perception of ball >
@@ -107,12 +107,15 @@ public class Pong extends PApplet {
             reasonerOfTracker = new Nar();
             ((Nar)reasonerOfTracker).narParameters.VOLUME = 0;
             ((Nar)reasonerOfTracker).narParameters.DURATION*=10;
+
+            ((Nar)reasonerOfTracker).narParameters.DECISION_THRESHOLD = 0.45f; // make it more indeciscive and noisy because we need the noise
         } catch (Exception ex) {
             System.out.println(ex);
             System.exit(1);
         }
 
-        tracker = new Tracker(reasonerOfTracker);
+        tracker = new Tracker(reasonerOfTracker, null);
+        tracker.posX = 30.0; // so it has a chance to catch the ball
 
         informer = new StaticInformer(reasoner);
 
@@ -149,8 +152,8 @@ public class Pong extends PApplet {
             final double posY = 1.0;
 
             ballEntity = new Entity(entityID++, posX, posY, 0.0, 0.0, "ball");
-            ballEntity.velocityX = 110.0 / slowdownFactor;
-            ballEntity.velocityY = 23.0 / slowdownFactor; //23.7;
+            ballEntity.velocityX = 50.0 / slowdownFactor;
+            ballEntity.velocityY = 13.0 / slowdownFactor; //23.7;
 
             ballEntity.renderable = new BallRenderComponent();
             ballEntity.behaviour = new BallBehaviour();
@@ -210,6 +213,12 @@ public class Pong extends PApplet {
                     ballEntity.posY = 1.0 + rng.nextDouble() * (80.0 - 2.0);
 
                     // TODO< choose random y velocity >
+
+
+                    // we set the tracker position because reaquiring the object (in this case the ball) takes to much time and is to unlikely
+                    // NOTE< we need to initialite this by an attention mechanism for a realistic vision system >
+                    tracker.posX = ballEntity.posX;
+                    tracker.posY = ballEntity.posY;
                 }
             }
 
@@ -330,28 +339,36 @@ public class Pong extends PApplet {
                 final double diffX = ballEntity.posX - tracker.posX;
                 final double diffY = ballEntity.posY - tracker.posY;
 
-                String code = "";
+                String code1 = "";
 
-                if (diffX > 15.0) {
-                    code +="r"; // entity on the right of the tracked position
+                if (diffX > 5.0) {
+                    code1 +="r"; // entity on the right of the tracked position
                 }
-                else if(diffX < -15.0) {
-                    code += "l"; // entity on the left of the tracked position
-                }
-
-                /*
-                if (diffY > 15.0) {
-                    code += "d"; // entity bellow the tracked position
-                }
-                else if(diffY < -15.0) {
-                    code += "u"; // entity above the tracked position
-                }*/
-
-                if (code.isEmpty()) {
-                    code = "c";
+                else if(diffX < -5.0) {
+                    code1 += "l"; // entity on the left of the tracked position
                 }
 
-                tracker.informAndStep(code);
+
+                if (code1.isEmpty()) {
+                    code1 = "c";
+                }
+
+
+                String code2 = "";
+
+                if (diffY > 5.0) {
+                    code1 +="d"; // entity on the right of the tracked position
+                }
+                else if(diffY < -5.0) {
+                    code1 += "u"; // entity on the left of the tracked position
+                }
+
+
+                if (code1.isEmpty()) {
+                    code1 = "c";
+                }
+
+                tracker.informAndStep(code1, code2);
             }
         }
 

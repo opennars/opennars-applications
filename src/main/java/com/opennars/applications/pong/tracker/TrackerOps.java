@@ -23,6 +23,42 @@ public class TrackerOps {
         tracker.timeoutForOps = -50;
     }
 
+    public void upLeft() {
+        System.out.println("[a ] TrackerOps.upleft");
+
+        tracker.posY -= 2.0;
+        tracker.posX -= 2.0;
+
+        tracker.timeoutForOps = -50;
+    }
+
+    public void downLeft() {
+        System.out.println("[a ] TrackerOps.downleft");
+
+        tracker.posY += 2.0;
+        tracker.posX -= 2.0;
+
+        tracker.timeoutForOps = -50;
+    }
+
+    public void upRight() {
+        System.out.println("[a ] TrackerOps.upright");
+
+        tracker.posY -= 2.0;
+        tracker.posX += 2.0;
+
+        tracker.timeoutForOps = -50;
+    }
+
+    public void downRight() {
+        System.out.println("[a ] TrackerOps.downright");
+
+        tracker.posY += 2.0;
+        tracker.posX += 2.0;
+
+        tracker.timeoutForOps = -50;
+    }
+
     public void left() {
         System.out.println("[a ] TrackerOps.left");
 
@@ -40,14 +76,9 @@ public class TrackerOps {
     }
 
     public void teleport() {
-        return; // teleport is disabled
-
-        /*
-
         System.out.println("[a ] TrackerOps.teleport");
 
         tracker.posX = rng.nextInt(8) * 10.0;
         tracker.posY = rng.nextInt(7) * 10.0;
-        */
     }
 }
