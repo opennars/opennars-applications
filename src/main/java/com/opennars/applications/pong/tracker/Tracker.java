@@ -7,6 +7,7 @@ import org.opennars.main.Nar;
 import org.opennars.middle.operatorreflection.MethodInvocationOperator;
 import org.opennars.operator.Operator;
 
+import java.lang.reflect.Method;
 import java.util.Random;
 
 /**
@@ -29,6 +30,8 @@ public class Tracker {
 
     public double goodLevel = 1.0;
 
+    public long t = 0;
+
     Random rng = new Random();
 
     public Tracker(final Reasoner reasoner1, final Reasoner reasoner2) {
@@ -42,6 +45,7 @@ public class Tracker {
         ops.tracker = this;
 
         try {
+            /*
             Operator opUp = new MethodInvocationOperator("^up", ops, ops.getClass().getMethod("up"), new Class[0]);
             reasoner1.addPlugin(opUp);
             ((Nar) reasoner1).memory.addOperator(opUp);
@@ -82,6 +86,15 @@ public class Tracker {
             reasoner1.addPlugin(opRight);
             ((Nar) reasoner1).memory.addOperator(opRight);
 
+            */
+            {
+                Operator op = new MethodInvocationOperator("^movedir", ops, ops.getClass().getMethod("movedir", new Class[]{String.class}), new Class[]{String.class});
+                reasoner1.addPlugin(op);
+                ((Nar)reasoner1).memory.addOperator(op);
+            }
+
+
+
             Operator opTeleport = new MethodInvocationOperator("^teleport", ops, ops.getClass().getMethod("teleport"), new Class[0]);
             reasoner1.addPlugin(opTeleport);
             ((Nar) reasoner1).memory.addOperator(opTeleport);
@@ -121,6 +134,8 @@ public class Tracker {
      * @param code is the code of the perceived direction
      */
     public void informAndStep(String code1, String code2) {
+        t++;
+
         goodLevel *= 0.98; // decay
 
         //System.out.println("[d5] good level= " + Double.toString(goodLevel));
@@ -132,45 +147,47 @@ public class Tracker {
 
         staticInformer.informWhenNecessary(false);
 
+        if( t%4 == 0) {
+            // good reasoner if it is the center
+            if (code1.equals("c")) {
+                timeSinceLastCenter = 0;
 
-        // TODO< give postive reward by axis >
-        // good reasoner if it is the center
-        if (code1.equals("c")) {
-            timeSinceLastCenter = 0;
+                goodLevel += 0.1; // very good
+                goodLevel = Math.min(goodLevel, 1.0);
 
-            goodLevel += 0.1; // very good
-            goodLevel = Math.min(goodLevel, 1.0);
+                //System.out.println("[a ] Tracker GOOD");
+                reasoner.addInput("<{SELF} --> [good1]>.:|:");
+            }
 
-            //System.out.println("[a ] Tracker GOOD");
-            reasoner.addInput("<{SELF} --> [good1]>.:|:");
-        }
+            if (code2.equals("c")) {
+                timeSinceLastCenter = 0;
 
-        if (code2.equals("c")) {
-            timeSinceLastCenter = 0;
+                goodLevel += 0.1; // very good
+                goodLevel = Math.min(goodLevel, 1.0);
 
-            goodLevel += 0.1; // very good
-            goodLevel = Math.min(goodLevel, 1.0);
-
-            //System.out.println("[a ] Tracker GOOD");
-            reasoner.addInput("<{SELF} --> [good1]>.:|:");
+                //System.out.println("[a ] Tracker GOOD");
+                reasoner.addInput("<{SELF} --> [good1]>.:|:");
+            }
         }
 
         timeSinceLastCenter++;
         if(timeSinceLastCenter>120) {
-            timeSinceLastCenter = 0;
+            //timeSinceLastCenter = 0;
 
             // force teleport
             // we don't inform NARS about the teleportation because it uses the teleport not wisely
             //posX = rng.nextInt(8) * 10.0;
             //posY = rng.nextInt(7) * 10.0;
 
-            reasoner.addInput("(^teleport, {SELF})!");
+            // commented because teleport seems to confuse it
+            //reasoner.addInput("(^teleport, {SELF})!");
         }
 
         timeoutForOps++;
         // inject random action if necessary
         if (timeoutForOps > 0 || rng.nextInt(100) <= 4) {
             switch(rng.nextInt(9)) {
+                /*
                 case 0: reasoner.addInput("(^left, {SELF})!"); break;
 
                 case 1: reasoner.addInput("(^right, {SELF})!"); break;
@@ -182,6 +199,29 @@ public class Tracker {
                 case 5: reasoner.addInput("(^down, {SELF})!"); break;
                 case 6: reasoner.addInput("(^downLeft, {SELF})!"); break;
                 case 7: reasoner.addInput("(^downRight, {SELF})!"); break;
+                */
+
+                case 0: reasoner.addInput("(^movedir, {SELF}, {ul})!"); break;
+                case 1: reasoner.addInput("(^movedir, {SELF}, {dl})!"); break;
+                case 2: reasoner.addInput("(^movedir, {SELF}, {ur})!"); break;
+                case 3: reasoner.addInput("(^movedir, {SELF}, {dr})!"); break;
+                case 4: reasoner.addInput("(^movedir, {SELF}, {u})!"); break;
+                case 5: reasoner.addInput("(^movedir, {SELF}, {d})!"); break;
+                case 6: reasoner.addInput("(^movedir, {SELF}, {l})!"); break;
+                case 7: reasoner.addInput("(^movedir, {SELF}, {r})!"); break;
+
+                /*
+                case 1: reasoner.addInput("(^right, {SELF})!"); break;
+
+                case 2: reasoner.addInput("(^up, {SELF})!"); break;
+                case 3: reasoner.addInput("(^upLeft, {SELF})!"); break;
+                case 4: reasoner.addInput("(^upRight, {SELF})!"); break;
+
+                case 5: reasoner.addInput("(^down, {SELF})!"); break;
+                case 6: reasoner.addInput("(^downLeft, {SELF})!"); break;
+                case 7: reasoner.addInput("(^downRight, {SELF})!"); break;
+                */
+
 
                 //case 4: reasoner.addInput("(^teleport, {SELF})!"); break;
 
@@ -199,9 +239,11 @@ public class Tracker {
         }
 
         // let it execute two commands - maybe for each axis - and give it asymetrically time - why not
-        reasoner.addInput("<{SELF} --> [good1]>!");
-        reasoner.cycles(15);
-        //reasoner.addInput("<{SELF} --> [good1]>!");
-        reasoner.cycles(15);
+        if( t%4 == 0) {
+            reasoner.addInput("<{SELF} --> [good1]>!");
+            reasoner.cycles(15);
+            //reasoner.addInput("<{SELF} --> [good1]>!");
+            reasoner.cycles(15);
+        }
     }
 }

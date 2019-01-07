@@ -152,8 +152,8 @@ public class Pong extends PApplet {
             final double posY = 1.0;
 
             ballEntity = new Entity(entityID++, posX, posY, 0.0, 0.0, "ball");
-            ballEntity.velocityX = 50.0 / slowdownFactor;
-            ballEntity.velocityY = 13.0 / slowdownFactor; //23.7;
+            ballEntity.velocityX = 20.0 / slowdownFactor;
+            ballEntity.velocityY = 7.0 / slowdownFactor; //23.7;
 
             ballEntity.renderable = new BallRenderComponent();
             ballEntity.behaviour = new BallBehaviour();
@@ -197,6 +197,16 @@ public class Pong extends PApplet {
 
             timeoutForOps++;
 
+            {
+                if (tracker.timeSinceLastCenter > 60 ) {
+                    tracker.timeSinceLastCenter = 0;
+
+                    // force to latch on a random object - in this case the ball
+                    tracker.posX = ballEntity.posX;
+                    tracker.posY = ballEntity.posY;
+                }
+            }
+
             // REFACTOR< TODO< use tick of entity >
             // tick
             for (Entity ie : entities) {
@@ -212,7 +222,8 @@ public class Pong extends PApplet {
                     ballEntity.posX = 1.0;
                     ballEntity.posY = 1.0 + rng.nextDouble() * (80.0 - 2.0);
 
-                    // TODO< choose random y velocity >
+                    // choose random y velocity
+                    ballEntity.velocityY = ( rng.nextDouble() * 2.0 - 1.0 ) * 10.0;
 
 
                     // we set the tracker position because reaquiring the object (in this case the ball) takes to much time and is to unlikely
@@ -341,18 +352,6 @@ public class Pong extends PApplet {
 
                 String code1 = "";
 
-                if (diffX > 5.0) {
-                    code1 +="r"; // entity on the right of the tracked position
-                }
-                else if(diffX < -5.0) {
-                    code1 += "l"; // entity on the left of the tracked position
-                }
-
-
-                if (code1.isEmpty()) {
-                    code1 = "c";
-                }
-
 
                 String code2 = "";
 
@@ -362,6 +361,21 @@ public class Pong extends PApplet {
                 else if(diffY < -5.0) {
                     code1 += "u"; // entity on the left of the tracked position
                 }
+
+
+                if (diffX > 5.0) {
+                    code1 +="r"; // entity on the right of the tracked position
+                }
+                else if(diffX < -5.0) {
+                    code1 += "l"; // entity on the left of the tracked position
+                }
+
+
+                //if (code1.isEmpty()) {
+                //    code1 = "c";
+                //}
+
+
 
 
                 if (code1.isEmpty()) {

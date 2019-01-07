@@ -23,6 +23,22 @@ public class TrackerOps {
         tracker.timeoutForOps = -50;
     }
 
+    public void movedir(final String dir) {
+        if (dir.contains("l")) {
+            left();
+        }
+        else if (dir.contains("r")) {
+            right();
+        }
+
+        if (dir.contains("u")) {
+            up();
+        }
+        else if (dir.contains("d")) {
+            down();
+        }
+    }
+
     public void upLeft() {
         System.out.println("[a ] TrackerOps.upleft");
 
