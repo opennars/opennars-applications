@@ -140,7 +140,7 @@ public class Tracker {
 
         //System.out.println("[d5] good level= " + Double.toString(goodLevel));
 
-        String narsese = "<{" + code1 + code2 + "} --> [on1]>. :|:";
+        String narsese = "<{" + code1 + code2 + "} --> [on" + code1 + "]>. :|:";
         staticInformer.addNarsese(narsese);
         //narsese = "<{" + code2 + "} --> [on2]>. :|:";
         //staticInformer.addNarsese(narsese);
