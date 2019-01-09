@@ -281,7 +281,7 @@ public class Pong extends PApplet {
     }
 
     void assignNewProtoObjects() {
-        double protoObjectMaxDistanceToHotPatch = 30.0;
+        double protoObjectMaxDistanceToHotPatch = 10.0;
 
         // search closest active/hot tracking record and assign position to it
         for (final PatchTracker.TrackingRecord iTrackingRecord : patchTracker.trackingRecords) {
@@ -387,7 +387,7 @@ public class Pong extends PApplet {
                     continue;
                 }
 
-                boolean isHotEnough = iTrackingRecord.timeSinceLastMove < -400;
+                boolean isHotEnough = true; //iTrackingRecord.timeSinceLastMove < -400;
                 if (!isHotEnough) {
                     continue;
                 }
@@ -494,21 +494,22 @@ public class Pong extends PApplet {
         }
 
 
-
+        /* commented because we don't need this sampling anymore - because we just look at the delta
         if (t%2==0) {
             samplePatchAtRandomPosition();
             samplePatchAtRandomPosition();
             samplePatchAtRandomPosition();
         }
+        */
 
         // attention< we need to bias our attention to the changes in the environment >
         {
             for(int y=0;y<pixelScreen.retHeight();y++) {
                 for(int x=0;x<pixelScreen.retWidth();x++) {
                     // we don't need to sample every pixel
-                    if ((x+y) % 2 == 0) {
-                        continue;
-                    }
+                    //if ((x+y) % 2 == 0) {
+                    //    continue;
+                    //}
 
                     // ignore if no change
                     if(pixelScreen.arr[y][x] == oldPixelScreen.arr[y][x]) {
@@ -571,7 +572,15 @@ public class Pong extends PApplet {
                     ballEntity.posY = 1.0 + rng.nextDouble() * (80.0 - 2.0);
 
                     // choose random y velocity
-                    ballEntity.velocityY = ( rng.nextDouble() * 2.0 - 1.0 ) * 10.0;
+                    for(;;) {
+                        ballEntity.velocityY = ( rng.nextDouble() * 2.0 - 1.0 ) * 10.0;
+
+                        // disallow low y velocity because it might reward a still agent to much without doing any actions
+                        if( Math.abs(ballEntity.velocityY) > 3.0) {
+                            break;
+                        }
+                    }
+
 
 
                     // we set the tracker position because reaquiring the object (in this case the ball) takes to much time and is to unlikely
@@ -611,13 +620,40 @@ public class Pong extends PApplet {
                     innerNarsese.add(Integer.toString(quantizedY));
                 }
 
-                String narsese = "<null --> [atTuple0]>";
-                if (protoObjects.size() > 0) {
-                    narsese = "<(*, " +String.join(",", innerNarsese) + ") --> [atTuple" + protoObjects.size() + "]>";
+
+                if (protoObjects.size() == 0) {
+                    String narsese = "<null --> [atTuple0]>. :|:";
+                    informer.addNarsese(narsese);
                 }
 
-                narsese += ". :|:";
-                informer.addNarsese(narsese);
+                if (protoObjects.size() == 1) {
+                    String narsese = "<(*, " +  (int)(protoObjects.get(0).posY / 10.0) + ") --> [atTuple1]>" + ". :|:";
+                    informer.addNarsese(narsese);
+                }
+
+                if (protoObjects.size() >= 2) {
+                    String narsese = "<(*, " +  (int)(protoObjects.get(0).posY / 10.0) + "," +  (int)(protoObjects.get(1).posY / 10.0) + ") --> [atTuple2]>" + ". :|:";
+                    informer.addNarsese(narsese);
+                }
+
+                /* skip this because it is noise and we want just to see if it works this way without it
+                if (protoObjects.size() >= 3) {
+                    String narsese = "<(*, " +  (int)(protoObjects.get(1).posY / 10.0) + "," +  (int)(protoObjects.get(2).posY / 10.0) + ") --> [atTuple3]>" + ". :|:";
+                    informer.addNarsese(narsese);
+                }
+
+                if (protoObjects.size() >= 4) {
+                    String narsese = "<(*, " +  (int)(protoObjects.get(2).posY / 10.0) + "," +  (int)(protoObjects.get(3).posY / 10.0) + ") --> [atTuple4]>" + ". :|:";
+                    informer.addNarsese(narsese);
+                }
+
+                if (protoObjects.size() >= 5) {
+                    String narsese = "<(*, " +  (int)(protoObjects.get(3).posY / 10.0) + "," +  (int)(protoObjects.get(4).posY / 10.0) + ") --> [atTuple5]>" + ". :|:";
+                    informer.addNarsese(narsese);
+                }
+                */
+
+
 
                 informer.informWhenNecessary(false); // give chance to push collected narsese to narsese consumer(which is the Nar)
             }
@@ -766,7 +802,7 @@ public class Pong extends PApplet {
         t2++;
         t = t2/slowdownFactor;
 
-        reasoner.cycles(50);
+        reasoner.cycles(10);
         removeOutdatedPredictions(predictions);
         removeOutdatedPredictions(disappointments);
 

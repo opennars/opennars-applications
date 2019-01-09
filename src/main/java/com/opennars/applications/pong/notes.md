@@ -50,12 +50,23 @@ Can be used by higher level reasoning processes to compose objects out of proto-
 * solved problem of left off proto-objects
 * implemented merging of proto-objects by age - we throw the older proto-object away
 
-== Current commit
+== commit
 
 * giving NARS the position informations from the (sorted) proto-objects
 - produces to complex products for to many objects (>= 4) - and it slows down
 
-== TODO
-    * merge tracked patches if they are the same
-    * forgetting of very old SDR's in the SDR database - we can retain a few 100's to a few 1000's of SDR's easiliy
+== Current commit
 
+* give NARS just the first 2-ary product
+* tuning for patches -> protoobject translation
+
+Result:
++ ball is tracked fine
+- translation based on patches has problem with recognizing the bat as an proto-object at all
+
+
+- protoobjects don't match up with the bat most of the time
+  algorithm of the patches is probably to complex and I should resort to something much simpler - I have an idea
+
+== TODO
+    * forgetting of very old SDR's in the SDR database - we can retain a few 100's to a few 1000's of SDR's easiliy
