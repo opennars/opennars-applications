@@ -55,7 +55,7 @@ Can be used by higher level reasoning processes to compose objects out of proto-
 * giving NARS the position informations from the (sorted) proto-objects
 - produces to complex products for to many objects (>= 4) - and it slows down
 
-== Current commit
+== commit
 
 * give NARS just the first 2-ary product
 * tuning for patches -> protoobject translation
@@ -67,6 +67,16 @@ Result:
 
 - protoobjects don't match up with the bat most of the time
   algorithm of the patches is probably to complex and I should resort to something much simpler - I have an idea
+
+== current commit
+
+* tried patricks encoding - which is just to put the active pixels as events
+  performance is still not good with 3.0.1
+
+It had a good run but then went onto the ^down spree
+https://www.youtube.com/watch?v=ZZfh5voSdL4
+
+
 
 == TODO
     * forgetting of very old SDR's in the SDR database - we can retain a few 100's to a few 1000's of SDR's easiliy

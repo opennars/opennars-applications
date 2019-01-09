@@ -72,6 +72,8 @@ public class Pong extends PApplet {
 
     StaticInformer informer;
 
+    StaticInformer informer2;
+
     double pseudoscore = 0.0;
 
     int slowdownFactor = 1;
@@ -146,6 +148,8 @@ public class Pong extends PApplet {
         tracker.posX = 30.0; // so it has a chance to catch the ball
 
         informer = new StaticInformer(reasoner);
+
+        informer2 = new StaticInformer(reasoner);
 
         setupScene();
 
@@ -466,17 +470,17 @@ public class Pong extends PApplet {
 
             // ball
             pixelScreen.drawDot((int)(ballEntity.posX), (int)(ballEntity.posY));
-            pixelScreen.drawDot((int)(ballEntity.posX+1), (int)(ballEntity.posY));
-            pixelScreen.drawDot((int)(ballEntity.posX), (int)(ballEntity.posY+1));
-            pixelScreen.drawDot((int)(ballEntity.posX+1), (int)(ballEntity.posY+1));
+            //pixelScreen.drawDot((int)(ballEntity.posX+1), (int)(ballEntity.posY));
+            //pixelScreen.drawDot((int)(ballEntity.posX), (int)(ballEntity.posY+1));
+            //pixelScreen.drawDot((int)(ballEntity.posX+1), (int)(ballEntity.posY+1));
 
 
             // bat
-            pixelScreen.drawDot((int)(batEntity.posX), (int)(batEntity.posY-2));
             pixelScreen.drawDot((int)(batEntity.posX), (int)(batEntity.posY-1));
             pixelScreen.drawDot((int)(batEntity.posX), (int)(batEntity.posY-0));
             pixelScreen.drawDot((int)(batEntity.posX), (int)(batEntity.posY+1));
-            pixelScreen.drawDot((int)(batEntity.posX), (int)(batEntity.posY+2));
+            //pixelScreen.drawDot((int)(batEntity.posX), (int)(batEntity.posY+1));
+            //pixelScreen.drawDot((int)(batEntity.posX), (int)(batEntity.posY+2));
         }
 
 
@@ -504,6 +508,8 @@ public class Pong extends PApplet {
 
         // attention< we need to bias our attention to the changes in the environment >
         {
+            HashMap<String, String> h = new HashMap<>();
+
             for(int y=0;y<pixelScreen.retHeight();y++) {
                 for(int x=0;x<pixelScreen.retWidth();x++) {
                     // we don't need to sample every pixel
@@ -511,23 +517,38 @@ public class Pong extends PApplet {
                     //    continue;
                     //}
 
+
+
+
                     // ignore if no change
-                    if(pixelScreen.arr[y][x] == oldPixelScreen.arr[y][x]) {
-                        continue;
+                    //if(pixelScreen.arr[y][x] == oldPixelScreen.arr[y][x]) {
+                    //    continue;
+                    //}
+
+                    // inform nars when it turned on
+                    if(pixelScreen.arr[y][x] == true) {
+                        h.put("<(*, y" + y / 10 + ", x" + x / 10 + ") --> [on]>. :|:", "<(*, y" + y / 10 + ", x" + x / 10 + ") --> [on]>. :|:");
                     }
 
                     // spawn
                     //samplePatchAtPosition(x, y);
 
+                    /*
                     PatchTracker.TrackingRecord r = new PatchTracker.TrackingRecord();
                     r.lastPosX = x;
                     r.lastPosY = y;
                     r.timeSinceLastMove = -1;
 
                     patchTracker.trackingRecords.add(r);
-
+                    */
                 }
             }
+
+            for(String i : h.keySet()) {
+                informer2.addNarsese(i);
+            }
+
+            informer2.informWhenNecessary(false);
         }
 
         // and update/copy
@@ -600,7 +621,7 @@ public class Pong extends PApplet {
 
 
             // inform
-            if(t%4==0) {
+            if(false && t%4==0) {
                 // heuristic
                 //  we sort the proto-objects by the selected axis - which is hardcoded to sort by the x axis now
 
@@ -663,7 +684,7 @@ public class Pong extends PApplet {
 
 
 
-                informer.informWhenNecessary(false); // give chance to push collected narsese to narsese consumer(which is the Nar)
+                //informer.informWhenNecessary(false); // give chance to push collected narsese to narsese consumer(which is the Nar)
             }
 
             if(t%4==0) {
