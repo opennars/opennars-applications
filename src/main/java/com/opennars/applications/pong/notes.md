@@ -27,7 +27,7 @@ Experiment:
     We can store the old patch for that sampled position and compare it with the new patch if the position is resampled
        The attention system can get informed when a change was detected.
 
-== Current commit
+== https://github.com/opennars/opennars-applications/commit/f4f0406138959237ed0c88e21f46137381078163
 
 * drawing of ball
 * drawing of bat
@@ -38,11 +38,16 @@ we need a attention system which looks at the difference of the pixels - so we c
 + this works very well
 - leads to a lot of tracked patches because they get "collected"
 
+== Current commit
+
+Added Proto-Objects
+def: Proto-objects are "clusters" (of patches) which show a similar behaviour, shape, color, etc.
+Can be used by higher level reasoning processes to compose objects out of proto-objects.
+
+Problem:
+    The ball currently leaves a trail of not moving inactive proto-objects!
 
 == TODO
-    * forgetting of very old SDR's in the SDR database - we can retain a few 100's to a few 1000's of SDR's easiliy
-
-
-TODO
     * merge tracked patches if they are the same
+    * forgetting of very old SDR's in the SDR database - we can retain a few 100's to a few 1000's of SDR's easiliy
 

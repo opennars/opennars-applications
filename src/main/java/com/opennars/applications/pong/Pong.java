@@ -98,6 +98,11 @@ public class Pong extends PApplet {
 
     PatchTracker patchTracker = new PatchTracker();
 
+    // protoobjects are used by higher level reasoning processes to identify and learn objects
+    List<ProtoObject> protoObjects = new ArrayList<>();
+
+    long protoObjectIdCounter = 1;
+
     @Override
     public void setup() {
         { // pixel screen
@@ -267,6 +272,94 @@ public class Pong extends PApplet {
         samplePatchAtPosition(posX, posY);
     }
 
+    void assignNewProtoObjects() {
+        double protoObjectMaxDistanceToHotPatch = 20.0;
+
+        // search closest active/hot tracking record and assign position to it
+        for (final PatchTracker.TrackingRecord iTrackingRecord : patchTracker.trackingRecords) {
+            boolean isHotEnough = iTrackingRecord.timeSinceLastMove < -400;
+            if (!isHotEnough) {
+                continue;
+            }
+
+            // search closest proto object and assign position to it
+
+            ProtoObject closest = null;
+            double closestDistance = 999999999999999999999.0;
+
+            for (ProtoObject iProtoObject : protoObjects) {
+                double diffX = iProtoObject.posX - iTrackingRecord.lastPosX;
+                double diffY = iProtoObject.posY - iTrackingRecord.lastPosY;
+                double distance = Math.sqrt(diffX * diffX + diffY * diffY);
+
+                if (distance > protoObjectMaxDistanceToHotPatch) {
+                    continue;
+                }
+
+                if (distance < closestDistance) {
+                    closest = iProtoObject;
+                    closestDistance = distance;
+                }
+            }
+
+            if (closest == null) {
+                // we need to assign a new proto object to it
+
+                ProtoObject createdProtoObject = new ProtoObject(protoObjectIdCounter++);
+                createdProtoObject.posX = iTrackingRecord.lastPosX;
+                createdProtoObject.posY = iTrackingRecord.lastPosY;
+
+                System.out.println("ProtoObject system: created new proto-object with id=" + createdProtoObject.classificationId + "!");
+
+                protoObjects.add(createdProtoObject);
+            }
+        }
+    }
+
+    void updateProtoObjects() {
+        double protoObjectMaxDistanceToHotPatch = 20.0;
+
+        // search closest active/hot tracking record and assign position to it
+        for (final PatchTracker.TrackingRecord iTrackingRecord : patchTracker.trackingRecords) {
+            boolean isHotEnough = iTrackingRecord.timeSinceLastMove < -400;
+            if (!isHotEnough) {
+                continue;
+            }
+
+            // search closest proto object and assign position to it
+
+
+            if (protoObjects.size() == 0) {
+                continue;
+            }
+
+            ProtoObject closest = null;
+            double closestDistance = 999999999999999999999.0;
+
+            for (ProtoObject iProtoObject : protoObjects) {
+                double diffX = iProtoObject.posX - iTrackingRecord.lastPosX;
+                double diffY = iProtoObject.posY - iTrackingRecord.lastPosY;
+                double distance = Math.sqrt(diffX*diffX + diffY*diffY);
+
+                if (distance > protoObjectMaxDistanceToHotPatch) {
+                    continue;
+                }
+
+                if (distance < closestDistance) {
+                    closest = iProtoObject;
+                    closestDistance = distance;
+                }
+            }
+
+            if (closest != null) {
+                closest.posX = iTrackingRecord.lastPosX;
+                closest.posY = iTrackingRecord.lastPosY;
+            }
+        }
+
+
+    }
+
     void tick() {
         { // draw to virtual screen
             pixelScreen.clear();
@@ -319,10 +412,16 @@ public class Pong extends PApplet {
                     oldPixelScreen.arr[y][x] = pixelScreen.arr[y][x];
                 }
             }
-            }
+        }
+
         if (t%2==0) {
             patchTracker.frame(pixelScreen);
         }
+
+        updateProtoObjects();
+        assignNewProtoObjects();
+
+
 
         if (t != oldT) {
             oldT = t;
@@ -632,6 +731,29 @@ public class Pong extends PApplet {
 
                 line(0, -5, 0, 5);
                 line(-5, 0, 5, 0);
+
+                popMatrix();
+                fill(0);
+            }
+        }
+
+
+        // draw proto-objects
+        {
+            for(final ProtoObject iTrackingRecord: protoObjects) {
+                float posX = (float)iTrackingRecord.posX;
+                float posY = (float)iTrackingRecord.posY;
+
+                pushMatrix();
+                translate((float)posX, (float)posY);
+
+                fill(255, 0, 0, 0.0f);
+
+                stroke(0, 0,255, 255.0f);
+
+
+                line(0, -25, 0, 25);
+                line(-25, 0, 25, 0);
 
                 popMatrix();
                 fill(0);
