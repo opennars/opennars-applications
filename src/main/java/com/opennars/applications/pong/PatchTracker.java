@@ -29,7 +29,6 @@ public class PatchTracker {
         for(int idx=trackingRecords.size()-1;idx>=0;idx--) {
             if (trackingRecords.get(idx).timeSinceLastMove >= 0) {
                 trackingRecords.remove(idx);
-                idx++;
             }
         }
     }
