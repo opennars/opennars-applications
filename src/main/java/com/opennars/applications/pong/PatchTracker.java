@@ -11,6 +11,10 @@ public class PatchTracker {
 
     public void frame(final PixelScreen screen) {
         for (final TrackingRecord iTrackingRecord : trackingRecords) {
+            if (iTrackingRecord.patch == null) {
+                continue;
+            }
+
             // try to "reaquire" the tracked patch as good as possible by sampling the neightborhood as close as possible while increasing the distance
 
             final PatchRecords.Patch patchAtCurrentPosition = screen.genPatchAt(iTrackingRecord.lastPosY, iTrackingRecord.lastPosX, -1);

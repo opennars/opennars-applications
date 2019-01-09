@@ -285,7 +285,7 @@ public class Pong extends PApplet {
 
         // search closest active/hot tracking record and assign position to it
         for (final PatchTracker.TrackingRecord iTrackingRecord : patchTracker.trackingRecords) {
-            boolean isHotEnough = iTrackingRecord.timeSinceLastMove < -490;
+            boolean isHotEnough = true; //iTrackingRecord.timeSinceLastMove < -490;
             if (!isHotEnough) {
                 continue;
             }
@@ -341,7 +341,7 @@ public class Pong extends PApplet {
                     continue;
                 }
 
-                double mergeDistance = 5;
+                double mergeDistance = 6;
 
                 double diffX = iProtoObjectA.posX - iProtoObjectB.posX;
                 double diffY = iProtoObjectA.posY - iProtoObjectB.posY;
@@ -517,7 +517,15 @@ public class Pong extends PApplet {
                     }
 
                     // spawn
-                    samplePatchAtPosition(x, y);
+                    //samplePatchAtPosition(x, y);
+
+                    PatchTracker.TrackingRecord r = new PatchTracker.TrackingRecord();
+                    r.lastPosX = x;
+                    r.lastPosY = y;
+                    r.timeSinceLastMove = -1;
+
+                    patchTracker.trackingRecords.add(r);
+
                 }
             }
         }
@@ -592,14 +600,14 @@ public class Pong extends PApplet {
 
 
             // inform
-            {
+            if(t%4==0) {
                 // heuristic
                 //  we sort the proto-objects by the selected axis - which is hardcoded to sort by the x axis now
 
                 Collections.sort(protoObjects, new Comparator<ProtoObject>() {
                     @Override
                     public int compare(ProtoObject o1, ProtoObject o2) {
-                        if (o1.posX < o2.posX) {
+                        if (o1.posX > o2.posX) {
                             return 1;
                         }
                         return -1;
@@ -658,7 +666,7 @@ public class Pong extends PApplet {
                 informer.informWhenNecessary(false); // give chance to push collected narsese to narsese consumer(which is the Nar)
             }
 
-            if(t%2==0) {
+            if(t%4==0) {
                 reasoner.addInput("<{SELF} --> [good]>!");
             }
 
@@ -822,7 +830,7 @@ public class Pong extends PApplet {
             System.out.println("Concepts: " + ((Nar)reasoner).memory.concepts.size());
         }
 
-        if(true) {
+        if(false) {
             System.out.println("#patches= " + patchTracker.trackingRecords.size());
         }
     }
