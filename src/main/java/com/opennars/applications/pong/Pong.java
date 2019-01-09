@@ -29,7 +29,6 @@ import com.opennars.applications.crossing.Viewport;
 import com.opennars.applications.pong.components.BallBehaviour;
 import com.opennars.applications.pong.components.BallRenderComponent;
 import com.opennars.applications.pong.components.BatBehaviour;
-import com.opennars.applications.pong.components.MappedPositionInformer;
 import com.opennars.applications.pong.tracker.Tracker;
 import com.opennars.sgui.NarSimpleGUI;
 import org.opennars.interfaces.pub.Reasoner;
@@ -319,6 +318,45 @@ public class Pong extends PApplet {
     void updateProtoObjects() {
         double protoObjectMaxDistanceToHotPatch = 20.0;
 
+        for (ProtoObject iProtoObject : protoObjects) {
+            // search next hottest tracking record which is close enough and hot enough
+
+            long hottestTime = 0;
+            PatchTracker.TrackingRecord hottestCloseEnoughTrackingRecord = null;
+
+            for (final PatchTracker.TrackingRecord iTrackingRecord : patchTracker.trackingRecords) {
+                double diffX = iProtoObject.posX - iTrackingRecord.lastPosX;
+                double diffY = iProtoObject.posY - iTrackingRecord.lastPosY;
+                double distance = Math.sqrt(diffX*diffX + diffY*diffY);
+
+                if (distance > protoObjectMaxDistanceToHotPatch) {
+                    continue;
+                }
+
+                boolean isHotEnough = iTrackingRecord.timeSinceLastMove < -400;
+                if (!isHotEnough) {
+                    continue;
+                }
+
+                if (iTrackingRecord.timeSinceLastMove > hottestTime) {
+                    continue;
+                }
+
+                hottestTime = iTrackingRecord.timeSinceLastMove;
+                hottestCloseEnoughTrackingRecord = iTrackingRecord;
+            }
+
+            // update if possible
+            if (hottestCloseEnoughTrackingRecord != null) {
+                iProtoObject.posX = hottestCloseEnoughTrackingRecord.lastPosX;
+                iProtoObject.posY = hottestCloseEnoughTrackingRecord.lastPosY;
+
+                // TODO< update update time >
+
+            }
+        }
+
+        /*
         // search closest active/hot tracking record and assign position to it
         for (final PatchTracker.TrackingRecord iTrackingRecord : patchTracker.trackingRecords) {
             boolean isHotEnough = iTrackingRecord.timeSinceLastMove < -400;
@@ -356,7 +394,7 @@ public class Pong extends PApplet {
                 closest.posY = iTrackingRecord.lastPosY;
             }
         }
-
+        */
 
     }
 
