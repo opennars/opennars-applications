@@ -56,5 +56,5 @@ public class PixelScreen {
 
     public boolean arr[][];
 
-    public int patchSize = 6;
+    public int patchSize = 5;
 }

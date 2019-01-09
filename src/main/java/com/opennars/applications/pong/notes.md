@@ -1,6 +1,6 @@
 == Old commits
 
-== Current commit
+=== https://github.com/opennars/opennars-applications/commit/44a439671a26a1ae8a1df4682e3f3611971451aa
 
 Problems of tracking and recognizing objects from pixel data are the following
  * identification of new unknown objects
@@ -27,8 +27,22 @@ Experiment:
     We can store the old patch for that sampled position and compare it with the new patch if the position is resampled
        The attention system can get informed when a change was detected.
 
+== Current commit
+
+* drawing of ball
+* drawing of bat
+
+* attention : don't forget tracked patched if they were moving
+
+we need a attention system which looks at the difference of the pixels - so we can (re)idenfiy either to fast moving objects or "teleporting" objects
++ this works very well
+- leads to a lot of tracked patches because they get "collected"
+
 
 == TODO
     * forgetting of very old SDR's in the SDR database - we can retain a few 100's to a few 1000's of SDR's easiliy
 
+
+TODO
+    * merge tracked patches if they are the same
 

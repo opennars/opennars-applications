@@ -48,8 +48,8 @@ public class PatchTracker {
 
         // TODO< loose tracking if it fails to find a new one with a minimalSimilarity of threshold >
 
-        // TODO< search more distance >
-        for(int searchDist=0;searchDist<=1;searchDist++) {
+        // TODO< search more distance ? >
+        for(int searchDist=0;searchDist<=2;searchDist++) {
             for(int dy=-searchDist;dy<=searchDist;dy++) {
                 for(int dx=-searchDist;dx<=searchDist;dx++) {
                     final PatchRecords.Patch patchAtCurrentPosition = screen.genPatchAt(bestPositionY+dy, bestPositionX+dx, -1);
@@ -65,14 +65,15 @@ public class PatchTracker {
         }
 
         if ( trackingRecord.lastPosX != bestPositionX || trackingRecord.lastPosY != bestPositionY) {
-            System.out.println("retrace: last=<" + trackingRecord.lastPosX + "," + trackingRecord.lastPosY + ">  best=<" + bestPositionX + "," + bestPositionY + ">");
+            if (false)   System.out.println("retrace: last=<" + trackingRecord.lastPosX + "," + trackingRecord.lastPosY + ">  best=<" + bestPositionX + "," + bestPositionY + ">");
 
             // update
             trackingRecord.lastPosX = bestPositionX;
             trackingRecord.lastPosY = bestPositionY;
 
             // set timer so it can't get forgotten for a relativly long time
-            trackingRecord.timeSinceLastMove = -100;
+            // attention< we set it here higher because it was moving indeed >
+            trackingRecord.timeSinceLastMove = -500;
 
             // it was moving
             trackingRecord.wasMoving = true;

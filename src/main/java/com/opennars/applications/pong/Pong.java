@@ -94,15 +94,18 @@ public class Pong extends PApplet {
     long patchIdCounter = 1;
 
     PixelScreen pixelScreen;
+    PixelScreen oldPixelScreen; // used for attention
 
     PatchTracker patchTracker = new PatchTracker();
 
     @Override
     public void setup() {
         { // pixel screen
-            int pixelScreenWidth = 80;
+            int pixelScreenWidth = 120;
             int pixelScreenHeight = 80;
             pixelScreen = new PixelScreen(pixelScreenWidth, pixelScreenHeight);
+
+            oldPixelScreen = new PixelScreen(pixelScreenWidth, pixelScreenHeight);
         }
 
 
@@ -209,12 +212,10 @@ public class Pong extends PApplet {
         }
     }
 
-    void samplePatchAtRandomPosition() {
-        int posX = rng.nextInt(pixelScreen.retWidth());
-        int posY = rng.nextInt(pixelScreen.retHeight());
+    void samplePatchAtPosition(int x, int y) {
 
         // cut the hit patch
-        PatchRecords.Patch patch = pixelScreen.genPatchAt(posY, posX, patchIdCounter++);
+        PatchRecords.Patch patch = pixelScreen.genPatchAt(y, x, patchIdCounter++);
 
         // compare and get best match
         PatchRecords.Patch similarPatch = patchRecords.querySdrMostSimiliarPatch(patch);
@@ -223,12 +224,12 @@ public class Pong extends PApplet {
         if (patchRecords.resultSimilarity > threshold) {
             // we identified the patch as a known patch
 
-            System.out.println("identified patch as known patch with id=" + Long.toString(similarPatch.id) + " at x=" + posX + " y=" + posY);
+            if (false)   System.out.println("identified patch as known patch with id=" + Long.toString(similarPatch.id) + " at x=" + x + " y=" + y);
 
             double bestPatchSimilarity = patchRecords.resultSimilarity;
 
-            int bestPatchPosX = posX;
-            int bestPatchPosY = posY;
+            int bestPatchPosX = x;
+            int bestPatchPosY = y;
 
             // search better and better patches near it
 
@@ -252,18 +253,37 @@ public class Pong extends PApplet {
 
         // and store as tracking record because we want to track it
         PatchTracker.TrackingRecord trackingRecord = new PatchTracker.TrackingRecord();
-        trackingRecord.lastPosX = posX;
-        trackingRecord.lastPosY = posY;
+        trackingRecord.lastPosX = x;
+        trackingRecord.lastPosY = y;
         trackingRecord.patch = patch;
 
         patchTracker.trackingRecords.add(trackingRecord);
+    }
+
+    void samplePatchAtRandomPosition() {
+        int posX = rng.nextInt(pixelScreen.retWidth());
+        int posY = rng.nextInt(pixelScreen.retHeight());
+
+        samplePatchAtPosition(posX, posY);
     }
 
     void tick() {
         { // draw to virtual screen
             pixelScreen.clear();
 
-            pixelScreen.drawDot((int)(ballEntity.posX / 2.0), (int)(ballEntity.posY / 2.0));
+            // ball
+            pixelScreen.drawDot((int)(ballEntity.posX), (int)(ballEntity.posY));
+            pixelScreen.drawDot((int)(ballEntity.posX+1), (int)(ballEntity.posY));
+            pixelScreen.drawDot((int)(ballEntity.posX), (int)(ballEntity.posY+1));
+            pixelScreen.drawDot((int)(ballEntity.posX+1), (int)(ballEntity.posY+1));
+
+
+            // bat
+            pixelScreen.drawDot((int)(batEntity.posX), (int)(batEntity.posY-2));
+            pixelScreen.drawDot((int)(batEntity.posX), (int)(batEntity.posY-1));
+            pixelScreen.drawDot((int)(batEntity.posX), (int)(batEntity.posY-0));
+            pixelScreen.drawDot((int)(batEntity.posX), (int)(batEntity.posY+1));
+            pixelScreen.drawDot((int)(batEntity.posX), (int)(batEntity.posY+2));
         }
 
         if (t%2==0) {
@@ -272,6 +292,34 @@ public class Pong extends PApplet {
             samplePatchAtRandomPosition();
         }
 
+        // attention< we need to bias our attention to the changes in the environment >
+        {
+            for(int y=0;y<pixelScreen.retHeight();y++) {
+                for(int x=0;x<pixelScreen.retWidth();x++) {
+                    // we don't need to sample every pixel
+                    if ((x+y) % 2 == 0) {
+                        continue;
+                    }
+
+                    // ignore if no change
+                    if(pixelScreen.arr[y][x] == oldPixelScreen.arr[y][x]) {
+                        continue;
+                    }
+
+                    // spawn
+                    samplePatchAtPosition(x, y);
+                }
+            }
+        }
+
+        // and update/copy
+        {
+            for(int y=0;y<pixelScreen.retHeight();y++) {
+                for(int x=0;x<pixelScreen.retWidth();x++) {
+                    oldPixelScreen.arr[y][x] = pixelScreen.arr[y][x];
+                }
+            }
+            }
         if (t%2==0) {
             patchTracker.frame(pixelScreen);
         }
@@ -563,8 +611,8 @@ public class Pong extends PApplet {
         // draw tracked patches of patch-tracker
         {
             for(final PatchTracker.TrackingRecord iTrackingRecord: patchTracker.trackingRecords) {
-                float posX = (float)iTrackingRecord.lastPosX * 2.5f;
-                float posY = (float)iTrackingRecord.lastPosY * 2.5f;
+                float posX = (float)iTrackingRecord.lastPosX;
+                float posY = (float)iTrackingRecord.lastPosY;
 
                 pushMatrix();
                 translate((float)posX, (float)posY);
@@ -572,11 +620,14 @@ public class Pong extends PApplet {
 
                 fill(255, 0, 0, 0.0f);
 
-                if (iTrackingRecord.timeSinceLastMove < -60 && iTrackingRecord.wasMoving) {
+                if (iTrackingRecord.timeSinceLastMove < -480 && iTrackingRecord.wasMoving) {
                     stroke(255.0f, 0,0, 0.8f * 255.0f);
                 }
+                else if (iTrackingRecord.timeSinceLastMove < -420 && iTrackingRecord.wasMoving) {
+                    stroke(0.2f * 255.0f, 0,0, 0.8f * 255.0f);
+                }
                 else {
-                    stroke(0, 0,0, 0.2f * 255.0f);
+                    stroke(0, 0,0, 0.1f * 255.0f);
                 }
 
                 line(0, -5, 0, 5);
