@@ -38,14 +38,18 @@ we need a attention system which looks at the difference of the pixels - so we c
 + this works very well
 - leads to a lot of tracked patches because they get "collected"
 
-== Current commit
+== commit
 
 Added Proto-Objects
 def: Proto-objects are "clusters" (of patches) which show a similar behaviour, shape, color, etc.
 Can be used by higher level reasoning processes to compose objects out of proto-objects.
 
-Problem:
-    The ball currently leaves a trail of not moving inactive proto-objects!
+
+== Current commit
+
+* solved problem of left off proto-objects
+* implemented merging of proto-objects by age - we throw the older proto-object away
+
 
 == TODO
     * merge tracked patches if they are the same

@@ -262,6 +262,7 @@ public class Pong extends PApplet {
         trackingRecord.patch = patch;
 
         patchTracker.trackingRecords.add(trackingRecord);
+
     }
 
     void samplePatchAtRandomPosition() {
@@ -272,11 +273,11 @@ public class Pong extends PApplet {
     }
 
     void assignNewProtoObjects() {
-        double protoObjectMaxDistanceToHotPatch = 20.0;
+        double protoObjectMaxDistanceToHotPatch = 30.0;
 
         // search closest active/hot tracking record and assign position to it
         for (final PatchTracker.TrackingRecord iTrackingRecord : patchTracker.trackingRecords) {
-            boolean isHotEnough = iTrackingRecord.timeSinceLastMove < -400;
+            boolean isHotEnough = iTrackingRecord.timeSinceLastMove < -490;
             if (!isHotEnough) {
                 continue;
             }
@@ -304,13 +305,58 @@ public class Pong extends PApplet {
             if (closest == null) {
                 // we need to assign a new proto object to it
 
-                ProtoObject createdProtoObject = new ProtoObject(protoObjectIdCounter++);
-                createdProtoObject.posX = iTrackingRecord.lastPosX;
-                createdProtoObject.posY = iTrackingRecord.lastPosY;
+                //if (protoObjectIdCounter == 1) {
+                    ProtoObject createdProtoObject = new ProtoObject(protoObjectIdCounter++);
+                    createdProtoObject.posX = iTrackingRecord.lastPosX;
+                    createdProtoObject.posY = iTrackingRecord.lastPosY;
 
-                System.out.println("ProtoObject system: created new proto-object with id=" + createdProtoObject.classificationId + "!");
+                    System.out.println("ProtoObject system: created new proto-object with id=" + createdProtoObject.classificationId + "!");
 
-                protoObjects.add(createdProtoObject);
+                    protoObjects.add(createdProtoObject);
+                //}
+
+            }
+        }
+    }
+
+    void removeOverlappingProtoObjects() {
+        int iA = 0;
+        for(ProtoObject iProtoObjectA : protoObjects) {
+            int iB = 0;
+
+            for(ProtoObject iProtoObjectB : protoObjects) {
+                //if(iB <= iA) {
+                //    continue;
+                //}
+
+                if (iProtoObjectA.equals(iProtoObjectB)) {
+                    continue;
+                }
+
+                double mergeDistance = 5;
+
+                double diffX = iProtoObjectA.posX - iProtoObjectB.posX;
+                double diffY = iProtoObjectA.posY - iProtoObjectB.posY;
+                double distance = Math.sqrt(diffX*diffX + diffY*diffY);
+
+                if(distance < mergeDistance) {
+                    if(iProtoObjectA.age > iProtoObjectB.age) {
+                        iProtoObjectB.remove = true; // delete younger one
+                    }
+                    else if(iProtoObjectB.age > iProtoObjectA.age) {
+                        iProtoObjectA.remove = true; // delete younger one
+                    }
+                }
+            }
+
+            iA++;
+        }
+
+
+        // and remove
+        for(int idx=protoObjects.size()-1;idx>=0;idx--) {
+            if(protoObjects.get(idx).remove) {
+                protoObjects.remove(idx);
             }
         }
     }
@@ -398,7 +444,15 @@ public class Pong extends PApplet {
 
     }
 
+    void tickProtoObjects() {
+        for(final ProtoObject iProtoObject : protoObjects) {
+            iProtoObject.age++;
+        }
+    }
+
     void tick() {
+        tickProtoObjects();
+
         { // draw to virtual screen
             pixelScreen.clear();
 
@@ -457,6 +511,7 @@ public class Pong extends PApplet {
         }
 
         updateProtoObjects();
+        removeOverlappingProtoObjects();
         assignNewProtoObjects();
 
 
@@ -794,6 +849,12 @@ public class Pong extends PApplet {
                 line(-25, 0, 25, 0);
 
                 popMatrix();
+
+                {
+                    fill(0, 0, 0, 255.0f);
+                    text("age=" + iTrackingRecord.age, posX, posY);
+                }
+
                 fill(0);
             }
         }
