@@ -45,10 +45,14 @@ def: Proto-objects are "clusters" (of patches) which show a similar behaviour, s
 Can be used by higher level reasoning processes to compose objects out of proto-objects.
 
 
-== Current commit
+== commit
 
 * solved problem of left off proto-objects
 * implemented merging of proto-objects by age - we throw the older proto-object away
+
+== Current commit
+
+* giving NARS the position informations from the (sorted) proto-objects
 
 
 == TODO

@@ -40,9 +40,7 @@ import org.opennars.operator.Operator;
 import processing.core.PApplet;
 import processing.event.MouseEvent;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Random;
+import java.util.*;
 
 public class Pong extends PApplet {
     Reasoner reasoner;
@@ -560,13 +558,37 @@ public class Pong extends PApplet {
 
             // inform
             {
+                // heuristic
+                //  we sort the proto-objects by the selected axis - which is hardcoded to sort by the x axis now
+
+                Collections.sort(protoObjects, new Comparator<ProtoObject>() {
+                    @Override
+                    public int compare(ProtoObject o1, ProtoObject o2) {
+                        if (o1.posX < o2.posX) {
+                            return 1;
+                        }
+                        return -1;
+                    }
+                });
+
+
                 int quantizedBallY = (int)(ballEntity.posY / 10.0);
                 int quantizedBallX = (int)(ballEntity.posX / 10.0);
 
                 int quantizedBatX = (int)(batEntity.posX / 10.0);
                 int quantizedBatY = (int)(batEntity.posY / 10.0);
 
-                String narsese = "<(*, " + Integer.toString(quantizedBallY)  + "," + Integer.toString(quantizedBatY) + ") --> [atTuple]>";
+                List<String> innerNarsese = new ArrayList<>();
+                for(ProtoObject iProtoObject : protoObjects) { // iterate in sorted proto-objects
+                    int quantizedY = (int)(iProtoObject.posY / 10.0);
+
+                    innerNarsese.add(Integer.toString(quantizedY));
+                }
+
+                String narsese = "<null --> [atTuple0]>";
+                if (protoObjects.size() > 0) {
+                    narsese = "<(*, " +String.join(",", innerNarsese) + ") --> [atTuple" + protoObjects.size() + "]>";
+                }
 
                 narsese += ". :|:";
                 informer.addNarsese(narsese);
