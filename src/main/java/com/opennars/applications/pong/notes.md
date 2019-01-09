@@ -53,7 +53,7 @@ Can be used by higher level reasoning processes to compose objects out of proto-
 == Current commit
 
 * giving NARS the position informations from the (sorted) proto-objects
-
+- produces to complex products for to many objects (>= 4) - and it slows down
 
 == TODO
     * merge tracked patches if they are the same

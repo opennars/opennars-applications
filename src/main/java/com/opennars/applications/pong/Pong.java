@@ -100,6 +100,9 @@ public class Pong extends PApplet {
 
     long protoObjectIdCounter = 1;
 
+    // used as a optimization - we need to avoid to add patches where patches are already located
+    PixelScreen patchScreen;
+
     @Override
     public void setup() {
         { // pixel screen
@@ -108,6 +111,8 @@ public class Pong extends PApplet {
             pixelScreen = new PixelScreen(pixelScreenWidth, pixelScreenHeight);
 
             oldPixelScreen = new PixelScreen(pixelScreenWidth, pixelScreenHeight);
+
+            patchScreen = new PixelScreen(pixelScreenWidth, pixelScreenHeight);
         }
 
 
@@ -215,6 +220,11 @@ public class Pong extends PApplet {
     }
 
     void samplePatchAtPosition(int x, int y) {
+
+        if (patchScreen.arr[y][x]) {
+            return; // we don't add a patch where a patch currently is!
+        }
+
 
         // cut the hit patch
         PatchRecords.Patch patch = pixelScreen.genPatchAt(y, x, patchIdCounter++);
@@ -468,6 +478,22 @@ public class Pong extends PApplet {
             pixelScreen.drawDot((int)(batEntity.posX), (int)(batEntity.posY+1));
             pixelScreen.drawDot((int)(batEntity.posX), (int)(batEntity.posY+2));
         }
+
+
+        // we need to draw the positions of already existing patches
+        {
+            patchScreen.clear();
+
+            for(PatchTracker.TrackingRecord iPatch : patchTracker.trackingRecords) {
+                if (iPatch.lastPosX < 0 || iPatch.lastPosX >= patchScreen.retWidth() || iPatch.lastPosY < 0 || iPatch.lastPosY >= patchScreen.retHeight()) {
+                    continue;
+                }
+
+                patchScreen.arr[iPatch.lastPosY][iPatch.lastPosX] = true;
+            }
+        }
+
+
 
         if (t%2==0) {
             samplePatchAtRandomPosition();
@@ -758,6 +784,10 @@ public class Pong extends PApplet {
 
         if (false) {
             System.out.println("Concepts: " + ((Nar)reasoner).memory.concepts.size());
+        }
+
+        if(true) {
+            System.out.println("#patches= " + patchTracker.trackingRecords.size());
         }
     }
 
