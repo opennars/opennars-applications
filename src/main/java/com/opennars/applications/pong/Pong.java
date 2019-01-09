@@ -86,8 +86,26 @@ public class Pong extends PApplet {
     // TODO< implement very simple perception of ball >
     Tracker tracker;
 
+
+    // used to keep track of snippets from the screen
+    // will be used to identify objects
+    PatchRecords patchRecords = new PatchRecords();
+
+    long patchIdCounter = 1;
+
+    PixelScreen pixelScreen;
+
+    PatchTracker patchTracker = new PatchTracker();
+
     @Override
     public void setup() {
+        { // pixel screen
+            int pixelScreenWidth = 80;
+            int pixelScreenHeight = 80;
+            pixelScreen = new PixelScreen(pixelScreenWidth, pixelScreenHeight);
+        }
+
+
         mapper.cellsize = 10;
 
         try {
@@ -191,7 +209,73 @@ public class Pong extends PApplet {
         }
     }
 
+    void samplePatchAtRandomPosition() {
+        int posX = rng.nextInt(pixelScreen.retWidth());
+        int posY = rng.nextInt(pixelScreen.retHeight());
+
+        // cut the hit patch
+        PatchRecords.Patch patch = pixelScreen.genPatchAt(posY, posX, patchIdCounter++);
+
+        // compare and get best match
+        PatchRecords.Patch similarPatch = patchRecords.querySdrMostSimiliarPatch(patch);
+
+        double threshold = 0.2;
+        if (patchRecords.resultSimilarity > threshold) {
+            // we identified the patch as a known patch
+
+            System.out.println("identified patch as known patch with id=" + Long.toString(similarPatch.id) + " at x=" + posX + " y=" + posY);
+
+            double bestPatchSimilarity = patchRecords.resultSimilarity;
+
+            int bestPatchPosX = posX;
+            int bestPatchPosY = posY;
+
+            // search better and better patches near it
+
+            // TODO
+
+
+
+        }
+        else {
+            // we identified the patch as a unknown patch
+
+            System.out.println("identified patch as unknown patch");
+
+            // TODO< send signal to attention system >
+
+            // store patch because it is yet unknown
+            patchRecords.patches.add(patch);
+
+
+        }
+
+        // and store as tracking record because we want to track it
+        PatchTracker.TrackingRecord trackingRecord = new PatchTracker.TrackingRecord();
+        trackingRecord.lastPosX = posX;
+        trackingRecord.lastPosY = posY;
+        trackingRecord.patch = patch;
+
+        patchTracker.trackingRecords.add(trackingRecord);
+    }
+
     void tick() {
+        { // draw to virtual screen
+            pixelScreen.clear();
+
+            pixelScreen.drawDot((int)(ballEntity.posX / 2.0), (int)(ballEntity.posY / 2.0));
+        }
+
+        if (t%2==0) {
+            samplePatchAtRandomPosition();
+            samplePatchAtRandomPosition();
+            samplePatchAtRandomPosition();
+        }
+
+        if (t%2==0) {
+            patchTracker.frame(pixelScreen);
+        }
+
         if (t != oldT) {
             oldT = t;
 
@@ -382,7 +466,7 @@ public class Pong extends PApplet {
                     code1 = "c";
                 }
 
-                tracker.informAndStep(code1, code2);
+                //tracker.informAndStep(code1, code2);
             }
         }
 
@@ -460,7 +544,7 @@ public class Pong extends PApplet {
 
 
         // draw tracker
-        {
+        /*{
 
             pushMatrix();
             translate((float)tracker.posX, (float)tracker.posY);
@@ -473,6 +557,34 @@ public class Pong extends PApplet {
 
             popMatrix();
             fill(0);
+        }*/
+
+
+        // draw tracked patches of patch-tracker
+        {
+            for(final PatchTracker.TrackingRecord iTrackingRecord: patchTracker.trackingRecords) {
+                float posX = (float)iTrackingRecord.lastPosX * 2.5f;
+                float posY = (float)iTrackingRecord.lastPosY * 2.5f;
+
+                pushMatrix();
+                translate((float)posX, (float)posY);
+                rotate(45.0f);
+
+                fill(255, 0, 0, 0.0f);
+
+                if (iTrackingRecord.timeSinceLastMove < -60 && iTrackingRecord.wasMoving) {
+                    stroke(255.0f, 0,0, 0.8f * 255.0f);
+                }
+                else {
+                    stroke(0, 0,0, 0.2f * 255.0f);
+                }
+
+                line(0, -5, 0, 5);
+                line(-5, 0, 5, 0);
+
+                popMatrix();
+                fill(0);
+            }
         }
 
     }
