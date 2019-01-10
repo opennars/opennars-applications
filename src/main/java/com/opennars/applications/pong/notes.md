@@ -68,7 +68,7 @@ Result:
 - protoobjects don't match up with the bat most of the time
   algorithm of the patches is probably to complex and I should resort to something much simpler - I have an idea
 
-== current commit
+== commit
 
 * tried patricks encoding - which is just to put the active pixels as events
   performance is still not good with 3.0.1
@@ -76,7 +76,19 @@ Result:
 It had a good run but then went onto the ^down spree
 https://www.youtube.com/watch?v=ZZfh5voSdL4
 
+== current commit
 
+* trying patricks encoing again with labeled pixels (by x position)
+* tuned forced random chance - old value seems to high
+
+Result:
+~ after >~30 mins - agent pressed a long time ^down (as usual) - and then recovered
+  after >~45 mins - agent is in a predador like state in the bottom corner and can react to ball in other positions of the screen
+
+12:00
 
 == TODO
+
+    * retina - agent has to be able to select object of focus - positions of other objects will be relative to it
+    
     * forgetting of very old SDR's in the SDR database - we can retain a few 100's to a few 1000's of SDR's easiliy

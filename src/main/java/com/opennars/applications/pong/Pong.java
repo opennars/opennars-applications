@@ -108,8 +108,8 @@ public class Pong extends PApplet {
     @Override
     public void setup() {
         { // pixel screen
-            int pixelScreenWidth = 120;
-            int pixelScreenHeight = 80;
+            int pixelScreenWidth = 160;
+            int pixelScreenHeight = 100;
             pixelScreen = new PixelScreen(pixelScreenWidth, pixelScreenHeight);
 
             oldPixelScreen = new PixelScreen(pixelScreenWidth, pixelScreenHeight);
@@ -476,9 +476,9 @@ public class Pong extends PApplet {
 
 
             // bat
-            pixelScreen.drawDot((int)(batEntity.posX), (int)(batEntity.posY-1));
+            //pixelScreen.drawDot((int)(batEntity.posX), (int)(batEntity.posY-1));
             pixelScreen.drawDot((int)(batEntity.posX), (int)(batEntity.posY-0));
-            pixelScreen.drawDot((int)(batEntity.posX), (int)(batEntity.posY+1));
+            //pixelScreen.drawDot((int)(batEntity.posX), (int)(batEntity.posY+1));
             //pixelScreen.drawDot((int)(batEntity.posX), (int)(batEntity.posY+1));
             //pixelScreen.drawDot((int)(batEntity.posX), (int)(batEntity.posY+2));
         }
@@ -510,8 +510,13 @@ public class Pong extends PApplet {
         {
             HashMap<String, String> h = new HashMap<>();
 
-            for(int y=0;y<pixelScreen.retHeight();y++) {
-                for(int x=0;x<pixelScreen.retWidth();x++) {
+            int labelCounter = 0; // fine to count labels by x because pong is ordered by x
+
+            for(int x=0;x<pixelScreen.retWidth();x++) {
+                for(int y=0;y<pixelScreen.retHeight();y++) {
+
+
+
                     // we don't need to sample every pixel
                     //if ((x+y) % 2 == 0) {
                     //    continue;
@@ -527,7 +532,11 @@ public class Pong extends PApplet {
 
                     // inform nars when it turned on
                     if(pixelScreen.arr[y][x] == true) {
-                        h.put("<(*, y" + y / 10 + ", x" + x / 10 + ") --> [on]>. :|:", "<(*, y" + y / 10 + ", x" + x / 10 + ") --> [on]>. :|:");
+                        String str = "<(*, y" + y / 10 + ", x" + x / 10 + ") --> [on" + labelCounter + "]>. :|:";
+
+                        h.put(str, str);
+
+                        labelCounter++;
                     }
 
                     // spawn
@@ -695,7 +704,7 @@ public class Pong extends PApplet {
             if(t%8==0) {
 
 
-                int explorativeTimeout = 60; // time after which a random op is injected when it didn't do anything sufficiently long
+                int explorativeTimeout = 600; // time after which a random op is injected when it didn't do anything sufficiently long
 
 
                 if(timeoutForOps >= 0) {
@@ -724,7 +733,7 @@ public class Pong extends PApplet {
                 { // inject random op from time to time by chance to avoid getting stuck in cycles from which the agent can't escape
                     int rngValue2 = rng.nextInt( 100);
 
-                    int chance = 13; // in percentage
+                    int chance = 5; // in percentage
 
                     if (rngValue2 < chance) {
                         System.out.println("[d] FORCED random op");
