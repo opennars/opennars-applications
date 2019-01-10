@@ -85,7 +85,7 @@ Result:
 ~ after >~30 mins - agent pressed a long time ^down (as usual) - and then recovered
   after >~45 mins - agent is in a predador like state in the bottom corner and can react to ball in other positions of the screen
 
-== current commit
+== commit
 
 * begun "retina" approach
   key idea is that the agent can choose to focus on objects
@@ -93,6 +93,15 @@ Result:
 
 Result:
 Plays well after a short time (<~10 min)
+
+== current commit
+
+* experimented with op movement delta of 3 pixels - got stuck in corner - might be due to bad luck
+* experimented with op movement delta of 5 pixels - got stuck in corner
+
+* current tuning
+-> leads to result of ~50% - random hit chance is ~10%
+[i] #balls=523 pseudoscore=238.0 t=138600
 
 == TODO
 

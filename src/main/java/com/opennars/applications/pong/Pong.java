@@ -75,6 +75,7 @@ public class Pong extends PApplet {
     StaticInformer informer2;
 
     double pseudoscore = 0.0;
+    int emittedBalls = 0;
 
     int slowdownFactor = 1;
 
@@ -184,8 +185,8 @@ public class Pong extends PApplet {
             final double posY = 1.0;
 
             ballEntity = new Entity(entityID++, posX, posY, 0.0, 0.0, "ball");
-            ballEntity.velocityX = 20.0 / slowdownFactor;
-            ballEntity.velocityY = 7.0 / slowdownFactor; //23.7;
+            ballEntity.velocityX = 40.0 / slowdownFactor;
+            ballEntity.velocityY = 14.0 / slowdownFactor; //23.7;
 
             ballEntity.renderable = new BallRenderComponent();
             ballEntity.behaviour = new BallBehaviour();
@@ -563,9 +564,9 @@ public class Pong extends PApplet {
                 double diffX = batEntity.posX - ballEntity.posX;
                 double diffY = batEntity.posY - ballEntity.posY;
 
-                String narsese = "<{x" + (int)(diffX / 10) + "} --> [diffX]>. :|:";
+                String narsese = "<x" + (int)(diffX / 10) + " --> [diffX]>. :|:";
                 informer2.addNarsese(narsese);
-                narsese = "<{y" + (int)(diffY / 10) + "} --> [diffY]>. :|:";
+                narsese = "<y" + (int)(diffY / 10) + " --> [diffY]>. :|:";
                 informer2.addNarsese(narsese);
             }
 
@@ -623,7 +624,7 @@ public class Pong extends PApplet {
 
                     // choose random y velocity
                     for(;;) {
-                        ballEntity.velocityY = ( rng.nextDouble() * 2.0 - 1.0 ) * 10.0;
+                        ballEntity.velocityY = ( rng.nextDouble() * 2.0 - 1.0 ) * 20.0;
 
                         // disallow low y velocity because it might reward a still agent to much without doing any actions
                         if( Math.abs(ballEntity.velocityY) > 3.0) {
@@ -637,6 +638,9 @@ public class Pong extends PApplet {
                     // NOTE< we need to initialite this by an attention mechanism for a realistic vision system >
                     tracker.posX = ballEntity.posX;
                     tracker.posY = ballEntity.posY;
+
+
+                    emittedBalls++;
                 }
             }
 
@@ -745,13 +749,13 @@ public class Pong extends PApplet {
                 { // inject random op from time to time by chance to avoid getting stuck in cycles from which the agent can't escape
                     int rngValue2 = rng.nextInt( 100);
 
-                    int chance = 5; // in percentage
+                    int chance = 13; // in percentage
 
                     if (rngValue2 < chance) {
-                        System.out.println("[d] FORCED random op");
+                        //System.out.println("[d] FORCED random op");
 
                         int rngValue = rng.nextInt( 3);
-                        System.out.println(rngValue);
+                        //System.out.println(rngValue);
                         switch (rngValue) {
                             case 0:
                                 reasoner.addInput("(^up, {SELF})!");
@@ -781,12 +785,14 @@ public class Pong extends PApplet {
 
                     System.out.println("GOOD NARS");
 
-                    pseudoscore += 1.0;
+                    if (((BallBehaviour)ballEntity.behaviour).bouncedOfBat) {
+                        pseudoscore += 1.0;
+                    }
                 }
             }
 
             if(t%600==0) {
-                System.out.println("[i] pseudoscore=" + Double.toString(pseudoscore) + " t=" + Integer.toString(t));
+                System.out.println("[i] #balls=" + emittedBalls + " pseudoscore=" + Double.toString(pseudoscore) + " t=" + Integer.toString(t));
             }
 
 

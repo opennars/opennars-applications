@@ -7,7 +7,7 @@ public class Ops {
     public Entity batEntity;
 
     public void up() {
-        System.out.println("UP");
+        //System.out.println("UP");
 
         //System.out.println(batEntity.posY);
 
@@ -28,7 +28,7 @@ public class Ops {
     }
 
     public void down() {
-        System.out.println("DOWN");
+        //System.out.println("DOWN");
 
         //System.out.println(batEntity.posY);
 
