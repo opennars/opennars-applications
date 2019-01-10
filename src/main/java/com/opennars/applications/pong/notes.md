@@ -115,6 +115,17 @@ Agent doesn't learn it at all to switch to the y axis.
 
 == current commit
 
+* tried again seperated axis of relatie ball position
+- didn't work - maybe decision making has an issue
+  it seemed to learn to associate ^down with certain x values - this led the agent to continiously miss the ball
+
+
+* tried x,y tuple of position
+[i] #balls=690 pseudoscore=320.0 t=184200
+-> not so good
+
+
+
 == TODO
 
     * retina - agent has to be able to select object of focus - positions of other objects will be relative to it

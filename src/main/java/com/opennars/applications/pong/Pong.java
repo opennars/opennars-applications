@@ -575,12 +575,18 @@ public class Pong extends PApplet {
                 double diffX = batEntity.posX - ballEntity.posX;
                 double diffY = batEntity.posY - ballEntity.posY;
 
-                if (perceptionAxis == 0) {
+                /*
+                if (true || perceptionAxis == 0) {
                     String narsese = "<x" + (int)(diffX / 10) + " --> [diffX]>. :|:";
                     informer2.addNarsese(narsese);
                 }
-                else {
+                if(true){
                     String narsese = "<y" + (int)(diffY / 10) + " --> [diffY]>. :|:";
+                    informer2.addNarsese(narsese);
+                }*/
+
+                {
+                    String narsese = "<x" + (int)(diffX / 10) +"_" + (int)(diffY / 10) + " --> [diffXY]>. :|:";
                     informer2.addNarsese(narsese);
                 }
 
@@ -913,7 +919,10 @@ public class Pong extends PApplet {
 
     @Override
     public void draw() {
-        tick();
+        for(int n=0;n<20;n++) {
+            tick();
+        }
+
 
         viewport.Transform();
         background(255);
