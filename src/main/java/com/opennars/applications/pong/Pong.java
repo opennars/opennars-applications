@@ -69,6 +69,7 @@ public class Pong extends PApplet {
     Random rng = new Random();
 
     long timeoutForOps = 0;
+    long timeoutForOpsEffective = 0;
 
     StaticInformer informer;
 
@@ -611,6 +612,7 @@ public class Pong extends PApplet {
         if (t != oldT) {
             oldT = t;
 
+            timeoutForOpsEffective++;
             timeoutForOps++;
 
             {
@@ -767,10 +769,14 @@ public class Pong extends PApplet {
 
                     int chance = 13; // in percentage
 
+                    if (timeoutForOpsEffective < 0) {
+                        chance = 0; // disable if op which changed the world was done
+                    }
+
                     if (rngValue2 < chance) {
                         //System.out.println("[d] FORCED random op");
 
-                        int rngValue = rng.nextInt( 5);
+                        int rngValue = rng.nextInt( 2);
                         //System.out.println(rngValue);
                         switch (rngValue) {
                             case 0:

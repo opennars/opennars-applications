@@ -103,7 +103,7 @@ Plays well after a short time (<~10 min)
 -> leads to result of ~50% - random hit chance is ~10%
 [i] #balls=523 pseudoscore=238.0 t=138600
 
-== current commit
+== commit
 
 * experimented with switchable axis
 
@@ -112,6 +112,8 @@ result (same run):
 [i] #balls=467 pseudoscore=108.0 t=97200
 
 Agent doesn't learn it at all to switch to the y axis.
+
+== current commit
 
 == TODO
 

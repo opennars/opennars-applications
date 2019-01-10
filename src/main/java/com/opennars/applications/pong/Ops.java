@@ -14,17 +14,21 @@ public class Ops {
 
         pong.timeoutForOps = -100;
 
-        //if (batEntity.posY <= 0.0) {
-        //    return;
-        //}
+
+        double oldPosition = batEntity.posY;
 
         batEntity.posY -= 10;
+
 
         //System.out.println(batEntity.posY);
 
         batEntity.posY = Math.max(batEntity.posY, 0.0);
 
         //System.out.println(batEntity.posY);
+
+        if(batEntity.posY < oldPosition) {
+            pong.timeoutForOpsEffective = -100;
+        }
     }
 
     public void down() {
@@ -34,13 +38,14 @@ public class Ops {
 
         pong.timeoutForOps = -100;
 
-        //if (batEntity.posY >= 80.0) {
-        //    return;
-        //}
+        double oldPosition = batEntity.posY;
 
         batEntity.posY += 10;
         batEntity.posY = Math.min(batEntity.posY, 80.0);
 
+        if(batEntity.posY > oldPosition) {
+            pong.timeoutForOpsEffective = -100;
+        }
     }
 
     public void selectAxis(String name) {
