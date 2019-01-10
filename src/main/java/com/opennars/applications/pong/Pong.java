@@ -553,8 +553,20 @@ public class Pong extends PApplet {
                 }
             }
 
-            for(String i : h.keySet()) {
-                informer2.addNarsese(i);
+
+            // commented because we don't anymore inform NARS with labeled pixels
+            //for(String i : h.keySet()) {
+            //    informer2.addNarsese(i);
+            //}
+
+            {
+                double diffX = batEntity.posX - ballEntity.posX;
+                double diffY = batEntity.posY - ballEntity.posY;
+
+                String narsese = "<{x" + (int)(diffX / 10) + "} --> [diffX]>. :|:";
+                informer2.addNarsese(narsese);
+                narsese = "<{y" + (int)(diffY / 10) + "} --> [diffY]>. :|:";
+                informer2.addNarsese(narsese);
             }
 
             informer2.informWhenNecessary(false);
@@ -963,6 +975,7 @@ public class Pong extends PApplet {
                 float posX = (float)iTrackingRecord.posX;
                 float posY = (float)iTrackingRecord.posY;
 
+                /*
                 pushMatrix();
                 translate((float)posX, (float)posY);
 
@@ -975,6 +988,8 @@ public class Pong extends PApplet {
                 line(-25, 0, 25, 0);
 
                 popMatrix();
+                */
+                drawCursor(posX, posY, 0.0f);
 
                 {
                     fill(0, 0, 0, 255.0f);
@@ -985,6 +1000,24 @@ public class Pong extends PApplet {
             }
         }
 
+    }
+
+    private void drawCursor(float posX, float posY, float innerWidth) {
+        pushMatrix();
+        translate(posX, posY);
+
+        fill(255, 0, 0, 0.0f);
+
+        stroke(0, 0,255, 255.0f);
+
+
+        line(0, -25, 0, -innerWidth);
+        line(0, innerWidth, 0, 25);
+
+        line(-25, 0, -innerWidth, 0);
+        line(innerWidth, 0, 25, 0);
+
+        popMatrix();
     }
 
     public void removeOutdatedPredictions(List<Prediction> predictions) {

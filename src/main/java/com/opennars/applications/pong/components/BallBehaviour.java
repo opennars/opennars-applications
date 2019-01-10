@@ -9,8 +9,12 @@ public class BallBehaviour implements BehaviourComponent {
     public Entity batEntity;
     public double batWidth = 26.0;
 
+    public boolean bouncedOfBat;
+
     @Override
     public void tick(Entity entity) {
+        bouncedOfBat = false;
+
         // TODO< parameter >
         final float dt = 1.0f / 50.0f;
 
@@ -28,6 +32,8 @@ public class BallBehaviour implements BehaviourComponent {
             if (hitBat) {
                 entity.posX = 100.0 - Float.MIN_NORMAL;
                 entity.velocityX *= -1;
+
+                bouncedOfBat = true;
             }
         }
         else if(entity.posX < 0.0) {

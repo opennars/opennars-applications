@@ -76,7 +76,7 @@ Result:
 It had a good run but then went onto the ^down spree
 https://www.youtube.com/watch?v=ZZfh5voSdL4
 
-== current commit
+== commit
 
 * trying patricks encoing again with labeled pixels (by x position)
 * tuned forced random chance - old value seems to high
@@ -85,7 +85,14 @@ Result:
 ~ after >~30 mins - agent pressed a long time ^down (as usual) - and then recovered
   after >~45 mins - agent is in a predador like state in the bottom corner and can react to ball in other positions of the screen
 
-12:00
+== current commit
+
+* begun "retina" approach
+  key idea is that the agent can choose to focus on objects
+  relative positions (to other objects) are put into the NAR as events
+
+Result:
+Plays well after a short time (<~10 min)
 
 == TODO
 
