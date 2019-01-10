@@ -7,7 +7,7 @@ public class Ops {
     public Entity batEntity;
 
     public void up() {
-        //System.out.println("UP");
+        System.out.println("[o] up");
 
         //System.out.println(batEntity.posY);
 
@@ -28,7 +28,7 @@ public class Ops {
     }
 
     public void down() {
-        //System.out.println("DOWN");
+        System.out.println("[o] down");
 
         //System.out.println(batEntity.posY);
 
@@ -41,5 +41,14 @@ public class Ops {
         batEntity.posY += 10;
         batEntity.posY = Math.min(batEntity.posY, 80.0);
 
+    }
+
+    public void selectAxis(String name) {
+        System.out.println("[o] select axis " + name);
+
+        if (name.equals("x"))
+            pong.perceptionAxis = 0;
+        else
+            pong.perceptionAxis = 1;
     }
 }

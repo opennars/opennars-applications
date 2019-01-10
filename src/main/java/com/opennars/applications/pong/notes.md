@@ -94,7 +94,7 @@ Result:
 Result:
 Plays well after a short time (<~10 min)
 
-== current commit
+== commit
 
 * experimented with op movement delta of 3 pixels - got stuck in corner - might be due to bad luck
 * experimented with op movement delta of 5 pixels - got stuck in corner
@@ -102,6 +102,16 @@ Plays well after a short time (<~10 min)
 * current tuning
 -> leads to result of ~50% - random hit chance is ~10%
 [i] #balls=523 pseudoscore=238.0 t=138600
+
+== current commit
+
+* experimented with switchable axis
+
+result (same run):
+[i] #balls=347 pseudoscore=82.0 t=72600
+[i] #balls=467 pseudoscore=108.0 t=97200
+
+Agent doesn't learn it at all to switch to the y axis.
 
 == TODO
 

@@ -106,6 +106,12 @@ public class Pong extends PApplet {
     // used as a optimization - we need to avoid to add patches where patches are already located
     PixelScreen patchScreen;
 
+
+
+    // configurable by ops
+    public int perceptionAxis = 1; // id of axis used to compare distances
+
+
     @Override
     public void setup() {
         { // pixel screen
@@ -214,6 +220,10 @@ public class Pong extends PApplet {
                 Operator opDown = new MethodInvocationOperator("^down", ops, ops.getClass().getMethod("down"), new Class[0]);
                 reasoner.addPlugin(opDown);
                 ((Nar) reasoner).memory.addOperator(opDown);
+
+                Operator opSel = new MethodInvocationOperator("^selectAxis", ops, ops.getClass().getMethod("selectAxis", String.class), new Class[]{String.class});
+                reasoner.addPlugin(opSel);
+                ((Nar) reasoner).memory.addOperator(opSel);
             } catch (NoSuchMethodException e) {
                 e.printStackTrace();
             }
@@ -564,10 +574,16 @@ public class Pong extends PApplet {
                 double diffX = batEntity.posX - ballEntity.posX;
                 double diffY = batEntity.posY - ballEntity.posY;
 
-                String narsese = "<x" + (int)(diffX / 10) + " --> [diffX]>. :|:";
-                informer2.addNarsese(narsese);
-                narsese = "<y" + (int)(diffY / 10) + " --> [diffY]>. :|:";
-                informer2.addNarsese(narsese);
+                if (perceptionAxis == 0) {
+                    String narsese = "<x" + (int)(diffX / 10) + " --> [diffX]>. :|:";
+                    informer2.addNarsese(narsese);
+                }
+                else {
+                    String narsese = "<y" + (int)(diffY / 10) + " --> [diffY]>. :|:";
+                    informer2.addNarsese(narsese);
+                }
+
+
             }
 
             informer2.informWhenNecessary(false);
@@ -754,7 +770,7 @@ public class Pong extends PApplet {
                     if (rngValue2 < chance) {
                         //System.out.println("[d] FORCED random op");
 
-                        int rngValue = rng.nextInt( 3);
+                        int rngValue = rng.nextInt( 5);
                         //System.out.println(rngValue);
                         switch (rngValue) {
                             case 0:
@@ -763,6 +779,12 @@ public class Pong extends PApplet {
 
                             case 1:
                                 reasoner.addInput("(^down, {SELF})!");
+                                break;
+                            case 2:
+                                reasoner.addInput("(^selectAxis, {SELF}, x)!");
+                                break;
+                            case 3:
+                                reasoner.addInput("(^selectAxis, {SELF}, y)!");
                                 break;
 
                             default:
@@ -858,7 +880,7 @@ public class Pong extends PApplet {
         t2++;
         t = t2/slowdownFactor;
 
-        reasoner.cycles(10);
+        reasoner.cycles(30);
         removeOutdatedPredictions(predictions);
         removeOutdatedPredictions(disappointments);
 
