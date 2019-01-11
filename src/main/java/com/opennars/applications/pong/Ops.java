@@ -1,10 +1,13 @@
 package com.opennars.applications.pong;
 
 import com.opennars.applications.componentbased.Entity;
+import org.opennars.interfaces.NarseseConsumer;
 
 public class Ops {
     public Pong pong;
     public Entity batEntity;
+    public Entity ballEntity;
+    public NarseseConsumer consumer;
 
     public void up() {
         System.out.println("[o] up");
@@ -55,5 +58,20 @@ public class Ops {
             pong.perceptionAxis = 0;
         else
             pong.perceptionAxis = 1;
+
+
+        // send update to the Reasoner
+        double diffX = batEntity.posX - ballEntity.posX;
+        double diffY = batEntity.posY - ballEntity.posY;
+
+        if (name.equals("x")) {
+            String narsese = "<x" + (int)(diffX / 10) + " --> [diffX]>. :|:";
+            consumer.addInput(narsese);
+        }
+
+        if (name.equals("y")) {
+            String narsese = "<y" + (int)(diffY / 10) + " --> [diffY]>. :|:";
+            consumer.addInput(narsese);
+        }
     }
 }

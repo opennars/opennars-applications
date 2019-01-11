@@ -113,7 +113,7 @@ result (same run):
 
 Agent doesn't learn it at all to switch to the y axis.
 
-== current commit
+== commit
 
 * tried again seperated axis of relatie ball position
 - didn't work - maybe decision making has an issue
@@ -124,7 +124,15 @@ Agent doesn't learn it at all to switch to the y axis.
 [i] #balls=690 pseudoscore=320.0 t=184200
 -> not so good
 
+== current commit
 
+* relative position
+* modified ^selectAxis to give the relatie position into NARS immediatly
+* another experiment in the direction of "active vision" 
+
+result
+[i] #balls=492 pseudoscore=140.0 t=109200
+-> not good at all
 
 == TODO
 

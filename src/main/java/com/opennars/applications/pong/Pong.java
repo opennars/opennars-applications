@@ -211,7 +211,9 @@ public class Pong extends PApplet {
         {
             Ops ops = new Ops();
             ops.batEntity = batEntity;
+            ops.ballEntity = ballEntity;
             ops.pong = this;
+            ops.consumer = reasoner;
 
             try {
                 Operator opUp = new MethodInvocationOperator("^up", ops, ops.getClass().getMethod("up"), new Class[0]);
@@ -575,20 +577,20 @@ public class Pong extends PApplet {
                 double diffX = batEntity.posX - ballEntity.posX;
                 double diffY = batEntity.posY - ballEntity.posY;
 
-                /*
-                if (true || perceptionAxis == 0) {
+
+                if (true && perceptionAxis == 0) {
                     String narsese = "<x" + (int)(diffX / 10) + " --> [diffX]>. :|:";
                     informer2.addNarsese(narsese);
                 }
-                if(true){
+                if(true && perceptionAxis == 1){
                     String narsese = "<y" + (int)(diffY / 10) + " --> [diffY]>. :|:";
                     informer2.addNarsese(narsese);
-                }*/
-
-                {
-                    String narsese = "<x" + (int)(diffX / 10) +"_" + (int)(diffY / 10) + " --> [diffXY]>. :|:";
-                    informer2.addNarsese(narsese);
                 }
+
+                /*{
+                    String narsese = "<x" + (int)(diffX / 10) +"_y" + (int)(diffY / 10) + " --> [diffXY]>. :|:";
+                    informer2.addNarsese(narsese);
+                }*/
 
 
             }
@@ -782,7 +784,7 @@ public class Pong extends PApplet {
                     if (rngValue2 < chance) {
                         //System.out.println("[d] FORCED random op");
 
-                        int rngValue = rng.nextInt( 2);
+                        int rngValue = rng.nextInt( 4);
                         //System.out.println(rngValue);
                         switch (rngValue) {
                             case 0:
@@ -814,7 +816,8 @@ public class Pong extends PApplet {
                 final double absDiffY = Math.abs(batEntity.posY - ballEntity.posY);
                 final double absDiffX = Math.abs(batEntity.posX - ballEntity.posX);
 
-                if (absDiffY <= 13.0 && absDiffX <= 15.0) {
+                if (((BallBehaviour)ballEntity.behaviour).bouncedOfBat) {
+                //if (absDiffY <= 13.0 && absDiffX <= 15.0) {
                     informReasoner.informAboutReinforcmentGood();
 
                     System.out.println("GOOD NARS");
