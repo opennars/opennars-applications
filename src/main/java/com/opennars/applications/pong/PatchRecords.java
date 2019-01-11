@@ -31,6 +31,14 @@ public class PatchRecords {
                 r[idx++] = !arr[y][x];
             return r;
         }
+
+        public int retHeight() {
+            return arr.length;
+        }
+
+        public int retWidth() {
+            return arr[0].length;
+        }
     }
 
     public List<Patch> patches = new ArrayList<>();

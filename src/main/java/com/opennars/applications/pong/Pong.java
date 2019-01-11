@@ -287,7 +287,10 @@ public class Pong extends PApplet {
         trackingRecord.lastPosY = y;
         trackingRecord.patch = patch;
 
-        patchTracker.trackingRecords.add(trackingRecord);
+        if (!patchTracker.checkOverlapsWithAny(trackingRecord)) { // don't add it if it overlapps completely with a known one
+            patchTracker.trackingRecords.add(trackingRecord);
+
+        }
 
     }
 
@@ -577,15 +580,25 @@ public class Pong extends PApplet {
                 double diffX = batEntity.posX - ballEntity.posX;
                 double diffY = batEntity.posY - ballEntity.posY;
 
-
-                if (true && perceptionAxis == 0) {
+                /*
+                if (true || perceptionAxis == 0) {
                     String narsese = "<x" + (int)(diffX / 10) + " --> [diffX]>. :|:";
                     informer2.addNarsese(narsese);
                 }
-                if(true && perceptionAxis == 1){
+                if(true || perceptionAxis == 1){
                     String narsese = "<y" + (int)(diffY / 10) + " --> [diffY]>. :|:";
                     informer2.addNarsese(narsese);
+                }*/
+
+                if (true) {
+                    // image because we want to bias the system to the y difference
+                    String narsese = "<{y" + (int)(diffY / 5) + "} --> (&/, [diffXYprod],_,"+ "{x" + (int)(diffX / 5) +"})>. :|:";
+                    informer2.addNarsese(narsese);
                 }
+
+
+                //String narsese = "<{x" + (int)(diffX / 10) +",y" + (int)(diffY / 10) + ",xy" + (int)(diffX / 10) +"_" + (int)(diffY / 10) +"} --> [diff]>. :|:";
+                //informer2.addNarsese(narsese);
 
                 /*{
                     String narsese = "<x" + (int)(diffX / 10) +"_y" + (int)(diffY / 10) + " --> [diffXY]>. :|:";
@@ -749,7 +762,7 @@ public class Pong extends PApplet {
                 int explorativeTimeout = 600; // time after which a random op is injected when it didn't do anything sufficiently long
 
 
-                if(timeoutForOps >= 0) {
+                if(timeoutForOps >= 50000) {
                     System.out.println("[d] random op");
 
 
@@ -775,7 +788,7 @@ public class Pong extends PApplet {
                 { // inject random op from time to time by chance to avoid getting stuck in cycles from which the agent can't escape
                     int rngValue2 = rng.nextInt( 100);
 
-                    int chance = 13; // in percentage
+                    int chance = 6; // in percentage
 
                     if (timeoutForOpsEffective < 0) {
                         chance = 0; // disable if op which changed the world was done
@@ -784,7 +797,7 @@ public class Pong extends PApplet {
                     if (rngValue2 < chance) {
                         //System.out.println("[d] FORCED random op");
 
-                        int rngValue = rng.nextInt( 4);
+                        int rngValue = rng.nextInt( 2);
                         //System.out.println(rngValue);
                         switch (rngValue) {
                             case 0:
@@ -928,8 +941,25 @@ public class Pong extends PApplet {
 
 
         viewport.Transform();
-        background(255);
+        background(20);
         fill(0);
+
+
+        for (int y=0;y<pixelScreen.retHeight();y++)
+        for (int x=0;x<pixelScreen.retWidth();x++)
+        {
+            if (pixelScreen.arr[y][x]) {
+                pushMatrix();
+                translate((float) x, (float) y);
+
+
+                fill(125, 125, 125, 0.0f);
+                rect(0, 0, 1, 1);
+
+                popMatrix();
+                fill(0);
+            }
+        }
 
 
         for (Entity e : entities) {

@@ -124,7 +124,7 @@ Agent doesn't learn it at all to switch to the y axis.
 [i] #balls=690 pseudoscore=320.0 t=184200
 -> not so good
 
-== current commit
+== commit
 
 * relative position
 * modified ^selectAxis to give the relatie position into NARS immediatly
@@ -133,6 +133,13 @@ Agent doesn't learn it at all to switch to the y axis.
 result
 [i] #balls=492 pseudoscore=140.0 t=109200
 -> not good at all
+
+== current commit
+
+* changed representation to 2d product with bias to y axis
+
+result
+[i] #balls=696 pseudoscore=342.0 t=190800
 
 == TODO
 

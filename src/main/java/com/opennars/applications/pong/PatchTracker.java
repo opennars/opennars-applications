@@ -9,6 +9,27 @@ import java.util.List;
 public class PatchTracker {
     public List<TrackingRecord> trackingRecords = new ArrayList<>();
 
+    // checks if any known patch overlaps (completly) with the queried one
+    public boolean checkOverlapsWithAny(TrackingRecord checkedRecord) {
+        for(TrackingRecord i : trackingRecords) {
+            if(checkedRecord.lastPosX != i.lastPosX || checkedRecord.lastPosY != i.lastPosY) {
+                continue;
+            }
+
+            if(i.patch.retHeight() != checkedRecord.patch.retHeight()) {
+                continue;
+            }
+
+            if(i.patch.retWidth() != checkedRecord.patch.retWidth()) {
+                continue;
+            }
+
+            return true;
+        }
+
+        return false;
+    }
+
     public void frame(final PixelScreen screen) {
         for (final TrackingRecord iTrackingRecord : trackingRecords) {
             if (iTrackingRecord.patch == null) {
@@ -34,6 +55,12 @@ public class PatchTracker {
             if (trackingRecords.get(idx).timeSinceLastMove >= 0) {
                 trackingRecords.remove(idx);
             }
+        }
+
+        // update
+        // we do it per cycle because the moving average has to decay if the patch is standing still - too
+        for (final TrackingRecord iTrackingRecord : trackingRecords) {
+            iTrackingRecord.update();
         }
     }
 
@@ -74,6 +101,7 @@ public class PatchTracker {
             trackingRecord.lastPosX = bestPositionX;
             trackingRecord.lastPosY = bestPositionY;
 
+
             // set timer so it can't get forgotten for a relativly long time
             // attention< we set it here higher because it was moving indeed >
             trackingRecord.timeSinceLastMove = -500;
@@ -92,6 +120,14 @@ public class PatchTracker {
         public int lastPosX;
         public int lastPosY;
 
+        // null when not known
+        public Integer previousPosX;
+        public Integer previousPosY;
+
+        // oving average velocity
+        public double movingAverageVelX;
+        public double movingAverageVelY;
+
         // timer used to decide when a patch is inactive
         public long timeSinceLastMove = -100;
 
@@ -99,5 +135,26 @@ public class PatchTracker {
 
 
         public boolean forget; // record will be forgotten if this flag is set
+
+        public void update() {
+            // update moving average
+            int velX = 0;
+            int velY = 0;
+
+            if (previousPosX != null) {
+                velX = lastPosX - previousPosX;
+                velY = lastPosY - previousPosY;
+
+                // update moving average velocity
+                double movingAverageFactor = 0.1;
+
+                movingAverageVelX = movingAverageVelX * (1.0-movingAverageFactor) + velX*movingAverageFactor;
+                movingAverageVelY = movingAverageVelY * (1.0-movingAverageFactor) + velY*movingAverageFactor;
+            }
+
+            // update position
+            previousPosX = lastPosX;
+            previousPosY = lastPosY;
+        }
     }
 }
