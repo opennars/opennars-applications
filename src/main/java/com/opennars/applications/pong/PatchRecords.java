@@ -21,6 +21,11 @@ public class PatchRecords {
             this.id = id;
         }
 
+        public Patch(int width, int height, long id) {
+            arr = new boolean[height][width];
+            this.id = id;
+        }
+
         public boolean[] retSdr() {
             boolean[] r = new boolean[arr.length * arr[0].length * 2];
             int idx=0;
@@ -56,6 +61,10 @@ public class PatchRecords {
         bestPatch = patches.get(0);
 
         for(final Patch other : patches) {
+            if (patch.retWidth() != other.retWidth() || patch.retHeight() != other.retHeight()) {
+                continue;
+            }
+
             if (sdrSimSym(patch.retSdr(), other.retSdr()) > resultSimilarity) {
                 resultSimilarity = sdrSimSym(patch.retSdr(), other.retSdr());
                 bestPatch = other;

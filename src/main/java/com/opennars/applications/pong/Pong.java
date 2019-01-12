@@ -689,6 +689,27 @@ public class Pong extends PApplet {
             }
         }
 
+        // creating patch from bounding box if it doesn't exist
+        {
+            for(BoundingBox iBb : boundingBoxes) {
+                int width = iBb.x1-iBb.x0 + 1;
+                int height = iBb.y1 - iBb.y0 + 1;
+
+                PatchRecords.Patch patch = new PatchRecords.Patch(width, height, patchIdCounter++);
+                for(int dx=0;dx<width;dx++) {
+                    for(int dy=0;dy<height;dy++) {
+                        patch.arr[dy][dx] = pixelScreen.readAt(iBb.y0+ dy,iBb.x0+ dx);
+                    }
+                }
+
+                // add if it doesn't exist
+                boolean exist = null != patchRecords.querySdrMostSimiliarPatch(patch);
+                if (!exist || patchRecords.resultSimilarity < 0.4f) {
+                    patchRecords.addPatch(patch);
+                }
+            }
+        }
+
 
 
         //if (t%2==0) {
