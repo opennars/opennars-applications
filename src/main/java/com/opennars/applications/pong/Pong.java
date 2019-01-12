@@ -42,8 +42,6 @@ import processing.event.MouseEvent;
 
 import java.util.*;
 
-// TODO< remove proto objects if they don't find their associated patches >
-
 public class Pong extends PApplet {
     Reasoner reasoner;
     int entityID = 1;
@@ -892,6 +890,7 @@ public class Pong extends PApplet {
 
         //updateProtoObjects();
         updateProtoObjects2();
+        removeOutdatedProtoObjects();
         removeProtoObjects();
         //removeOverlappingProtoObjects();
         //assignNewProtoObjects();
@@ -1210,6 +1209,43 @@ public class Pong extends PApplet {
 
     }
 
+    // marks proto objects which patches can't be found as to be removed
+    private void removeOutdatedProtoObjects() {
+        for(ProtoObject ipo: protoObjects) {
+            Patch2Protoobject patch2Protoobj = derefPatch2Protoobj(ipo.associatedPatch2ProtoobjectId);
+
+            boolean foundAnyPatch = false;
+
+            for(PatchRecords.Patch iComparedPatch : patch2Protoobj.patches) {
+
+                int iRadius = 5;
+
+                for(int dx=-iRadius;dx<=iRadius;dx++) {
+                    for(int dy=-iRadius;dy<=iRadius;dy++) {
+                        int x = (int)ipo.posX + dx;
+                        int y = (int)ipo.posY + dy;
+
+                        PatchRecords.Patch patch = pixelScreen.genPatchAt(y, x, iComparedPatch.retWidth(), iComparedPatch.retHeight(), -1);
+                        double sim = PatchRecords.sdrSimSym(iComparedPatch.retSdr(), patch.retSdr());
+
+                        if( sim > 0.4) {
+                            foundAnyPatch = true;
+
+                            // TODO< proper breaking >
+                        }
+                    }
+                }
+
+            }
+
+            if (!foundAnyPatch) {
+                ipo.remove = true;
+
+                System.out.println("didn't find any patch of protoobj -> remove");
+            }
+        }
+    }
+
     private void createAndMergeBoundingBox(int x0, int y0, int x1, int y1) {
         if( x0 > x1 ) {
             int t = x0;
@@ -1230,6 +1266,8 @@ public class Pong extends PApplet {
 
         boundingBoxes.add(new BoundingBox(x0, y0, x1, y1));
     }
+
+
 
     @Override
     public void draw() {
