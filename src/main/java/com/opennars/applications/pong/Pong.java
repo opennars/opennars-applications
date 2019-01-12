@@ -124,6 +124,9 @@ public class Pong extends PApplet {
     public List<BoundingBox> boundingBoxes = new ArrayList<>();
 
 
+    // 0.3 may lead to false positives
+    public double sdrMinSimilarity = 0.5;
+
     @Override
     public void setup() {
         { // pixel screen
@@ -513,7 +516,7 @@ public class Pong extends PApplet {
 
                                     double dist3 = Math.sqrt(dx*dx + dy*dy);
 
-                                    if(sim < 0.5 && dist3 < minDist) {
+                                    if(sim >= sdrMinSimilarity && dist3 < minDist) {
                                         minDist = dist3;
 
                                         foundBestPatch = true;
@@ -726,7 +729,7 @@ public class Pong extends PApplet {
                         int farestOffPixelX = -1;
                         int farestOffPixelY = -1;
 
-                        for(int dist=6;dist>=0;dist--) {
+                        for(int dist=14;dist>=0;dist--) {
                             for(int dx=-dist;dx<=dist;dx++) {
                                 for(int dy=-dist;dy<=dist;dy++) {
                                     if (pixelScreenOff.readAt(y+dy,x+dx)) {
@@ -795,7 +798,7 @@ public class Pong extends PApplet {
                 // TODO< try to find protoobject with same id of patch2po and update position if found >
                 {
                     if (patch2po != null) {
-                        double maxDistForClosestProtoObject = 10.0;
+                        double maxDistForClosestProtoObject = 12.0;
 
                         boolean found2 = false;
 
@@ -852,10 +855,9 @@ public class Pong extends PApplet {
 
                 // add unknown new patch to group
                 if (foundClosestProtoObject != null) {
-                    double minPatchSimiliarity = 0.3;
 
                     Patch2Protoobject associatedPatch2Protoobj = derefPatch2Protoobj(foundClosestProtoObject.associatedPatch2ProtoobjectId);
-                    boolean hasSimilarPatch = associatedPatch2Protoobj.hasSimilarPatch(patch);
+                    boolean hasSimilarPatch = associatedPatch2Protoobj.hasSimilarPatch(patch, sdrMinSimilarity);
                     if (!hasSimilarPatch) {
                         // add patch to it
 
@@ -1228,7 +1230,8 @@ public class Pong extends PApplet {
                         PatchRecords.Patch patch = pixelScreen.genPatchAt(y, x, iComparedPatch.retWidth(), iComparedPatch.retHeight(), -1);
                         double sim = PatchRecords.sdrSimSym(iComparedPatch.retSdr(), patch.retSdr());
 
-                        if( sim > 0.4) {
+                        // 0.4 leads to false objects in pong
+                        if( sim >= sdrMinSimilarity) {
                             foundAnyPatch = true;
 
                             // TODO< proper breaking >
@@ -1271,7 +1274,7 @@ public class Pong extends PApplet {
 
     @Override
     public void draw() {
-        for(int n=0;n<1;n++) {
+        for(int n=0;n<10;n++) {
             tick();
         }
 
@@ -1416,7 +1419,7 @@ public class Pong extends PApplet {
 
                 {
                     fill(0, 0, 0, 255.0f);
-                    text("age=" + iTrackingRecord.age, posX, posY);
+                    text("id=" + iTrackingRecord.associatedPatch2ProtoobjectId + " age=" + iTrackingRecord.age , posX, posY);
                 }
 
                 fill(0);
@@ -1543,7 +1546,7 @@ public class Pong extends PApplet {
     }
 
     public Patch2Protoobject tryFindPatch2Protoobject4Patch(PatchRecords.Patch patch) {
-        float comparisionThreshold = 0.4f;
+        float comparisionThreshold = (float)sdrMinSimilarity;
 
         Patch2Protoobject best = null;
         PatchRecords.Patch bestPatch = null;
@@ -1560,7 +1563,7 @@ public class Pong extends PApplet {
                 }
 
                 double sim = PatchRecords.sdrSimSym(patch.retSdr(), iPatch.retSdr());
-                if (sim > comparisionThreshold && sim > bestSimilarity) {
+                if (sim >= comparisionThreshold && sim > bestSimilarity) {
                     bestSimilarity = sim;
                     best = ip2o;
                     bestPatch = iPatch;
@@ -1581,8 +1584,7 @@ public class Pong extends PApplet {
             this.protoObjectTypeId = protoObjectTypeId;
         }
 
-        public boolean hasSimilarPatch(PatchRecords.Patch patch) {
-            double similarityThreshold = 0.4;
+        public boolean hasSimilarPatch(PatchRecords.Patch patch, double similarityThreshold) {
 
             for(PatchRecords.Patch iPatch:patches) {
                 if (patch.retWidth() != iPatch.retWidth()) {
@@ -1592,7 +1594,7 @@ public class Pong extends PApplet {
                     continue;
                 }
 
-                if( PatchRecords.sdrSimSym(patch.retSdr(), iPatch.retSdr()) < similarityThreshold ) {
+                if( PatchRecords.sdrSimSym(patch.retSdr(), iPatch.retSdr()) >= similarityThreshold ) {
                     return true;
                 }
             }
