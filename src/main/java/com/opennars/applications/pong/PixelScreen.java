@@ -46,6 +46,13 @@ public class PixelScreen {
         arr[y][x] = true;
     }
 
+    public boolean readAt(int y, int x) {
+        if(x < 0 || y < 0 || x >= retWidth() || y >= retHeight()) {
+            return false;
+        }
+        return arr[y][x];
+    }
+
     public int retWidth() {
         return arr[0].length;
     }

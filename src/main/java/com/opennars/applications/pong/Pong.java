@@ -95,7 +95,12 @@ public class Pong extends PApplet {
     long patchIdCounter = 1;
 
     PixelScreen pixelScreen;
+
+    // used for attention / object detection
     PixelScreen oldPixelScreen; // used for attention
+    PixelScreen pixelScreenOn; // pixel screen for on switching pixels
+    PixelScreen pixelScreenOff; // pixel screen for off switching pixels
+
 
     PatchTracker patchTracker = new PatchTracker();
 
@@ -113,6 +118,12 @@ public class Pong extends PApplet {
     public int perceptionAxis = 1; // id of axis used to compare distances
 
 
+
+    // identified bounding boxes (per frame)
+    // used to create proto-objects
+    public List<BoundingBox> boundingBoxes = new ArrayList<>();
+
+
     @Override
     public void setup() {
         { // pixel screen
@@ -121,6 +132,8 @@ public class Pong extends PApplet {
             pixelScreen = new PixelScreen(pixelScreenWidth, pixelScreenHeight);
 
             oldPixelScreen = new PixelScreen(pixelScreenWidth, pixelScreenHeight);
+            pixelScreenOn = new PixelScreen(pixelScreenWidth, pixelScreenHeight);
+            pixelScreenOff = new PixelScreen(pixelScreenWidth, pixelScreenHeight);
 
             patchScreen = new PixelScreen(pixelScreenWidth, pixelScreenHeight);
         }
@@ -482,22 +495,27 @@ public class Pong extends PApplet {
     void tick() {
         tickProtoObjects();
 
+        {
+            pixelScreenOn.clear();
+            pixelScreenOff.clear();
+        }
+
         { // draw to virtual screen
             pixelScreen.clear();
 
             // ball
             pixelScreen.drawDot((int)(ballEntity.posX), (int)(ballEntity.posY));
-            //pixelScreen.drawDot((int)(ballEntity.posX+1), (int)(ballEntity.posY));
-            //pixelScreen.drawDot((int)(ballEntity.posX), (int)(ballEntity.posY+1));
-            //pixelScreen.drawDot((int)(ballEntity.posX+1), (int)(ballEntity.posY+1));
+            pixelScreen.drawDot((int)(ballEntity.posX+1), (int)(ballEntity.posY));
+            pixelScreen.drawDot((int)(ballEntity.posX), (int)(ballEntity.posY+1));
+            pixelScreen.drawDot((int)(ballEntity.posX+1), (int)(ballEntity.posY+1));
 
 
             // bat
-            //pixelScreen.drawDot((int)(batEntity.posX), (int)(batEntity.posY-1));
+            pixelScreen.drawDot((int)(batEntity.posX), (int)(batEntity.posY-1));
             pixelScreen.drawDot((int)(batEntity.posX), (int)(batEntity.posY-0));
-            //pixelScreen.drawDot((int)(batEntity.posX), (int)(batEntity.posY+1));
-            //pixelScreen.drawDot((int)(batEntity.posX), (int)(batEntity.posY+1));
-            //pixelScreen.drawDot((int)(batEntity.posX), (int)(batEntity.posY+2));
+            pixelScreen.drawDot((int)(batEntity.posX), (int)(batEntity.posY+1));
+            pixelScreen.drawDot((int)(batEntity.posX), (int)(batEntity.posY+1));
+            pixelScreen.drawDot((int)(batEntity.posX), (int)(batEntity.posY+2));
         }
 
 
@@ -523,6 +541,20 @@ public class Pong extends PApplet {
         }
         */
 
+        // attention< > / object segmentation
+        {
+            for(int x=0;x<pixelScreen.retWidth();x++) {
+                for (int y = 0; y < pixelScreen.retHeight(); y++) {
+                    if (pixelScreen.arr[y][x] && !oldPixelScreen.arr[y][x]) {
+                        pixelScreenOn.arr[y][x] = true;
+                    }
+                    else if (!pixelScreen.arr[y][x] && oldPixelScreen.arr[y][x]) {
+                        pixelScreenOff.arr[y][x] = true;
+                    }
+                }
+            }
+        }
+
         // attention< we need to bias our attention to the changes in the environment >
         {
             HashMap<String, String> h = new HashMap<>();
@@ -543,21 +575,21 @@ public class Pong extends PApplet {
 
 
                     // ignore if no change
-                    //if(pixelScreen.arr[y][x] == oldPixelScreen.arr[y][x]) {
-                    //    continue;
-                    //}
+                    if(pixelScreen.arr[y][x] == oldPixelScreen.arr[y][x]) {
+                        continue;
+                    }
 
                     // inform nars when it turned on
-                    if(pixelScreen.arr[y][x] == true) {
+                    /*if(pixelScreen.arr[y][x] == true) {
                         String str = "<(*, y" + y / 10 + ", x" + x / 10 + ") --> [on" + labelCounter + "]>. :|:";
 
                         h.put(str, str);
 
                         labelCounter++;
-                    }
+                    }*/
 
                     // spawn
-                    //samplePatchAtPosition(x, y);
+                    samplePatchAtPosition(x, y);
 
                     /*
                     PatchTracker.TrackingRecord r = new PatchTracker.TrackingRecord();
@@ -620,13 +652,52 @@ public class Pong extends PApplet {
             }
         }
 
-        if (t%2==0) {
-            patchTracker.frame(pixelScreen);
+        // heuristic for tight bounds of (proto)objects
+        // idea here is to look only at on/off switching pixels and try to merge the bounding boxes
+        {
+            boundingBoxes.clear();
+
+            for(int y=0;y<pixelScreen.retHeight();y++) {
+                for (int x = 0; x < pixelScreen.retWidth(); x++) {
+                    if(pixelScreenOn.arr[y][x]) {
+                        // search for farest off
+
+                        double farestOffPixelDist = 0;
+                        int farestOffPixelX = -1;
+                        int farestOffPixelY = -1;
+
+                        for(int dist=6;dist>=0;dist--) {
+                            for(int dx=-dist;dx<=dist;dx++) {
+                                for(int dy=-dist;dy<=dist;dy++) {
+                                    if (pixelScreenOff.readAt(y+dy,x+dx)) {
+                                        double dist2 = Math.sqrt(dx*dx + dy*dy);
+                                        if (dist2 > farestOffPixelDist) {
+                                            farestOffPixelDist = dist2;
+                                            farestOffPixelX = x + dx;
+                                            farestOffPixelY = y + dy;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
+                        if (farestOffPixelDist > 0) {
+                            createAndMergeBoundingBox(x, y, farestOffPixelX, farestOffPixelY);
+                        }
+                    }
+                }
+            }
         }
 
-        updateProtoObjects();
-        removeOverlappingProtoObjects();
-        assignNewProtoObjects();
+
+
+        //if (t%2==0) {
+            patchTracker.frame(pixelScreen);
+        //}
+
+        //updateProtoObjects();
+        //removeOverlappingProtoObjects();
+        //assignNewProtoObjects();
 
 
 
@@ -933,9 +1004,29 @@ public class Pong extends PApplet {
         }
     }
 
+    private void createAndMergeBoundingBox(int x0, int y0, int x1, int y1) {
+        if( x0 > x1 ) {
+            int t = x0;
+            x0 = x1;
+            x1 = t;
+        }
+
+        if( y0 > y1 ) {
+            int t = y0;
+            y0 = y1;
+            y1 = t;
+        }
+
+
+        // TODO< merge with existing bounding box >
+
+
+        boundingBoxes.add(new BoundingBox(x0, y0, x1, y1));
+    }
+
     @Override
     public void draw() {
-        for(int n=0;n<20;n++) {
+        for(int n=0;n<1;n++) {
             tick();
         }
 
@@ -952,8 +1043,10 @@ public class Pong extends PApplet {
                 pushMatrix();
                 translate((float) x, (float) y);
 
-
-                fill(125, 125, 125, 0.0f);
+                stroke(255);
+                fill(255);
+                color(255);
+                //fill(255, 125, 125, 255.0f);
                 rect(0, 0, 1, 1);
 
                 popMatrix();
@@ -962,9 +1055,9 @@ public class Pong extends PApplet {
         }
 
 
-        for (Entity e : entities) {
-            e.render(this);
-        }
+        //for (Entity e : entities) {
+        //    e.render(this);
+        //}
 
         for (Prediction pred : predictions) {
             Entity e = pred.ent;
@@ -1026,18 +1119,27 @@ public class Pong extends PApplet {
 
                 fill(255, 0, 0, 0.0f);
 
-                if (iTrackingRecord.timeSinceLastMove < -480 && iTrackingRecord.wasMoving) {
+                if (iTrackingRecord.absTimeSinceLastMove == 0) {
                     stroke(255.0f, 0,0, 0.8f * 255.0f);
+
+                    line(0, -5, 0, 5);
+                    line(-5, 0, 5, 0);
                 }
-                else if (iTrackingRecord.timeSinceLastMove < -420 && iTrackingRecord.wasMoving) {
+                else if (false && iTrackingRecord.timeSinceLastMove < -420 && iTrackingRecord.wasMoving) {
                     stroke(0.2f * 255.0f, 0,0, 0.8f * 255.0f);
+
+
+                    line(0, -5, 0, 5);
+                    line(-5, 0, 5, 0);
                 }
-                else {
+                else if (false) {
                     stroke(0, 0,0, 0.1f * 255.0f);
+
+
+                    line(0, -5, 0, 5);
+                    line(-5, 0, 5, 0);
                 }
 
-                line(0, -5, 0, 5);
-                line(-5, 0, 5, 0);
 
                 popMatrix();
                 fill(0);
@@ -1073,6 +1175,22 @@ public class Pong extends PApplet {
                 }
 
                 fill(0);
+            }
+        }
+
+        // draw bounding-boxes (per frame)
+        {
+            if (boundingBoxes.size() == 2) {
+                int here = 5;
+            }
+
+            for(final BoundingBox iBb: boundingBoxes) {
+                color(255,0,0,127);
+                fill(255, 0, 0, 0.0f);
+
+                stroke(0, 0,255, 255.0f);
+
+                rect(iBb.x0, iBb.y0, iBb.x1-iBb.x0+1, iBb.y1-iBb.y0+1);
             }
         }
 
@@ -1150,5 +1268,19 @@ public class Pong extends PApplet {
         String[] args2 = {"Pong"};
         Pong mp = new Pong();
         PApplet.runSketch(args2, mp);
+    }
+
+
+    static class BoundingBox {
+        public int x0;
+        public int y0;
+        public int x1;
+        public int y1;
+        public BoundingBox(int x0, int y0, int x1, int y1) {
+            this.x0 = x0;
+            this.y0 = y0;
+            this.x1 = x1;
+            this.y1 = y1;
+        }
     }
 }

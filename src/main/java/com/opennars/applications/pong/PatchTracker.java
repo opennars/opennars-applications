@@ -48,6 +48,7 @@ public class PatchTracker {
         // timer
         for (final TrackingRecord iTrackingRecord : trackingRecords) {
             iTrackingRecord.timeSinceLastMove++;
+            iTrackingRecord.absTimeSinceLastMove++;
         }
 
         // forgetting
@@ -105,6 +106,7 @@ public class PatchTracker {
             // set timer so it can't get forgotten for a relativly long time
             // attention< we set it here higher because it was moving indeed >
             trackingRecord.timeSinceLastMove = -500;
+            trackingRecord.absTimeSinceLastMove = 0;
 
             // it was moving
             trackingRecord.wasMoving = true;
@@ -130,6 +132,8 @@ public class PatchTracker {
 
         // timer used to decide when a patch is inactive
         public long timeSinceLastMove = -100;
+
+        public long absTimeSinceLastMove = 0;
 
         public boolean wasMoving = false;
 
