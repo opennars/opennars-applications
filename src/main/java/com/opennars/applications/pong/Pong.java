@@ -710,6 +710,77 @@ public class Pong extends PApplet {
             }
         }
 
+        // assign/patch to closest proto-object or create proto-object from bounding object and patch
+        {
+
+            for(BoundingBox iBb : boundingBoxes) {
+                int width = iBb.x1 - iBb.x0 + 1;
+                int height = iBb.y1 - iBb.y0 + 1;
+
+                double bbCenterX = iBb.x0 + width*0.5;
+                double bbCenterY = iBb.y0 + height*0.5;
+
+                // create patch from bounding box
+                PatchRecords.Patch patch = new PatchRecords.Patch(width, height, patchIdCounter++);
+                for (int dx = 0; dx < width; dx++) {
+                    for (int dy = 0; dy < height; dy++) {
+                        patch.arr[dy][dx] = pixelScreen.readAt(iBb.y0 + dy, iBb.x0 + dx);
+                    }
+                }
+
+                // search for best known mapping from patch to type of proto-object
+                Patch2Protoobject patch2po = tryFindPatch2Protoobject4Patch(patch);
+
+
+                // TODO< try to find protoobject with same id of patch2po and update position if found >
+
+
+                // if not found then add patch to p2obj of cloest allowed proto-object >
+                // TODO< add if not found part >
+
+                ProtoObject foundClosestProtoObject = null;
+                double cloestFoundPo = 999999999.0;
+                double maxDist2Po = 10.0; // maximal distance to protoobject
+                for(ProtoObject iPo:protoObjects) {
+                    double distFromBb2PoX = Math.abs(bbCenterX - iPo.posX);
+                    double distFromBb2PoY = Math.abs(bbCenterY - iPo.posY);
+
+                    double dist = Math.sqrt(distFromBb2PoX*distFromBb2PoX + distFromBb2PoY*distFromBb2PoY);
+                    if (dist < cloestFoundPo) {
+                        cloestFoundPo = dist;
+                        foundClosestProtoObject = iPo;
+                    }
+                }
+
+                boolean foundClosestProtoObjectB = cloestFoundPo <= maxDist2Po;
+                if (!foundClosestProtoObjectB) {
+                    foundClosestProtoObject = null;
+                }
+
+
+                // update position
+                if (foundClosestProtoObject != null) {
+                    foundClosestProtoObject.posX = bbCenterX;
+                    foundClosestProtoObject.posY = bbCenterY;
+                }
+
+                // create new proto object with new patch2po if nothing was found
+                if (!foundClosestProtoObjectB) {
+                    // * create patch2ob
+                    Patch2Protoobject createdPatch2po = new Patch2Protoobject(patch2ProtoobjectsIdCounter++);
+                    patch2Protoobjects.add(createdPatch2po);
+                    createdPatch2po.patches.add(patch);
+
+                    // create proto object
+                    ProtoObject po = new ProtoObject(protoObjectIdCounter++);
+                    protoObjects.add(po);
+                    po.posX = bbCenterX;
+                    po.posY = bbCenterY;
+                    po.associatedPatch2ProtoobjectId = createdPatch2po.protoObjectTypeId;
+                }
+            }
+        }
+
 
 
         //if (t%2==0) {
@@ -1302,6 +1373,50 @@ public class Pong extends PApplet {
             this.y0 = y0;
             this.x1 = x1;
             this.y1 = y1;
+        }
+    }
+
+
+    List<Patch2Protoobject> patch2Protoobjects = new ArrayList<>();
+    long patch2ProtoobjectsIdCounter = 0;
+
+    public Patch2Protoobject tryFindPatch2Protoobject4Patch(PatchRecords.Patch patch) {
+        float comparisionThreshold = 0.3f;
+
+        Patch2Protoobject best = null;
+        PatchRecords.Patch bestPatch = null;
+        double bestSimilarity = 0.0f;
+
+        for(Patch2Protoobject ip2o:patch2Protoobjects) {
+
+            for(PatchRecords.Patch iPatch:ip2o.patches) {
+                if(iPatch.retHeight() != patch.retHeight()) {
+                    continue;
+                }
+                if(iPatch.retWidth() != patch.retWidth()) {
+                    continue;
+                }
+
+                double sim = PatchRecords.sdrSimSym(patch.retSdr(), iPatch.retSdr());
+                if (sim > comparisionThreshold && sim > bestSimilarity) {
+                    bestSimilarity = sim;
+                    best = ip2o;
+                    bestPatch = iPatch;
+                }
+            }
+        }
+
+        return best;
+    }
+
+    // used to find/identify proto objects based on patches
+    static class Patch2Protoobject {
+        List<PatchRecords.Patch> patches = new ArrayList<>();
+
+        long protoObjectTypeId;
+
+        public Patch2Protoobject(long protoObjectTypeId) {
+            this.protoObjectTypeId = protoObjectTypeId;
         }
     }
 }
