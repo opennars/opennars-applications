@@ -5,15 +5,15 @@ public class PixelScreen {
         arr = new boolean[height][width];
     }
 
-    public PatchRecords.Patch genPatchAt(int y, int x, long id) {
-        PatchRecords.Patch resPatch = new PatchRecords.Patch(patchSize, id);
+    public PatchRecords.Patch genPatchAt(int y, int x, int width, int height, long id) {
+        PatchRecords.Patch resPatch = new PatchRecords.Patch(width, height, id);
 
         int py, px;
 
-        for(py=0;py<patchSize;py++) {
-            for(px=0;px<patchSize;px++) {
-                int dy= py - patchSize/2;
-                int dx= px - patchSize/2;
+        for(py=0;py<height;py++) {
+            for(px=0;px<width;px++) {
+                int dy= py - height/2;
+                int dx= px - width/2;
 
 
                 int absX = x + dx;
@@ -62,6 +62,4 @@ public class PixelScreen {
     }
 
     public boolean arr[][];
-
-    public int patchSize = 5;
 }

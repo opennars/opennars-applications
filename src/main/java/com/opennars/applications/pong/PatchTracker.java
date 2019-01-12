@@ -38,7 +38,7 @@ public class PatchTracker {
 
             // try to "reaquire" the tracked patch as good as possible by sampling the neightborhood as close as possible while increasing the distance
 
-            final PatchRecords.Patch patchAtCurrentPosition = screen.genPatchAt(iTrackingRecord.lastPosY, iTrackingRecord.lastPosX, -1);
+            final PatchRecords.Patch patchAtCurrentPosition = screen.genPatchAt(iTrackingRecord.lastPosY, iTrackingRecord.lastPosX, 5,5,-1);
             final double currentSimilarity = PatchRecords.sdrSimSym(iTrackingRecord.patch.retSdr(), patchAtCurrentPosition.retSdr());
 
             tryRetrace(screen, iTrackingRecord, currentSimilarity);
@@ -83,7 +83,7 @@ public class PatchTracker {
         for(int searchDist=0;searchDist<=2;searchDist++) {
             for(int dy=-searchDist;dy<=searchDist;dy++) {
                 for(int dx=-searchDist;dx<=searchDist;dx++) {
-                    final PatchRecords.Patch patchAtCurrentPosition = screen.genPatchAt(bestPositionY+dy, bestPositionX+dx, -1);
+                    final PatchRecords.Patch patchAtCurrentPosition = screen.genPatchAt(bestPositionY+dy, bestPositionX+dx, 5,5,-1);
                     final double currentSimilarity = PatchRecords.sdrSimSym(trackingRecord.patch.retSdr(), patchAtCurrentPosition.retSdr());
 
                     if (currentSimilarity > minimalSimilarity) {
