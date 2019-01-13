@@ -159,6 +159,13 @@ result
 [i] #balls=632 pseudoscore=288.0 t=167400
 -> not so good
 
+== current commit
+
+* representation is fed from game-objects
+* using labeled event representation
+
+[i] #balls=578 pseudoscore=280.0 t=157200
+-> not so good
 
 
 == TODO

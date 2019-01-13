@@ -685,14 +685,21 @@ public class Pong extends PApplet {
 
                 {
                     final String str = "y" + (int)(ballEntity.posY / 10.0) + "x" + (int)(ballEntity.posX / 10);
-                    h.put(str, str);
+                    //h.put(str, str);
+
+                    String narsese = "<{" + str + "}-->[V0]>. :|:";
+                    informer2.addNarsese(narsese);
                 }
 
                 {
                     final String str = "y" + (int)(batEntity.posY / 10.0) + "x" + (int)(batEntity.posX / 10);
-                    h.put(str, str);
+                    //h.put(str, str);
+
+                    String narsese = "<{" + str + "}-->[V1]>. :|:";
+                    informer2.addNarsese(narsese);
                 }
 
+                /*
                 String narsese = "";
 
                 for(String i : h.keySet()) {
@@ -705,7 +712,7 @@ public class Pong extends PApplet {
                     narsese = "<{" + narsese + "}-->[V]>. :|:";
 
                     informer2.addNarsese(narsese);
-                }
+                }*/
             }
 
             {
