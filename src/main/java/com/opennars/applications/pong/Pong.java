@@ -677,8 +677,19 @@ public class Pong extends PApplet {
             {
                 h.clear();
 
-                for(ProtoObject iPo: protoObjects) {
-                    final String str = "y" + (int)(iPo.posY / 10.0) + "x" + (int)(iPo.posX / 10);
+                // commented because we give perfect information a try
+                //for(ProtoObject iPo: protoObjects) {
+                //    final String str = "y" + (int)(iPo.posY / 10.0) + "x" + (int)(iPo.posX / 10);
+                //    h.put(str, str);
+                //}
+
+                {
+                    final String str = "y" + (int)(ballEntity.posY / 10.0) + "x" + (int)(ballEntity.posX / 10);
+                    h.put(str, str);
+                }
+
+                {
+                    final String str = "y" + (int)(batEntity.posY / 10.0) + "x" + (int)(batEntity.posX / 10);
                     h.put(str, str);
                 }
 

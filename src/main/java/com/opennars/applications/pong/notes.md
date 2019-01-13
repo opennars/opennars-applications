@@ -141,7 +141,7 @@ result
 result
 [i] #balls=696 pseudoscore=342.0 t=190800
 
-== current commit
+== commit
 
 * representation is fed from proto-objects
 * using unlabeled event representation
@@ -149,6 +149,17 @@ result
 
 [i] #balls=724 pseudoscore=307.0 t=186000
 -> not so good
+
+== current commit
+
+* representation is fed from game-objects
+* using unlabeled event representation
+  ex: <{y10x5, y1x3}-->[V]>
+
+[i] #balls=632 pseudoscore=288.0 t=167400
+-> not so good
+
+
 
 == TODO
 
