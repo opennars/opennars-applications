@@ -134,12 +134,21 @@ result
 [i] #balls=492 pseudoscore=140.0 t=109200
 -> not good at all
 
-== current commit
+== commit
 
 * changed representation to 2d product with bias to y axis
 
 result
 [i] #balls=696 pseudoscore=342.0 t=190800
+
+== current commit
+
+* representation is fed from proto-objects
+* using unlabeled event representation
+  ex: <{y10x5, y1x3}-->[V]>
+
+[i] #balls=724 pseudoscore=307.0 t=186000
+-> not so good
 
 == TODO
 

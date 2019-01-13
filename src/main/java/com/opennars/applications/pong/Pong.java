@@ -42,6 +42,9 @@ import processing.event.MouseEvent;
 
 import java.util.*;
 
+// TODO< better algorithm for comparision in
+//       updateProtoObjects2() >
+
 public class Pong extends PApplet {
     Reasoner reasoner;
     int entityID = 1;
@@ -672,6 +675,29 @@ public class Pong extends PApplet {
             //}
 
             {
+                h.clear();
+
+                for(ProtoObject iPo: protoObjects) {
+                    final String str = "y" + (int)(iPo.posY / 10.0) + "x" + (int)(iPo.posX / 10);
+                    h.put(str, str);
+                }
+
+                String narsese = "";
+
+                for(String i : h.keySet()) {
+                    narsese += i + ",";
+                }
+
+                if (narsese.length() > 0) {
+                    narsese = narsese.substring(0, narsese.length()-1);
+
+                    narsese = "<{" + narsese + "}-->[V]>. :|:";
+
+                    informer2.addNarsese(narsese);
+                }
+            }
+
+            {
                 double diffX = batEntity.posX - ballEntity.posX;
                 double diffY = batEntity.posY - ballEntity.posY;
 
@@ -685,11 +711,13 @@ public class Pong extends PApplet {
                     informer2.addNarsese(narsese);
                 }*/
 
+                /*
                 if (true) {
                     // image because we want to bias the system to the y difference
                     String narsese = "<{y" + (int)(diffY / 5) + "} --> (&/, [diffXYprod],_,"+ "{x" + (int)(diffX / 5) +"})>. :|:";
                     informer2.addNarsese(narsese);
                 }
+                */
 
 
                 //String narsese = "<{x" + (int)(diffX / 10) +",y" + (int)(diffY / 10) + ",xy" + (int)(diffX / 10) +"_" + (int)(diffY / 10) +"} --> [diff]>. :|:";
@@ -1274,7 +1302,7 @@ public class Pong extends PApplet {
 
     @Override
     public void draw() {
-        for(int n=0;n<10;n++) {
+        for(int n=0;n<20;n++) {
             tick();
         }
 
