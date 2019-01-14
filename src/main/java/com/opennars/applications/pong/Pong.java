@@ -130,6 +130,8 @@ public class Pong extends PApplet {
     // 0.3 may lead to false positives
     public double sdrMinSimilarity = 0.5;
 
+    boolean enableVision = false;
+
     @Override
     public void setup() {
         { // pixel screen
@@ -499,6 +501,10 @@ public class Pong extends PApplet {
 
 
     void updateProtoObjects2() {
+        if (!enableVision) {
+            return;
+        }
+
         for (ProtoObject iProtoObject : protoObjects) {
             // search for closest patch which matches
             boolean foundBestPatch = false;
@@ -556,6 +562,10 @@ public class Pong extends PApplet {
     }
 
     void tickProtoObjects() {
+        if (!enableVision) {
+            return;
+        }
+
         for(final ProtoObject iProtoObject : protoObjects) {
             iProtoObject.age++;
         }
@@ -580,11 +590,13 @@ public class Pong extends PApplet {
 
 
             // bat
-            pixelScreen.drawDot((int)(batEntity.posX), (int)(batEntity.posY-1));
             pixelScreen.drawDot((int)(batEntity.posX), (int)(batEntity.posY-0));
-            pixelScreen.drawDot((int)(batEntity.posX), (int)(batEntity.posY+1));
-            pixelScreen.drawDot((int)(batEntity.posX), (int)(batEntity.posY+1));
-            pixelScreen.drawDot((int)(batEntity.posX), (int)(batEntity.posY+2));
+
+            for(int i=0;i<=13;i++) {
+                pixelScreen.drawDot((int)(batEntity.posX), (int)(batEntity.posY+i));
+                pixelScreen.drawDot((int)(batEntity.posX), (int)(batEntity.posY-i));
+            }
+
         }
 
 
@@ -689,7 +701,7 @@ public class Pong extends PApplet {
                 List<String> l = new ArrayList<>();
 
                 {
-                    final String str = "y" + (int)(ballEntity.posY / 10.0) + "x" + (int)(ballEntity.posX / 10.0);
+                    final String str = "0y" + (int)(ballEntity.posY / 10.0) + "x" + (int)(ballEntity.posX / 800.0);
                     //h.put(str, str);
                     l.add(str);
 
@@ -698,7 +710,7 @@ public class Pong extends PApplet {
                 }
 
                 {
-                    final String str = "y" + (int)(batEntity.posY / 10.0) + "x" + (int)(batEntity.posX / 10.0);
+                    final String str = "1y" + (int)(batEntity.posY / 10.0) + "x" + (int)(batEntity.posX / 800.0);
                     //h.put(str, str);
                     l.add(str);
 
@@ -720,7 +732,15 @@ public class Pong extends PApplet {
                 if (narsese.length() > 0) {
                     narsese = narsese.substring(0, narsese.length()-1);
 
-                    narsese = "<{" + narsese + "}-->[V]>. :|:";
+                    String encoding = "product";
+
+                    if (encoding.equals("set")) {
+                        narsese = "<{" + narsese + "}-->[V]>. :|:";
+                    }
+                    else if(encoding.equals("product")){
+                        narsese = "<(*," + narsese + ")-->[V]>. :|:";
+                    }
+
 
                     informer2.addNarsese(narsese);
                 }
@@ -784,7 +804,7 @@ public class Pong extends PApplet {
 
         // heuristic for tight bounds of (proto)objects
         // idea here is to look only at on/off switching pixels and try to merge the bounding boxes
-        {
+        if (enableVision) {
             boundingBoxes.clear();
 
             for(int y=0;y<pixelScreen.retHeight();y++) {
@@ -820,7 +840,7 @@ public class Pong extends PApplet {
         }
 
         // creating patch from bounding box if it doesn't exist
-        {
+        if(enableVision){
             for(BoundingBox iBb : boundingBoxes) {
                 int width = iBb.x1-iBb.x0 + 1;
                 int height = iBb.y1 - iBb.y0 + 1;
@@ -841,7 +861,7 @@ public class Pong extends PApplet {
         }
 
         // assign/patch to closest proto-object or create proto-object from bounding object and patch
-        {
+        if(enableVision){
 
             for(BoundingBox iBb : boundingBoxes) {
                 int width = iBb.x1 - iBb.x0 + 1;

@@ -25,7 +25,7 @@ public class Ops {
 
         //System.out.println(batEntity.posY);
 
-        batEntity.posY = Math.max(batEntity.posY, 0.0);
+        batEntity.posY = Math.max(batEntity.posY, 13.0);
 
         //System.out.println(batEntity.posY);
 
@@ -44,7 +44,7 @@ public class Ops {
         double oldPosition = batEntity.posY;
 
         batEntity.posY += 10;
-        batEntity.posY = Math.min(batEntity.posY, 80.0);
+        batEntity.posY = Math.min(batEntity.posY, 80.0 - 13.0);
 
         if(batEntity.posY > oldPosition) {
             pong.timeoutForOpsEffective = -100;
