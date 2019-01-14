@@ -150,7 +150,7 @@ result
 [i] #balls=724 pseudoscore=307.0 t=186000
 -> not so good
 
-== current commit
+== commit
 
 * representation is fed from game-objects
 * using unlabeled event representation
@@ -159,7 +159,7 @@ result
 [i] #balls=632 pseudoscore=288.0 t=167400
 -> not so good
 
-== current commit
+== commit
 
 * representation is fed from game-objects
 * using labeled event representation
@@ -167,6 +167,26 @@ result
 [i] #balls=578 pseudoscore=280.0 t=157200
 -> not so good
 
+== current commit
+
+Experiment:
+
+* representation is fed from game-objects - absolute position - only y axis
+* using unlabeled event representation
+
+[i] #balls=321 pseudoscore=97.0 t=72600
+-> not so good
+
+Experiment:
+
+* representation is fed from game-objects - absolute position - only y axis
+* using labeled event representation
+  ex
+  String narsese = "<y" + (int)(batEntity.posY / 10) + " --> [batY]>. :|:";
+  String narsese = "<y" + (int)(ballEntity.posY / 10) + " --> [ballY]>. :|:";
+
+[i] #balls=12 pseudoscore=30.0 t=9600
+-> very good
 
 == TODO
 

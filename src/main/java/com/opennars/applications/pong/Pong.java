@@ -159,6 +159,9 @@ public class Pong extends PApplet {
             System.exit(1);
         }
 
+        // we want instrumentation
+        reasoner.addPlugin(new InstrumentationDerivations());
+
         Reasoner reasonerOfTracker = null;
         try {
             reasonerOfTracker = new Nar();
@@ -674,7 +677,7 @@ public class Pong extends PApplet {
             //    informer2.addNarsese(i);
             //}
 
-            {
+            if(false) {
                 h.clear();
 
                 // commented because we give perfect information a try
@@ -684,22 +687,22 @@ public class Pong extends PApplet {
                 //}
 
                 {
-                    final String str = "y" + (int)(ballEntity.posY / 10.0) + "x" + (int)(ballEntity.posX / 10);
-                    //h.put(str, str);
+                    final String str = "y" + (int)(ballEntity.posY / 10.0) + "x" + (int)(ballEntity.posX / 1000);
+                    h.put(str, str);
 
-                    String narsese = "<{" + str + "}-->[V0]>. :|:";
-                    informer2.addNarsese(narsese);
+                    //String narsese = "<{" + str + "}-->[V0]>. :|:";
+                    //informer2.addNarsese(narsese);
                 }
 
                 {
-                    final String str = "y" + (int)(batEntity.posY / 10.0) + "x" + (int)(batEntity.posX / 10);
-                    //h.put(str, str);
+                    final String str = "y" + (int)(batEntity.posY / 10.0) + "x" + (int)(batEntity.posX / 1000);
+                    h.put(str, str);
 
-                    String narsese = "<{" + str + "}-->[V1]>. :|:";
-                    informer2.addNarsese(narsese);
+                    //String narsese = "<{" + str + "}-->[V1]>. :|:";
+                    //informer2.addNarsese(narsese);
                 }
 
-                /*
+
                 String narsese = "";
 
                 for(String i : h.keySet()) {
@@ -712,7 +715,17 @@ public class Pong extends PApplet {
                     narsese = "<{" + narsese + "}-->[V]>. :|:";
 
                     informer2.addNarsese(narsese);
-                }*/
+                }
+            }
+            else if(true) {
+                if (true) {
+                    String narsese = "<y" + (int)(batEntity.posY / 10) + " --> [batY]>. :|:";
+                    informer2.addNarsese(narsese);
+                }
+                if(true){
+                    String narsese = "<y" + (int)(ballEntity.posY / 10) + " --> [ballY]>. :|:";
+                    informer2.addNarsese(narsese);
+                }
             }
 
             {
