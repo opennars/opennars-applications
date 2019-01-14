@@ -689,7 +689,7 @@ public class Pong extends PApplet {
                 List<String> l = new ArrayList<>();
 
                 {
-                    final String str = "0y" + (int)(ballEntity.posY / 10.0) + "x" + (int)(ballEntity.posX / 1000);
+                    final String str = "y" + (int)(ballEntity.posY / 10.0) + "x" + (int)(ballEntity.posX / 10.0);
                     //h.put(str, str);
                     l.add(str);
 
@@ -698,7 +698,7 @@ public class Pong extends PApplet {
                 }
 
                 {
-                    final String str = "1y" + (int)(batEntity.posY / 10.0) + "x" + (int)(batEntity.posX / 1000);
+                    final String str = "y" + (int)(batEntity.posY / 10.0) + "x" + (int)(batEntity.posX / 10.0);
                     //h.put(str, str);
                     l.add(str);
 

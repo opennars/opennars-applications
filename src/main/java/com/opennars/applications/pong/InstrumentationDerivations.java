@@ -53,7 +53,7 @@ public class InstrumentationDerivations implements Plugin, EventEmitter.EventObs
             Task task = (Task)args[0];
             String reason = (String)args[1];
 
-            if (task.sentence.truth.getConfidence() > 0.5) {
+            if (task.sentence.truth.getConfidence() > 0.5 /*&& reason.equals("Perceived")*/) {
                 out.println("[TaskAdd]" + instanceName + ": " + reason + "   " + task.toStringLong());
             }
         }
