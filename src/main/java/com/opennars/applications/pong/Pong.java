@@ -719,11 +719,11 @@ public class Pong extends PApplet {
             }
             else if(true) {
                 if (true) {
-                    String narsese = "<y" + (int)(batEntity.posY / 10) + " --> [batY]>. :|:";
+                    String narsese = "<{y" + (int)(batEntity.posY / 10) + "} --> [batY]>. :|:";
                     informer2.addNarsese(narsese);
                 }
                 if(true){
-                    String narsese = "<y" + (int)(ballEntity.posY / 10) + " --> [ballY]>. :|:";
+                    String narsese = "<{y" + (int)(ballEntity.posY / 10) + "} --> [ballY]>. :|:";
                     informer2.addNarsese(narsese);
                 }
             }

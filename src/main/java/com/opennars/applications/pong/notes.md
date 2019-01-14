@@ -167,7 +167,7 @@ result
 [i] #balls=578 pseudoscore=280.0 t=157200
 -> not so good
 
-== current commit
+== commit
 
 Experiment:
 
@@ -187,6 +187,23 @@ Experiment:
 
 [i] #balls=12 pseudoscore=30.0 t=9600
 -> very good
+
+== current commit
+
+Experiment:
+
+
+* representation is fed from game-objects - absolute position - only y axis
+* using labeled event representation
+  ex
+  String narsese = "<{y" + (int)(batEntity.posY / 10) + "} --> [batY]>. :|:";
+  String narsese = "<{y" + (int)(ballEntity.posY / 10) + "} --> [ballY]>. :|:";
+
+
+[i] #balls=16 pseudoscore=35.0 t=11400
+-> very good
+
+Conclusion: the set is not the reason for the poor performance for the unlabeled case
 
 == TODO
 
