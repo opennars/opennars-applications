@@ -677,7 +677,7 @@ public class Pong extends PApplet {
             //    informer2.addNarsese(i);
             //}
 
-            if(false) {
+            if(true) {
                 h.clear();
 
                 // commented because we give perfect information a try
@@ -686,17 +686,21 @@ public class Pong extends PApplet {
                 //    h.put(str, str);
                 //}
 
+                List<String> l = new ArrayList<>();
+
                 {
-                    final String str = "y" + (int)(ballEntity.posY / 10.0) + "x" + (int)(ballEntity.posX / 1000);
-                    h.put(str, str);
+                    final String str = "0y" + (int)(ballEntity.posY / 10.0) + "x" + (int)(ballEntity.posX / 1000);
+                    //h.put(str, str);
+                    l.add(str);
 
                     //String narsese = "<{" + str + "}-->[V0]>. :|:";
                     //informer2.addNarsese(narsese);
                 }
 
                 {
-                    final String str = "y" + (int)(batEntity.posY / 10.0) + "x" + (int)(batEntity.posX / 1000);
-                    h.put(str, str);
+                    final String str = "1y" + (int)(batEntity.posY / 10.0) + "x" + (int)(batEntity.posX / 1000);
+                    //h.put(str, str);
+                    l.add(str);
 
                     //String narsese = "<{" + str + "}-->[V1]>. :|:";
                     //informer2.addNarsese(narsese);
@@ -705,7 +709,11 @@ public class Pong extends PApplet {
 
                 String narsese = "";
 
-                for(String i : h.keySet()) {
+                //for(String i : h.keySet()) {
+                //    narsese += i + ",";
+                //}
+
+                for(String i: l) {
                     narsese += i + ",";
                 }
 
@@ -717,7 +725,7 @@ public class Pong extends PApplet {
                     informer2.addNarsese(narsese);
                 }
             }
-            else if(true) {
+            else if(false) {
                 if (true) {
                     String narsese = "<{y" + (int)(batEntity.posY / 10) + "} --> [batY]>. :|:";
                     informer2.addNarsese(narsese);
