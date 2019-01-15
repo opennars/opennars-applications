@@ -20,7 +20,7 @@ public class Ops {
 
         double oldPosition = batEntity.posY;
 
-        batEntity.posY -= 10;
+        batEntity.posY -= 7;
 
 
         //System.out.println(batEntity.posY);
@@ -43,7 +43,7 @@ public class Ops {
 
         double oldPosition = batEntity.posY;
 
-        batEntity.posY += 10;
+        batEntity.posY += 7;
         batEntity.posY = Math.min(batEntity.posY, 80.0 - 13.0);
 
         if(batEntity.posY > oldPosition) {

@@ -205,7 +205,7 @@ Experiment:
 
 Conclusion: the set is not the reason for the poor performance for the unlabeled case
 
-== current commit
+== commit
 
 Experiment:
 
@@ -215,7 +215,12 @@ Experiment:
   final String str = "0y" + (int)(ballEntity.posY / 10.0) + "x" + (int)(ballEntity.posX / 1000);
   final String str = "1y" + (int)(batEntity.posY / 10.0) + "x" + (int)(batEntity.posX / 1000);
 
+== current commit
 
+* changed pong environment
+
+Experiment: to compute the baseline of a agent which doesn't do anything
+[i] #balls=1100 pseudoscore=430.0 t=271800
 
 == TODO
 

@@ -690,6 +690,59 @@ public class Pong extends PApplet {
             //}
 
             if(true) {
+                {
+                    int a = 423;
+                    a += (int)(ballEntity.posY / 10.0);
+                    a *= 423;
+                    a ^= (int)(batEntity.posY / 10.0);
+                    a *= 423;
+
+                    informer2.addNarsese("<(*,q" +a+ ",y"+(int)(ballEntity.posY / 10.0)+",x"+(int)(batEntity.posY / 10.0)+")-->[z0]>. :|: %0.95;0.60%");
+                }
+
+                informer2.informWhenNecessary(false);
+
+                /*{
+                    int a = 423;
+                    a += (int)(ballEntity.posY / 10.0);
+                    a *= 423;
+                    a ^= (int)(batEntity.posY / 10.0);
+                    a *= 423;
+
+                    informer2.addNarsese("<{w" +a+ "}-->[z0]>. :|: %0.95;0.60%");
+                }
+
+                informer2.informWhenNecessary(false);
+                reasoner.cycles(10);
+
+                {
+                    int a = 423;
+                    a += (int)((ballEntity.posY+10) / 10.0);
+                    a *= 423;
+                    a ^= (int)(batEntity.posY / 10.0);
+                    a *= 423;
+
+                    informer2.addNarsese("<{w" +a+ "}-->[z0]>. :|: %0.95;0.3%");
+                }
+
+                informer2.informWhenNecessary(false);
+                reasoner.cycles(10);
+
+                {
+                    int a = 423;
+                    a += (int)((ballEntity.posY-10) / 10.0);
+                    a *= 423;
+                    a ^= (int)(batEntity.posY / 10.0);
+                    a *= 423;
+
+                    informer2.addNarsese("<{w" +a+ "}-->[z0]>. :|: %0.95;0.3%");
+                }
+
+                informer2.informWhenNecessary(false);
+                 */
+
+            }
+            else if(false) {
                 h.clear();
 
                 // commented because we give perfect information a try
@@ -1014,12 +1067,12 @@ public class Pong extends PApplet {
             {
                 final boolean inRange = ballEntity.posX < 120.0;
                 if (!inRange) {
-                    ballEntity.posX = 1.0;
-                    ballEntity.posY = 1.0 + rng.nextDouble() * (80.0 - 2.0);
+                    ballEntity.posX = 2.0;
+                    ballEntity.posY = 30.0 + rng.nextDouble() * (80.0-30.0 - 2.0);
 
                     // choose random y velocity
                     for(;;) {
-                        ballEntity.velocityY = ( rng.nextDouble() * 2.0 - 1.0 ) * 20.0;
+                        ballEntity.velocityY = ( rng.nextDouble() * 2.0 - 1.0 ) * 10.0;
 
                         // disallow low y velocity because it might reward a still agent to much without doing any actions
                         if( Math.abs(ballEntity.velocityY) > 3.0) {
@@ -1144,10 +1197,10 @@ public class Pong extends PApplet {
                 { // inject random op from time to time by chance to avoid getting stuck in cycles from which the agent can't escape
                     int rngValue2 = rng.nextInt( 100);
 
-                    int chance = 6; // in percentage
+                    int chance = 15; // in percentage
 
                     if (timeoutForOpsEffective < 0) {
-                        chance = 0; // disable if op which changed the world was done
+                        chance = 3; // disable if op which changed the world was done
                     }
 
                     if (rngValue2 < chance) {
@@ -1264,7 +1317,7 @@ public class Pong extends PApplet {
         t2++;
         t = t2/slowdownFactor;
 
-        reasoner.cycles(30);
+        reasoner.cycles(45);
         removeOutdatedPredictions(predictions);
         removeOutdatedPredictions(disappointments);
 
