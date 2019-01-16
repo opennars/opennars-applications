@@ -222,6 +222,14 @@ Experiment:
 Experiment: to compute the baseline of a agent which doesn't do anything
 [i] #balls=1100 pseudoscore=430.0 t=271800
 
+== curent commit
+
+* changed representation to product with some y resolution
+
+experiment with 80k concepts and 200 term and tasklinks
+[i] #balls=950 pseudoscore=782.0 t=338400
+
+
 == TODO
 
     * retina - agent has to be able to select object of focus - positions of other objects will be relative to it

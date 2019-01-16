@@ -697,7 +697,9 @@ public class Pong extends PApplet {
                     a ^= (int)(batEntity.posY / 10.0);
                     a *= 423;
 
-                    informer2.addNarsese("<(*,q" +a+ ",y"+(int)(ballEntity.posY / 10.0)+",x"+(int)(batEntity.posY / 10.0)+")-->[z0]>. :|: %0.95;0.60%");
+                    //informer2.addNarsese("<(*,q" +a+ ",y"+(int)(ballEntity.posY / 10.0)+",x"+(int)(batEntity.posY / 10.0)+")-->[z0]>. :|: %0.95;0.60%");
+
+                    informer2.addNarsese("<(*,y"+(int)(ballEntity.posY / 10.0)+"x"+(int)(ballEntity.posX / 50.0) + ",y"+(int)(batEntity.posY / 10.0)+")-->[z0]>. :|: %0.95;0.60%");
                 }
 
                 //informer2.informWhenNecessary(false);
