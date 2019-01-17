@@ -1164,6 +1164,9 @@ public class Pong extends PApplet {
 
             if(t%4==0) {
                 reasoner.addInput("<{SELF} --> [good]>!");
+
+                // give hint for attention
+                reasoner.addInput("<(&/,<?N --> [V]>,?t1,?op,?t2) =/> <{SELF} --> [good]>>?");
             }
 
 
