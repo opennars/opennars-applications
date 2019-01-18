@@ -1,6 +1,6 @@
-== Old commits
+## Old commits
 
-=== https://github.com/opennars/opennars-applications/commit/44a439671a26a1ae8a1df4682e3f3611971451aa
+### https://github.com/opennars/opennars-applications/commit/44a439671a26a1ae8a1df4682e3f3611971451aa
 
 Problems of tracking and recognizing objects from pixel data are the following
  * identification of new unknown objects
@@ -27,7 +27,7 @@ Experiment:
     We can store the old patch for that sampled position and compare it with the new patch if the position is resampled
        The attention system can get informed when a change was detected.
 
-== https://github.com/opennars/opennars-applications/commit/f4f0406138959237ed0c88e21f46137381078163
+## https://github.com/opennars/opennars-applications/commit/f4f0406138959237ed0c88e21f46137381078163
 
 * drawing of ball
 * drawing of bat
@@ -38,24 +38,24 @@ we need a attention system which looks at the difference of the pixels - so we c
 + this works very well
 - leads to a lot of tracked patches because they get "collected"
 
-== commit
+## commit
 
 Added Proto-Objects
 def: Proto-objects are "clusters" (of patches) which show a similar behaviour, shape, color, etc.
 Can be used by higher level reasoning processes to compose objects out of proto-objects.
 
 
-== commit
+## commit
 
 * solved problem of left off proto-objects
 * implemented merging of proto-objects by age - we throw the older proto-object away
 
-== commit
+## commit
 
 * giving NARS the position informations from the (sorted) proto-objects
 - produces to complex products for to many objects (>= 4) - and it slows down
 
-== commit
+## commit
 
 * give NARS just the first 2-ary product
 * tuning for patches -> protoobject translation
@@ -68,7 +68,7 @@ Result:
 - protoobjects don't match up with the bat most of the time
   algorithm of the patches is probably to complex and I should resort to something much simpler - I have an idea
 
-== commit
+## commit
 
 * tried patricks encoding - which is just to put the active pixels as events
   performance is still not good with 3.0.1
@@ -76,7 +76,7 @@ Result:
 It had a good run but then went onto the ^down spree
 https://www.youtube.com/watch?v=ZZfh5voSdL4
 
-== commit
+## commit
 
 * trying patricks encoing again with labeled pixels (by x position)
 * tuned forced random chance - old value seems to high
@@ -85,7 +85,7 @@ Result:
 ~ after >~30 mins - agent pressed a long time ^down (as usual) - and then recovered
   after >~45 mins - agent is in a predador like state in the bottom corner and can react to ball in other positions of the screen
 
-== commit
+## commit
 
 * begun "retina" approach
   key idea is that the agent can choose to focus on objects
@@ -94,7 +94,7 @@ Result:
 Result:
 Plays well after a short time (<~10 min)
 
-== commit
+## commit
 
 * experimented with op movement delta of 3 pixels - got stuck in corner - might be due to bad luck
 * experimented with op movement delta of 5 pixels - got stuck in corner
@@ -103,7 +103,7 @@ Plays well after a short time (<~10 min)
 -> leads to result of ~50% - random hit chance is ~10%
 [i] #balls=523 pseudoscore=238.0 t=138600
 
-== commit
+## commit
 
 * experimented with switchable axis
 
@@ -113,7 +113,7 @@ result (same run):
 
 Agent doesn't learn it at all to switch to the y axis.
 
-== commit
+## commit
 
 * tried again seperated axis of relatie ball position
 - didn't work - maybe decision making has an issue
@@ -124,7 +124,7 @@ Agent doesn't learn it at all to switch to the y axis.
 [i] #balls=690 pseudoscore=320.0 t=184200
 -> not so good
 
-== commit
+## commit
 
 * relative position
 * modified ^selectAxis to give the relatie position into NARS immediatly
@@ -134,14 +134,14 @@ result
 [i] #balls=492 pseudoscore=140.0 t=109200
 -> not good at all
 
-== commit
+## commit
 
 * changed representation to 2d product with bias to y axis
 
 result
 [i] #balls=696 pseudoscore=342.0 t=190800
 
-== commit
+## commit
 
 * representation is fed from proto-objects
 * using unlabeled event representation
@@ -150,7 +150,7 @@ result
 [i] #balls=724 pseudoscore=307.0 t=186000
 -> not so good
 
-== commit
+## commit
 
 * representation is fed from game-objects
 * using unlabeled event representation
@@ -159,7 +159,7 @@ result
 [i] #balls=632 pseudoscore=288.0 t=167400
 -> not so good
 
-== commit
+## commit
 
 * representation is fed from game-objects
 * using labeled event representation
@@ -167,7 +167,7 @@ result
 [i] #balls=578 pseudoscore=280.0 t=157200
 -> not so good
 
-== commit
+## commit
 
 Experiment:
 
@@ -188,7 +188,7 @@ Experiment:
 [i] #balls=12 pseudoscore=30.0 t=9600
 -> very good
 
-== commit
+## commit
 
 Experiment:
 
@@ -205,7 +205,7 @@ Experiment:
 
 Conclusion: the set is not the reason for the poor performance for the unlabeled case
 
-== commit
+## commit
 
 Experiment:
 
@@ -215,21 +215,21 @@ Experiment:
   final String str = "0y" + (int)(ballEntity.posY / 10.0) + "x" + (int)(ballEntity.posX / 1000);
   final String str = "1y" + (int)(batEntity.posY / 10.0) + "x" + (int)(batEntity.posX / 1000);
 
-== current commit
+## commit
 
 * changed pong environment
 
 Experiment: to compute the baseline of a agent which doesn't do anything
 [i] #balls=1100 pseudoscore=430.0 t=271800
 
-== commit
+## commit
 
 * changed representation to product with some y resolution
 
 experiment with 80k concepts and 200 term and tasklinks
 [i] #balls=950 pseudoscore=782.0 t=338400
 
-== current commit
+## current commit
 
 * full resolution
 * movement is direction based - op's only set the direction and movement is automatic
