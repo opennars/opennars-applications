@@ -11,16 +11,30 @@ public class Ops {
 
     public void up() {
         System.out.println("[o] up");
-
-        //System.out.println(batEntity.posY);
-
-
+        upDirection();
         pong.timeoutForOps = -100;
+    }
+
+    public void down() {
+        System.out.println("[o] down");
+        downDirection();
+        pong.timeoutForOps = -100;
+    }
+
+    public void upDirection() {
+        pong.batDirection = 1;
+    }
+
+    public void downDirection() {
+        pong.batDirection = -1;
+    }
+
+    public void upDirect() {
 
 
         double oldPosition = batEntity.posY;
 
-        batEntity.posY -= 7;
+        //batEntity.posY -= 7;
 
 
         //System.out.println(batEntity.posY);
@@ -34,12 +48,8 @@ public class Ops {
         }
     }
 
-    public void down() {
-        System.out.println("[o] down");
+    public void downDirect() {
 
-        //System.out.println(batEntity.posY);
-
-        pong.timeoutForOps = -100;
 
         double oldPosition = batEntity.posY;
 

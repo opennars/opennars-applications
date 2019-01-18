@@ -132,6 +132,41 @@ public class Pong extends PApplet {
 
     boolean enableVision = false;
 
+    public int batDirection = 0;
+
+    // fovea
+    public int foveaBigX = 1;
+    public int foveaBigY = 0;
+
+    public int foveaFineX = 0;
+    public int foveaFineY = 0;
+
+
+
+    public int retFoveaX() {
+        int foveaCenterX = 50;
+
+        int resultX = foveaCenterX + foveaBigX * 30;
+        resultX += (foveaFineX * 20);
+
+        return resultX;
+    }
+
+    public int retFoveaY() {
+        int foveaCenterY = 40;
+
+        int resultY = foveaCenterY + foveaBigY * 30;
+        resultY += (foveaFineY * 20);
+
+        return resultY;
+    }
+
+
+
+
+
+
+
     @Override
     public void setup() {
         { // pixel screen
@@ -254,10 +289,41 @@ public class Pong extends PApplet {
             } catch (NoSuchMethodException e) {
                 e.printStackTrace();
             }
+        }
 
-            // tell NARS that it has ops
-            reasoner.addInput("(^up, {SELF})!");
-            reasoner.addInput("(^down, {SELF})!");
+        {
+            FoveaOps ops = new FoveaOps();
+            ops.pong = this;
+
+            try {
+                {
+                    Operator op = new MethodInvocationOperator("^foveaBigX", ops, ops.getClass().getMethod("foveaBigX", String.class), new Class[]{String.class});
+                    reasoner.addPlugin(op);
+                    ((Nar) reasoner).memory.addOperator(op);
+                }
+
+                {
+                    Operator op = new MethodInvocationOperator("^foveaBigY", ops, ops.getClass().getMethod("foveaBigY", String.class), new Class[]{String.class});
+                    reasoner.addPlugin(op);
+                    ((Nar) reasoner).memory.addOperator(op);
+                }
+
+                {
+                    Operator op = new MethodInvocationOperator("^foveaFineX", ops, ops.getClass().getMethod("foveaFineX", String.class), new Class[]{String.class});
+                    reasoner.addPlugin(op);
+                    ((Nar) reasoner).memory.addOperator(op);
+                }
+
+                {
+                    Operator op = new MethodInvocationOperator("^foveaFineY", ops, ops.getClass().getMethod("foveaFineY", String.class), new Class[]{String.class});
+                    reasoner.addPlugin(op);
+                    ((Nar) reasoner).memory.addOperator(op);
+                }
+
+
+            } catch (NoSuchMethodException e) {
+                e.printStackTrace();
+            }
         }
     }
 
@@ -699,7 +765,15 @@ public class Pong extends PApplet {
 
                     //informer2.addNarsese("<(*,q" +a+ ",y"+(int)(ballEntity.posY / 10.0)+",x"+(int)(batEntity.posY / 10.0)+")-->[z0]>. :|: %0.95;0.60%");
 
-                    informer2.addNarsese("<(*,y"+(int)(ballEntity.posY / 10.0)+"x"+(int)(ballEntity.posX / 50.0) + ",y"+(int)(batEntity.posY / 10.0)+")-->[z0]>. :|: %0.95;0.60%");
+                    double diffBallX = ballEntity.posX - 0.0;//retFoveaX();
+                    double diffBallY = ballEntity.posY - 0.0;//retFoveaY();
+
+                    //diffBallX = 0.0;
+
+                    double diffBatX = batEntity.posX - 0.0;//retFoveaX();
+                    double diffBatY = batEntity.posY - 0.0;//retFoveaY();
+
+                    informer2.addNarsese("<(*,y"+(int)(diffBallY / 8.0)+"x"+(int)(diffBallX / 8.0) + ",y"+(int)(diffBatY / 10.0)+")-->[NNN]>. :|: %0.95;0.60%");
                 }
 
                 //informer2.informWhenNecessary(false);
@@ -1047,6 +1121,13 @@ public class Pong extends PApplet {
             timeoutForOpsEffective++;
             timeoutForOps++;
 
+            // move bat
+            {
+                batEntity.posY += ((double)batDirection * 0.4);
+                batEntity.posY = Math.max(batEntity.posY, 13.0);
+                batEntity.posY = Math.min(batEntity.posY, 80.0 - 13.0);
+            }
+
             {
                 if (tracker.timeSinceLastCenter > 60 ) {
                     tracker.timeSinceLastCenter = 0;
@@ -1202,34 +1283,100 @@ public class Pong extends PApplet {
                 { // inject random op from time to time by chance to avoid getting stuck in cycles from which the agent can't escape
                     int rngValue2 = rng.nextInt( 100);
 
-                    int chance = 15; // in percentage
+                    int chance = 6; // in percentage
 
                     if (timeoutForOpsEffective < 0) {
-                        chance = 3; // disable if op which changed the world was done
+                        chance = 6; // disable if op which changed the world was done
                     }
 
                     if (rngValue2 < chance) {
                         //System.out.println("[d] FORCED random op");
 
-                        int rngValue = rng.nextInt( 2);
-                        //System.out.println(rngValue);
-                        switch (rngValue) {
-                            case 0:
-                                reasoner.addInput("(^up, {SELF})!");
-                                break;
+                        int rngValue0 = rng.nextInt(100);
+                        if(rngValue0 < 1000) {
+                            int rngValue1 = rng.nextInt( 2);
 
-                            case 1:
-                                reasoner.addInput("(^down, {SELF})!");
-                                break;
-                            case 2:
+                            switch (rngValue1) {
+                                case 0:
+                                    reasoner.addInput("(^up, {SELF})!");
+                                    break;
+
+                                case 1:
+                                    reasoner.addInput("(^down, {SELF})!");
+                                    break;
+                            }
+                        }
+                        else {
+
+                            int rngValue1 = rng.nextInt( 12);
+
+                            switch (rngValue1) {
+                                //case 0:
+                                //    reasoner.addInput("(^foveaBigX, {SELF}, -1)!");
+                                //    break;
+
+                                //case 1:
+                                //    reasoner.addInput("(^foveaBigX, {SELF}, 0)!");
+                                //    break;
+
+                                //case 2:
+                                //    reasoner.addInput("(^foveaBigX, {SELF}, 1)!");
+                                //    break;
+
+                                case 3:
+                                    reasoner.addInput("(^foveaBigY, {SELF}, -1)!");
+                                    break;
+
+                                case 4:
+                                    reasoner.addInput("(^foveaBigY, {SELF}, 0)!");
+                                    break;
+
+                                case 5:
+                                    reasoner.addInput("(^foveaBigY, {SELF}, 1)!");
+                                    break;
+
+
+
+
+                                //case 6:
+                                //    reasoner.addInput("(^foveaFineX, {SELF}, -1)!");
+                                //    break;
+
+                                //case 7:
+                                //    reasoner.addInput("(^foveaFineX, {SELF}, 0)!");
+                                //    break;
+
+                                //case 8:
+                                //    reasoner.addInput("(^foveaFineX, {SELF}, 1)!");
+                                //    break;
+
+                                case 9:
+                                    reasoner.addInput("(^foveaFineY, {SELF}, -1)!");
+                                    break;
+
+                                case 10:
+                                    reasoner.addInput("(^foveaFineY, {SELF}, 0)!");
+                                    break;
+
+                                case 11:
+                                    reasoner.addInput("(^foveaFineY, {SELF}, 1)!");
+                                    break;
+
+                                /*
+
+
+                                case 2:
                                 reasoner.addInput("(^selectAxis, {SELF}, x)!");
                                 break;
                             case 3:
                                 reasoner.addInput("(^selectAxis, {SELF}, y)!");
                                 break;
-
-                            default:
+*/
+                                default:
+                                // ignore
+                            }
                         }
+
                     }
                 }
 
