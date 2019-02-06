@@ -40,7 +40,10 @@ public class WriteOutMemory {
         for (Iterator<Concept> it = nar.memory.concepts.iterator(); it.hasNext(); ) {
             Concept iConcept = it.next();
 
-            elements.add(new E(iConcept.name().toString(), iConcept.budget.getPriority()));
+            E e = new E(iConcept.name().toString(), iConcept.budget.getPriority());
+            //e.pressure = iConcept.beliefs.pressure;
+
+            elements.add(e);
         }
 
 
@@ -61,7 +64,7 @@ public class WriteOutMemory {
         });
 
         for(E iE : elements) {
-            pr.println("\t" + iE.conceptName + " " + iE.priority);
+            pr.println("\t" + iE.conceptName +" "+iE.pressure + " " + iE.priority);
         }
 
 
@@ -75,6 +78,7 @@ public class WriteOutMemory {
     private static class E {
         public double priority;
         public String conceptName;
+        public long pressure;
 
         public E(String conceptName, double priority) {
             this.conceptName = conceptName;

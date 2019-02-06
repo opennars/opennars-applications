@@ -35,8 +35,8 @@ public class InstrumentationDerivations implements Plugin, EventEmitter.EventObs
 
     @Override
     public boolean setEnabled(final Nar n, final boolean enabled) {
-        n.memory.event.set(this, enabled, Events.TaskDerive.class);
-        n.memory.event.set(this, enabled, Events.TaskAdd.class);
+        //n.memory.event.set(this, enabled, Events.TaskDerive.class);
+        //n.memory.event.set(this, enabled, Events.TaskAdd.class);
         return true;
     }
 
@@ -53,7 +53,7 @@ public class InstrumentationDerivations implements Plugin, EventEmitter.EventObs
             Task task = (Task)args[0];
             String reason = (String)args[1];
 
-            if (task.sentence.truth.getConfidence() > 0.5 && reason.equals("Perceived")) {
+            if (task.sentence.truth == null || task.sentence.truth.getConfidence() > 0.3/* && reason.equals("Perceived")*/) {
                 out.println("[TaskAdd]" + instanceName + ": " + reason + "   " + task.toStringLong());
             }
         }

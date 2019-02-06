@@ -23,17 +23,12 @@
  */
 package com.opennars.applications.pong;
 
-import com.opennars.applications.componentbased.Entity;
-import com.opennars.applications.pong.components.MappedPositionInformer;
-import org.opennars.interfaces.NarseseConsumer;
-
-import java.util.ArrayList;
-import java.util.List;
-
 public class InformReasoner {
+    /*
     String lastInput = "";
     String input = "";
     List<String> inputs = new ArrayList<>();
+    public TemporalQa temporalQa;
 
     //minX and minY define the lower end of the relative coordinate system
     public void informAboutEntities(List<Entity> entities) {
@@ -49,7 +44,7 @@ public class InformReasoner {
     }
 
     public void informAboutReinforcmentGood() {
-        String narsese = "<{SELF} --> [good]>.:|:";
+        String narsese = "<{SELF} --> [good]>";
         inputs.add(narsese);
         input += inputs.get(inputs.size()-1);
     }
@@ -59,7 +54,8 @@ public class InformReasoner {
         boolean hadInput = false;
         if(!input.equals(lastInput)||force) {
             for(String inp : inputs) {
-                consumer.addInput(inp);
+                consumer.addInput(inp + ".:|:");
+                temporalQa.inputEventAsNarsese(inp);
                 hadInput = true;
             }
             lastInput = input;
@@ -67,5 +63,5 @@ public class InformReasoner {
         input = "";
         inputs.clear();
         return hadInput;
-    }
+    }*/
 }

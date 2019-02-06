@@ -229,13 +229,28 @@ Experiment: to compute the baseline of a agent which doesn't do anything
 experiment with 80k concepts and 200 term and tasklinks
 [i] #balls=950 pseudoscore=782.0 t=338400
 
-## current commit
+## commit
 
 * full resolution
 * movement is direction based - op's only set the direction and movement is automatic
 
 experiment:
 #balls=1316 pseudoscore=814.0 t=401400
+
+
+## current commit
+
+added Temporal Q&A
+
+experiment - with temporal Q&A
+    x resolution grid is 20
+    
+    [i] #balls=753 pseudoscore=665.0 t=280200
+
+experiment - without temporal Q&A
+    x resolution grid is 20
+    
+    [i] #balls=753 pseudoscore=462.0 t=228600
 
 == TODO
 

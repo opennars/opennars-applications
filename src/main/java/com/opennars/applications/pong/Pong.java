@@ -34,6 +34,7 @@ import com.opennars.sgui.NarSimpleGUI;
 import org.opennars.interfaces.pub.Reasoner;
 import org.opennars.io.events.Events;
 import org.opennars.io.events.OutputHandler;
+import org.opennars.language.*;
 import org.opennars.main.Nar;
 import org.opennars.middle.operatorreflection.MethodInvocationOperator;
 import org.opennars.operator.Operator;
@@ -46,6 +47,8 @@ import java.util.*;
 //       updateProtoObjects2() >
 
 public class Pong extends PApplet {
+    TemporalQa temporalQa;
+
     Reasoner reasoner;
     int entityID = 1;
 
@@ -225,6 +228,13 @@ public class Pong extends PApplet {
         new NarSimpleGUI((Nar)reasoner);
 
         new NarSimpleGUI((Nar)reasonerOfTracker);
+
+        temporalQa = new TemporalQa(reasoner);
+        temporalQa.goalTerms.add(Inheritance.make(new SetExt(new Term("SELF")), new SetInt(new Term("good"))));
+
+        //informReasoner.temporalQa = temporalQa;
+
+        informer2.temporalQa = temporalQa;
     }
 
     void setupScene() {
@@ -773,7 +783,7 @@ public class Pong extends PApplet {
                     double diffBatX = batEntity.posX - 0.0;//retFoveaX();
                     double diffBatY = batEntity.posY - 0.0;//retFoveaY();
 
-                    informer2.addNarsese("<(*,y"+(int)(diffBallY / 8.0)+"x"+(int)(diffBallX / 8.0) + ",y"+(int)(diffBatY / 10.0)+")-->[NNN]>. :|: %0.95;0.60%");
+                    informer2.addNarsese("<(*,y"+(int)(diffBallY / 8.0)+"x"+(int)(diffBallX / 20.0) + ",y"+(int)(diffBatY / 10.0)+")-->[NNN]>");
                 }
 
                 //informer2.informWhenNecessary(false);
@@ -864,10 +874,10 @@ public class Pong extends PApplet {
                     String encoding = "product";
 
                     if (encoding.equals("set")) {
-                        narsese = "<{" + narsese + "}-->[V]>. :|:";
+                        narsese = "<{" + narsese + "}-->[V]>";
                     }
                     else if(encoding.equals("product")){
-                        narsese = "<(*," + narsese + ")-->[V]>. :|:";
+                        narsese = "<(*," + narsese + ")-->[V]>";
                     }
 
 
@@ -876,11 +886,11 @@ public class Pong extends PApplet {
             }
             else if(false) {
                 if (true) {
-                    String narsese = "<{y" + (int)(batEntity.posY / 10) + "} --> [batY]>. :|:";
+                    String narsese = "<{y" + (int)(batEntity.posY / 10) + "} --> [batY]>";
                     informer2.addNarsese(narsese);
                 }
                 if(true){
-                    String narsese = "<{y" + (int)(ballEntity.posY / 10) + "} --> [ballY]>. :|:";
+                    String narsese = "<{y" + (int)(ballEntity.posY / 10) + "} --> [ballY]>";
                     informer2.addNarsese(narsese);
                 }
             }
@@ -1123,7 +1133,7 @@ public class Pong extends PApplet {
 
             // move bat
             {
-                batEntity.posY += ((double)batDirection * 0.4);
+                batEntity.posY += ((double)batDirection * 0.5); //  0.65
                 batEntity.posY = Math.max(batEntity.posY, 13.0);
                 batEntity.posY = Math.min(batEntity.posY, 80.0 - 13.0);
             }
@@ -1246,6 +1256,7 @@ public class Pong extends PApplet {
             if(t%4==0) {
                 reasoner.addInput("<{SELF} --> [good]>!");
 
+
                 // give hint for attention
                 reasoner.addInput("<(&/,<?N --> [V]>,?t1,?op,?t2) =/> <{SELF} --> [good]>>?");
             }
@@ -1269,10 +1280,16 @@ public class Pong extends PApplet {
                     switch (rngValue) {
                         case 0:
                             reasoner.addInput("(^up, {SELF})!");
+
+                            temporalQa.inputEvent(Inheritance.makeTerm(new Product(new SetExt(new Term("SELF"))), new Term("up")));
+
                             break;
 
                         case 1:
                             reasoner.addInput("(^down, {SELF})!");
+
+                            temporalQa.inputEvent(Inheritance.makeTerm(new Product(new SetExt(new Term("SELF"))), new Term("down")));
+
                             break;
 
                         default:
@@ -1299,10 +1316,16 @@ public class Pong extends PApplet {
                             switch (rngValue1) {
                                 case 0:
                                     reasoner.addInput("(^up, {SELF})!");
+
+                                    temporalQa.inputEvent(Inheritance.makeTerm(new Product(new SetExt(new Term("SELF"))), new Term("up")));
+
                                     break;
 
                                 case 1:
                                     reasoner.addInput("(^down, {SELF})!");
+
+                                    temporalQa.inputEvent(Inheritance.makeTerm(new Product(new SetExt(new Term("SELF"))), new Term("down")));
+
                                     break;
                             }
                         }
@@ -1392,7 +1415,7 @@ public class Pong extends PApplet {
 
                 if (((BallBehaviour)ballEntity.behaviour).bouncedOfBat) {
                 //if (absDiffY <= 13.0 && absDiffX <= 15.0) {
-                    informReasoner.informAboutReinforcmentGood();
+                    informer2.informAboutReinforcmentGood();
 
                     System.out.println("GOOD NARS");
 
@@ -1469,11 +1492,16 @@ public class Pong extends PApplet {
         t2++;
         t = t2/slowdownFactor;
 
-        reasoner.cycles(45);
+        for(int i=0;i<45;i++) {
+            reasoner.cycles(1);
+            temporalQa.endTimestep();
+        }
+
         removeOutdatedPredictions(predictions);
         removeOutdatedPredictions(disappointments);
 
 
+        /*
         informReasoner.informAboutEntities(entities);
 
         if (t % perception_update == 0) {
@@ -1484,6 +1512,7 @@ public class Pong extends PApplet {
                 //reasoner.addInput(questions);
             }
         }
+        */
 
         if (false) {
             System.out.println("Concepts: " + ((Nar)reasoner).memory.concepts.size());

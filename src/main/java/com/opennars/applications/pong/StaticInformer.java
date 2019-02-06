@@ -10,14 +10,23 @@ import org.opennars.interfaces.NarseseConsumer;
  */
 // TODO< maintain a list of entities and pull information from entities on tick() >
 public class StaticInformer {
+
     public NarseseConsumer consumer;
 
     private String lastInput = "";
     private String input = "";
     private List<String> inputs = new ArrayList<>();
+    public TemporalQa temporalQa;
 
     public StaticInformer(final NarseseConsumer consumer) {
         this.consumer = consumer;
+    }
+
+
+    public void informAboutReinforcmentGood() {
+        String narsese = "<{SELF} --> [good]>";
+        inputs.add(narsese);
+        input += inputs.get(inputs.size()-1);
     }
 
     public void addNarsese(final String narsese) {
@@ -29,7 +38,8 @@ public class StaticInformer {
         boolean hadInput = false;
         if(!input.equals(lastInput)||force) {
             for(String inp : inputs) {
-                consumer.addInput(inp);
+                consumer.addInput(inp + ".:|:");
+                temporalQa.inputEventAsNarsese(inp);
                 hadInput = true;
             }
             lastInput = input;
@@ -38,5 +48,4 @@ public class StaticInformer {
         inputs.clear();
         return hadInput;
     }
-
 }
