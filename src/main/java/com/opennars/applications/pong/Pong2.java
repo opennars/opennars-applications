@@ -301,40 +301,7 @@ public class Pong2 extends PApplet {
             }
         }
 
-        {
-            FoveaOps ops = new FoveaOps();
-            ops.pong = this;
 
-            try {
-                {
-                    Operator op = new MethodInvocationOperator("^foveaBigX", ops, ops.getClass().getMethod("foveaBigX", String.class), new Class[]{String.class});
-                    reasoner.addPlugin(op);
-                    ((Nar) reasoner).memory.addOperator(op);
-                }
-
-                {
-                    Operator op = new MethodInvocationOperator("^foveaBigY", ops, ops.getClass().getMethod("foveaBigY", String.class), new Class[]{String.class});
-                    reasoner.addPlugin(op);
-                    ((Nar) reasoner).memory.addOperator(op);
-                }
-
-                {
-                    Operator op = new MethodInvocationOperator("^foveaFineX", ops, ops.getClass().getMethod("foveaFineX", String.class), new Class[]{String.class});
-                    reasoner.addPlugin(op);
-                    ((Nar) reasoner).memory.addOperator(op);
-                }
-
-                {
-                    Operator op = new MethodInvocationOperator("^foveaFineY", ops, ops.getClass().getMethod("foveaFineY", String.class), new Class[]{String.class});
-                    reasoner.addPlugin(op);
-                    ((Nar) reasoner).memory.addOperator(op);
-                }
-
-
-            } catch (NoSuchMethodException e) {
-                e.printStackTrace();
-            }
-        }
     }
 
     void samplePatchAtPosition(int x, int y) {
@@ -1330,76 +1297,7 @@ public class Pong2 extends PApplet {
 
                                     break;
                             }
-                        }
-                        else {
 
-                            int rngValue1 = rng.nextInt( 12);
-
-                            switch (rngValue1) {
-                                //case 0:
-                                //    reasoner.addInput("(^foveaBigX, {SELF}, -1)!");
-                                //    break;
-
-                                //case 1:
-                                //    reasoner.addInput("(^foveaBigX, {SELF}, 0)!");
-                                //    break;
-
-                                //case 2:
-                                //    reasoner.addInput("(^foveaBigX, {SELF}, 1)!");
-                                //    break;
-
-                                case 3:
-                                    reasoner.addInput("(^foveaBigY, {SELF}, -1)!");
-                                    break;
-
-                                case 4:
-                                    reasoner.addInput("(^foveaBigY, {SELF}, 0)!");
-                                    break;
-
-                                case 5:
-                                    reasoner.addInput("(^foveaBigY, {SELF}, 1)!");
-                                    break;
-
-
-
-
-                                //case 6:
-                                //    reasoner.addInput("(^foveaFineX, {SELF}, -1)!");
-                                //    break;
-
-                                //case 7:
-                                //    reasoner.addInput("(^foveaFineX, {SELF}, 0)!");
-                                //    break;
-
-                                //case 8:
-                                //    reasoner.addInput("(^foveaFineX, {SELF}, 1)!");
-                                //    break;
-
-                                case 9:
-                                    reasoner.addInput("(^foveaFineY, {SELF}, -1)!");
-                                    break;
-
-                                case 10:
-                                    reasoner.addInput("(^foveaFineY, {SELF}, 0)!");
-                                    break;
-
-                                case 11:
-                                    reasoner.addInput("(^foveaFineY, {SELF}, 1)!");
-                                    break;
-
-                                /*
-
-
-                                case 2:
-                                reasoner.addInput("(^selectAxis, {SELF}, x)!");
-                                break;
-                            case 3:
-                                reasoner.addInput("(^selectAxis, {SELF}, y)!");
-                                break;
-*/
-                                default:
-                                // ignore
-                            }
                         }
 
                     }
