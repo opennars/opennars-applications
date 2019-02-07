@@ -43,213 +43,8 @@ import processing.event.MouseEvent;
 
 import java.util.*;
 
-// TODO< better algorithm for comparision in
-//       updateProtoObjects2() >
-
 public class Pong2 extends PApplet {
-    TemporalQa temporalQa;
-
-    Reasoner reasoner;
-    int entityID = 1;
-
-    List<Prediction> predictions = new ArrayList<>();
-    List<Prediction> disappointments = new ArrayList<>();
-
-
-    List<Entity> entities = new ArrayList<>();
-    int t = 0;
-    int t2 = 0;
-    int oldT = 0;
-    public static boolean showAnomalies = false;
-
-    GridMapper mapper = new GridMapper();
-
-
-    Entity ballEntity;
-    Entity batEntity;
-
-    Random rng = new Random();
-
-    long timeoutForOps = 0;
-    long timeoutForOpsEffective = 0;
-
-    StaticInformer informer;
-
-    double pseudoscore = 0.0;
-    int emittedBalls = 0;
-
-    int slowdownFactor = 1;
-
-
-    final int fps = 60;
-
-    // tracker which is used to track the position of the ball
-    // TODO< implement very simple perception of ball >
-    Tracker tracker;
-
-
-    PixelScreen pixelScreen;
-
-    // used for attention / object detection
-    PixelScreen oldPixelScreen; // used for attention
-    PixelScreen pixelScreenOn; // pixel screen for on switching pixels
-    PixelScreen pixelScreenOff; // pixel screen for off switching pixels
-
-
-    PatchTracker patchTracker = new PatchTracker();
-
-
-    // used as a optimization - we need to avoid to add patches where patches are already located
-    PixelScreen patchScreen;
-
-
-
-    // configurable by ops
-    public int perceptionAxis = 1; // id of axis used to compare distances
-
-
-
-
-    public int batDirection = 0;
-
-    // fovea
-    public int foveaBigX = 1;
-    public int foveaBigY = 0;
-
-    public int foveaFineX = 0;
-    public int foveaFineY = 0;
-
-
-    @Override
-    public void setup() {
-        { // pixel screen
-            int pixelScreenWidth = 160;
-            int pixelScreenHeight = 100;
-            pixelScreen = new PixelScreen(pixelScreenWidth, pixelScreenHeight);
-
-            oldPixelScreen = new PixelScreen(pixelScreenWidth, pixelScreenHeight);
-            pixelScreenOn = new PixelScreen(pixelScreenWidth, pixelScreenHeight);
-            pixelScreenOff = new PixelScreen(pixelScreenWidth, pixelScreenHeight);
-
-            patchScreen = new PixelScreen(pixelScreenWidth, pixelScreenHeight);
-        }
-
-
-        mapper.cellsize = 10;
-
-        try {
-            reasoner = new Nar();
-            ((Nar)reasoner).narParameters.VOLUME = 0;
-            ((Nar)reasoner).narParameters.DURATION*=10;
-            ReasonerListener listener = new ReasonerListener(reasoner, predictions, disappointments, entities, mapper);
-            reasoner.on(Events.TaskAdd.class, listener);
-            reasoner.on(OutputHandler.DISAPPOINT.class, listener);
-        } catch (Exception ex) {
-            System.out.println(ex);
-            System.exit(1);
-        }
-
-        // we want instrumentation
-        reasoner.addPlugin(new InstrumentationDerivations());
-
-        Reasoner reasonerOfTracker = null;
-        try {
-            reasonerOfTracker = new Nar();
-            ((Nar)reasonerOfTracker).narParameters.VOLUME = 0;
-            ((Nar)reasonerOfTracker).narParameters.DURATION*=10;
-
-            ((Nar)reasonerOfTracker).narParameters.DECISION_THRESHOLD = 0.45f; // make it more indeciscive and noisy because we need the noise
-        } catch (Exception ex) {
-            System.out.println(ex);
-            System.exit(1);
-        }
-
-        tracker = new Tracker(reasonerOfTracker, null);
-        tracker.posX = 30.0; // so it has a chance to catch the ball
-
-        informer = new StaticInformer(reasoner);
-
-
-        setupScene();
-
-        size(1000, 1000);
-        frameRate(fps);
-        new NarSimpleGUI((Nar)reasoner);
-
-        new NarSimpleGUI((Nar)reasonerOfTracker);
-
-        temporalQa = new TemporalQa(reasoner);
-        temporalQa.goalTerms.add(Inheritance.make(new SetExt(new Term("SELF1")), new SetInt(new Term("good"))));
-
-        //informReasoner.temporalQa = temporalQa;
-
-        informer.temporalQa = temporalQa;
-    }
-
-    void setupScene() {
-        {
-            final double posX = 100.0;
-            final double posY = 30.0;
-
-            batEntity = new Entity(entityID++, posX, posY, 0.0, 0.0, "ball");
-            batEntity.velocityX = 0.0;
-            batEntity.velocityY = 0.0;
-
-            batEntity.renderable = new BallRenderComponent();
-            batEntity.behaviour = new BatBehaviour();
-
-            entities.add(batEntity);
-        }
-
-        {
-            final double posX = 40.0;
-            final double posY = 30.0;
-
-            ballEntity = new Entity(entityID++, posX, posY, 0.0, 0.0, "ball");
-            ballEntity.velocityX = -40.0 / slowdownFactor;
-            ballEntity.velocityY = 14.0 / slowdownFactor; //23.7;
-
-            ballEntity.renderable = new BallRenderComponent();
-            ballEntity.behaviour = new BallBehaviour();
-            ((BallBehaviour) ballEntity.behaviour).batEntity = batEntity;
-
-            entities.add(ballEntity);
-        }
-
-
-        {
-            Ops ops = new Ops();
-            ops.batEntity = batEntity;
-            ops.ballEntity = ballEntity;
-            ops.pong = this;
-            ops.consumer = reasoner;
-
-            try {
-                Operator opUp = new MethodInvocationOperator("^up", ops, ops.getClass().getMethod("up"), new Class[0]);
-                reasoner.addPlugin(opUp);
-                ((Nar) reasoner).memory.addOperator(opUp);
-
-                Operator opDown = new MethodInvocationOperator("^down", ops, ops.getClass().getMethod("down"), new Class[0]);
-                reasoner.addPlugin(opDown);
-                ((Nar) reasoner).memory.addOperator(opDown);
-
-                Operator opSel = new MethodInvocationOperator("^selectAxis", ops, ops.getClass().getMethod("selectAxis", String.class), new Class[]{String.class});
-                reasoner.addPlugin(opSel);
-                ((Nar) reasoner).memory.addOperator(opSel);
-            } catch (NoSuchMethodException e) {
-                e.printStackTrace();
-            }
-        }
-
-
-    }
-
-
-
-
     void tick() {
-
-
         { // draw to virtual screen
             pixelScreen.clear();
 
@@ -272,27 +67,23 @@ public class Pong2 extends PApplet {
 
 
 
-            if(t%4==0) {
-                final String narsese = retNarseseOfBallAndBat(ballEntity.posX, ballEntity.posY, batEntity.posX, batEntity.posY);
-                informer.addNarsese(narsese);
+        if(t%4==0) {
+            final String narsese = retNarseseOfBallAndBat(ballEntity.posX, ballEntity.posY, batEntity.posX, batEntity.posY);
+            informer.addNarsese(narsese);
 
 
-
-
-                boolean isMiddle = Math.abs(batEntity.posY-ballEntity.posY) < 7.0;
-                if (isMiddle) {
-                    informer.informAboutReinforcment(1.0);
-                }
-
-                informer.informWhenNecessary(false);
+            boolean isMiddle = Math.abs(batEntity.posY-ballEntity.posY) < 7.0;
+            if (isMiddle) {
+                informer.informAboutReinforcment(1.0);
             }
 
-            if(t%150 == 0) {
-                // weak punishment over time
-                informer.informAboutReinforcment(-.5, 0.05);
-            }
+            informer.informWhenNecessary(false);
+        }
 
-
+        if(t%150 == 0) {
+            // weak punishment over time
+            informer.informAboutReinforcment(-.5, 0.05);
+        }
 
 
 
@@ -589,6 +380,133 @@ public class Pong2 extends PApplet {
 
     }
 
+
+
+    @Override
+    public void setup() {
+        { // pixel screen
+            int pixelScreenWidth = 160;
+            int pixelScreenHeight = 100;
+            pixelScreen = new PixelScreen(pixelScreenWidth, pixelScreenHeight);
+
+            oldPixelScreen = new PixelScreen(pixelScreenWidth, pixelScreenHeight);
+            pixelScreenOn = new PixelScreen(pixelScreenWidth, pixelScreenHeight);
+            pixelScreenOff = new PixelScreen(pixelScreenWidth, pixelScreenHeight);
+
+            patchScreen = new PixelScreen(pixelScreenWidth, pixelScreenHeight);
+        }
+
+
+        mapper.cellsize = 10;
+
+        try {
+            reasoner = new Nar();
+            ((Nar)reasoner).narParameters.VOLUME = 0;
+            ((Nar)reasoner).narParameters.DURATION*=10;
+            ReasonerListener listener = new ReasonerListener(reasoner, predictions, disappointments, entities, mapper);
+            reasoner.on(Events.TaskAdd.class, listener);
+            reasoner.on(OutputHandler.DISAPPOINT.class, listener);
+        } catch (Exception ex) {
+            System.out.println(ex);
+            System.exit(1);
+        }
+
+        // we want instrumentation
+        reasoner.addPlugin(new InstrumentationDerivations());
+
+        Reasoner reasonerOfTracker = null;
+        try {
+            reasonerOfTracker = new Nar();
+            ((Nar)reasonerOfTracker).narParameters.VOLUME = 0;
+            ((Nar)reasonerOfTracker).narParameters.DURATION*=10;
+
+            ((Nar)reasonerOfTracker).narParameters.DECISION_THRESHOLD = 0.45f; // make it more indeciscive and noisy because we need the noise
+        } catch (Exception ex) {
+            System.out.println(ex);
+            System.exit(1);
+        }
+
+        tracker = new Tracker(reasonerOfTracker, null);
+        tracker.posX = 30.0; // so it has a chance to catch the ball
+
+        informer = new StaticInformer(reasoner);
+
+
+        setupScene();
+
+        size(1000, 1000);
+        frameRate(fps);
+        new NarSimpleGUI((Nar)reasoner);
+
+        new NarSimpleGUI((Nar)reasonerOfTracker);
+
+        temporalQa = new TemporalQa(reasoner);
+        temporalQa.goalTerms.add(Inheritance.make(new SetExt(new Term("SELF1")), new SetInt(new Term("good"))));
+
+        //informReasoner.temporalQa = temporalQa;
+
+        informer.temporalQa = temporalQa;
+    }
+
+    void setupScene() {
+        {
+            final double posX = 100.0;
+            final double posY = 30.0;
+
+            batEntity = new Entity(entityID++, posX, posY, 0.0, 0.0, "ball");
+            batEntity.velocityX = 0.0;
+            batEntity.velocityY = 0.0;
+
+            batEntity.renderable = new BallRenderComponent();
+            batEntity.behaviour = new BatBehaviour();
+
+            entities.add(batEntity);
+        }
+
+        {
+            final double posX = 40.0;
+            final double posY = 30.0;
+
+            ballEntity = new Entity(entityID++, posX, posY, 0.0, 0.0, "ball");
+            ballEntity.velocityX = -40.0 / slowdownFactor;
+            ballEntity.velocityY = 14.0 / slowdownFactor; //23.7;
+
+            ballEntity.renderable = new BallRenderComponent();
+            ballEntity.behaviour = new BallBehaviour();
+            ((BallBehaviour) ballEntity.behaviour).batEntity = batEntity;
+
+            entities.add(ballEntity);
+        }
+
+
+        {
+            Ops ops = new Ops();
+            ops.batEntity = batEntity;
+            ops.ballEntity = ballEntity;
+            ops.pong = this;
+            ops.consumer = reasoner;
+
+            try {
+                Operator opUp = new MethodInvocationOperator("^up", ops, ops.getClass().getMethod("up"), new Class[0]);
+                reasoner.addPlugin(opUp);
+                ((Nar) reasoner).memory.addOperator(opUp);
+
+                Operator opDown = new MethodInvocationOperator("^down", ops, ops.getClass().getMethod("down"), new Class[0]);
+                reasoner.addPlugin(opDown);
+                ((Nar) reasoner).memory.addOperator(opDown);
+
+                Operator opSel = new MethodInvocationOperator("^selectAxis", ops, ops.getClass().getMethod("selectAxis", String.class), new Class[]{String.class});
+                reasoner.addPlugin(opSel);
+                ((Nar) reasoner).memory.addOperator(opSel);
+            } catch (NoSuchMethodException e) {
+                e.printStackTrace();
+            }
+        }
+
+
+    }
+
+
     float mouseScroll = 0;
     Viewport viewport = new Viewport(this);
     public void mouseWheel(MouseEvent event) {
@@ -635,6 +553,78 @@ public class Pong2 extends PApplet {
         PApplet.runSketch(args2, mp);
     }
 
+
+    TemporalQa temporalQa;
+
+    Reasoner reasoner;
+    int entityID = 1;
+
+    List<Prediction> predictions = new ArrayList<>();
+    List<Prediction> disappointments = new ArrayList<>();
+
+
+    List<Entity> entities = new ArrayList<>();
+    int t = 0;
+    int t2 = 0;
+    int oldT = 0;
+    public static boolean showAnomalies = false;
+
+    GridMapper mapper = new GridMapper();
+
+
+    Entity ballEntity;
+    Entity batEntity;
+
+    Random rng = new Random();
+
+    long timeoutForOps = 0;
+    long timeoutForOpsEffective = 0;
+
+    StaticInformer informer;
+
+    double pseudoscore = 0.0;
+    int emittedBalls = 0;
+
+    int slowdownFactor = 1;
+
+
+    final int fps = 60;
+
+    // tracker which is used to track the position of the ball
+    // TODO< implement very simple perception of ball >
+    Tracker tracker;
+
+
+    PixelScreen pixelScreen;
+
+    // used for attention / object detection
+    PixelScreen oldPixelScreen; // used for attention
+    PixelScreen pixelScreenOn; // pixel screen for on switching pixels
+    PixelScreen pixelScreenOff; // pixel screen for off switching pixels
+
+
+    PatchTracker patchTracker = new PatchTracker();
+
+
+    // used as a optimization - we need to avoid to add patches where patches are already located
+    PixelScreen patchScreen;
+
+
+
+    // configurable by ops
+    public int perceptionAxis = 1; // id of axis used to compare distances
+
+
+
+
+    public int batDirection = 0;
+
+    // fovea
+    public int foveaBigX = 1;
+    public int foveaBigY = 0;
+
+    public int foveaFineX = 0;
+    public int foveaFineY = 0;
 
 
 }
