@@ -4,7 +4,7 @@ import com.opennars.applications.componentbased.Entity;
 import org.opennars.interfaces.NarseseConsumer;
 
 public class Ops {
-    public Pong pong;
+    public Pong2 pong;
     public Entity batEntity;
     public Entity ballEntity;
     public NarseseConsumer consumer;

@@ -46,7 +46,7 @@ import java.util.*;
 // TODO< better algorithm for comparision in
 //       updateProtoObjects2() >
 
-public class Pong extends PApplet {
+public class Pong2 extends PApplet {
     TemporalQa temporalQa;
 
     Reasoner reasoner;
@@ -1251,6 +1251,11 @@ public class Pong extends PApplet {
                 //reasoner.addInput("<(&/,<?N --> [V]>,?t1,?op,?t2) =/> <{SELF1} --> [good]>>?");
             }
 
+            if(t%150 == 0) {
+                // weak punishment over time
+                reasoner.addInput("(--, <{SELF1} --> [good]>). :|: %0.5;0.05%");
+            }
+
 
             if(t%8==0) {
 
@@ -1534,13 +1539,13 @@ public class Pong extends PApplet {
                 for(int batY=0; batY<80; batY+=8) {
                     String narseseOfBallBatPos = retNarseseOfBallAndBat(ballX, ballY, 0, batY);
 
-                    boolean up = ballY < batY;
+                    boolean up = ballY > batY;
                     String narseseOpName = up ? "up" : "down";
                     String narseseOfOp = "<(*,{SELF}) --> " + narseseOpName + ">";
                     //String narseseOfOp = "<{callOp} --> [" + narseseOpName + "]>";
 
                     // (C, O) =/> E
-                    String narsese = "<(&/," + narseseOfBallBatPos + ",+10," + narseseOfOp + ")" + "=/>" + "<{SELF1} --> [good]>>" + ".";
+                    String narsese = "<(&/," + narseseOfBallBatPos + ",+1," + narseseOfOp + ",+1)" + "=/>" + "<{SELF1} --> [good]>>" + ".";
 
                     System.out.println(narsese);
 
@@ -1865,8 +1870,8 @@ public class Pong extends PApplet {
         }
         //</editor-fold>
         //</editor-fold>
-        String[] args2 = {"Pong"};
-        Pong mp = new Pong();
+        String[] args2 = {"Pong2"};
+        Pong2 mp = new Pong2();
         PApplet.runSketch(args2, mp);
     }
 

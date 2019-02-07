@@ -3,7 +3,7 @@ package com.opennars.applications.pong;
 import org.opennars.interfaces.NarseseConsumer;
 
 public class FoveaOps {
-    public Pong pong;
+    public Pong2 pong;
     public NarseseConsumer consumer;
 
     public void foveaBigX(String valString) {
