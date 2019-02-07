@@ -11,13 +11,15 @@ public class Ops {
 
     public void up() {
         System.out.println("[o] up");
-        upDirection();
+        //upDirection();
+        upDirect();
         pong.timeoutForOps = -100;
     }
 
     public void down() {
         System.out.println("[o] down");
-        downDirection();
+        //downDirection();
+        downDirect();
         pong.timeoutForOps = -100;
     }
 
@@ -34,7 +36,7 @@ public class Ops {
 
         double oldPosition = batEntity.posY;
 
-        //batEntity.posY -= 7;
+        batEntity.posY -= 10;
 
 
         //System.out.println(batEntity.posY);
@@ -53,7 +55,7 @@ public class Ops {
 
         double oldPosition = batEntity.posY;
 
-        batEntity.posY += 7;
+        batEntity.posY += 10;
         batEntity.posY = Math.min(batEntity.posY, 80.0 - 13.0);
 
         if(batEntity.posY > oldPosition) {

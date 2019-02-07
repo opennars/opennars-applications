@@ -156,8 +156,9 @@ public class Pong2 extends PApplet {
             }
 
 
-            if(t%4==0) {
+            if(t%13==0) {
                 reasoner.addInput("<{SELF1} --> [good]>!");
+                //System.out.println("<{SELF1} --> [good]>!");
 
 
                 // give hint for attention
@@ -204,10 +205,10 @@ public class Pong2 extends PApplet {
                 { // inject random op from time to time by chance to avoid getting stuck in cycles from which the agent can't escape
                     int rngValue2 = rng.nextInt( 100);
 
-                    int chance = 6; // in percentage
+                    int chance = 16; // in percentage
 
                     if (timeoutForOpsEffective < 0) {
-                        chance = 6; // disable if op which changed the world was done
+                        chance = 16; // disable if op which changed the world was done
                     }
 
                     if (rngValue2 < chance) {
@@ -298,7 +299,9 @@ public class Pong2 extends PApplet {
 
     private static String retNarseseOfBallAndBat(double ballX, double ballY, double batX, double batY) {
         //return "<(*,y"+(int)(ballY / 8.0)+"x"+(int)(ballX / 2000.0) + ",y"+(int)(batY / 10.0)+")-->[ballBatPos]>";
+        return "<{y"+(int)(ballY / 6.0)+"y"+(int)(batY / 6.0)+"}-->[ballBatPos]>";
 
+        /*
         if (Math.abs(ballY-batY) < 7) {
             return "<{N}-->[ballBatPos]>";
         }
@@ -308,29 +311,27 @@ public class Pong2 extends PApplet {
         }
         else {
             return "<{NN}-->[ballBatPos]>";
-        }
+        }*/
     }
 
 
 
     private void remindReasonerOfActionPairs() {
-        return;
 
-        /*
         int ballX = 0;
         //for(int ballX=0; ballX < 100; ballX+=10)
         {
-            for(int ballY=0; ballY<80;ballY+=30) {
-                for(int batY=0; batY<80; batY+=30) {
+            for(int ballY=0; ballY<80;ballY+=3) {
+                for(int batY=0; batY<80; batY+=3) {
                     String narseseOfBallBatPos = retNarseseOfBallAndBat(ballX, ballY, 0, batY);
 
-                    boolean up = ballY > batY;
+                    boolean up = ballY < batY;
                     String narseseOpName = up ? "up" : "down";
                     String narseseOfOp = "<(*,{SELF}) --> " + narseseOpName + ">";
                     //String narseseOfOp = "<{callOp} --> [" + narseseOpName + "]>";
 
                     // (C, O) =/> E
-                    String narsese = "<(&/," + narseseOfBallBatPos + ",+1," + narseseOfOp + ",+1)" + "=/>" + "<{SELF1} --> [good]>>" + ".";
+                    String narsese = "<(&/," + narseseOfBallBatPos + ",+1," + narseseOfOp + ")" + "=/>" + "<{SELF1} --> [good]>>" + ".";
 
                     System.out.println(narsese);
 
@@ -340,7 +341,6 @@ public class Pong2 extends PApplet {
         }
 
         int debug = 5;
-        */
     }
 
 

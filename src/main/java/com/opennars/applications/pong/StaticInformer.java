@@ -39,7 +39,7 @@ public class StaticInformer {
     }
 
     public void addNarsese(final String narsese) {
-        inputs.add(narsese + ". :|: %1.0;0.99%");
+        inputs.add(narsese + ". :|: %1.0;0.85%");
         input += inputs.get(inputs.size()-1);
     }
 
@@ -53,7 +53,7 @@ public class StaticInformer {
             for(String inp : inputs) {
                 String narsese = inp;
 
-                System.out.println(narsese);
+                //System.out.println(narsese);
 
                 consumer.addInput(narsese);
                 temporalQa.inputEventAsNarsese(inp);
