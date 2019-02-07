@@ -238,7 +238,7 @@ experiment:
 #balls=1316 pseudoscore=814.0 t=401400
 
 
-## current commit
+## commit
 
 added Temporal Q&A
 
@@ -251,6 +251,15 @@ experiment - without temporal Q&A
     x resolution grid is 20
     
     [i] #balls=753 pseudoscore=462.0 t=228600
+
+## current commit
+
+experiment - with temporal Q&A
+
+    x resolution grid is 20
+    #concepts is 120k
+
+[i] #balls=1193 pseudoscore=775.0 t=373800
 
 == TODO
 
