@@ -282,7 +282,7 @@ public class Pong2 extends PApplet {
         t2++;
         t = t2/slowdownFactor;
 
-        for(int i=0;i<50;i++) {
+        for(int i=0;i<25;i++) {
             reasoner.cycles(1);
             temporalQa.endTimestep();
         }
@@ -321,8 +321,8 @@ public class Pong2 extends PApplet {
         int ballX = 0;
         //for(int ballX=0; ballX < 100; ballX+=10)
         {
-            for(int ballY=0; ballY<80;ballY+=3) {
-                for(int batY=0; batY<80; batY+=3) {
+            for(int ballY=0; ballY<80;ballY+=8) {
+                for(int batY=0; batY<80; batY+=8) {
                     String narseseOfBallBatPos = retNarseseOfBallAndBat(ballX, ballY, 0, batY);
 
                     boolean up = ballY < batY;
@@ -333,7 +333,7 @@ public class Pong2 extends PApplet {
                     // (C, O) =/> E
                     String narsese = "<(&/," + narseseOfBallBatPos + ",+1," + narseseOfOp + ")" + "=/>" + "<{SELF1} --> [good]>>" + ".";
 
-                    System.out.println(narsese);
+                    //System.out.println(narsese);
 
                     reasoner.addInput(narsese);
                 }
