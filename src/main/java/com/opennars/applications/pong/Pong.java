@@ -1492,7 +1492,7 @@ public class Pong extends PApplet {
         t2++;
         t = t2/slowdownFactor;
 
-        for(int i=0;i<45;i++) {
+        for(int i=0;i<25;i++) {
             reasoner.cycles(1);
             temporalQa.endTimestep();
         }
