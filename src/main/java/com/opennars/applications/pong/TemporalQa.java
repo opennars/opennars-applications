@@ -134,8 +134,10 @@ public class TemporalQa {
 
         int debug = 6;
 
-        System.out.println("Temporal Q&A - " + finalNarsese);
+        if (false) {
+            System.out.println("Temporal Q&A - " + finalNarsese);
 
-        consumer.addInput(finalNarsese);
+            consumer.addInput(finalNarsese);
+        }
     }
 }

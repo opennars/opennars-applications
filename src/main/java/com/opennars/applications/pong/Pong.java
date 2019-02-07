@@ -230,7 +230,7 @@ public class Pong extends PApplet {
         new NarSimpleGUI((Nar)reasonerOfTracker);
 
         temporalQa = new TemporalQa(reasoner);
-        temporalQa.goalTerms.add(Inheritance.make(new SetExt(new Term("SELF")), new SetInt(new Term("good"))));
+        temporalQa.goalTerms.add(Inheritance.make(new SetExt(new Term("SELF1")), new SetInt(new Term("good"))));
 
         //informReasoner.temporalQa = temporalQa;
 
@@ -766,25 +766,8 @@ public class Pong extends PApplet {
             //}
 
             if(true) {
-                {
-                    int a = 423;
-                    a += (int)(ballEntity.posY / 10.0);
-                    a *= 423;
-                    a ^= (int)(batEntity.posY / 10.0);
-                    a *= 423;
-
-                    //informer2.addNarsese("<(*,q" +a+ ",y"+(int)(ballEntity.posY / 10.0)+",x"+(int)(batEntity.posY / 10.0)+")-->[z0]>. :|: %0.95;0.60%");
-
-                    double diffBallX = ballEntity.posX - 0.0;//retFoveaX();
-                    double diffBallY = ballEntity.posY - 0.0;//retFoveaY();
-
-                    //diffBallX = 0.0;
-
-                    double diffBatX = batEntity.posX - 0.0;//retFoveaX();
-                    double diffBatY = batEntity.posY - 0.0;//retFoveaY();
-
-                    informer2.addNarsese("<(*,y"+(int)(diffBallY / 8.0)+"x"+(int)(diffBallX / 20.0) + ",y"+(int)(diffBatY / 10.0)+")-->[NNN]>");
-                }
+                final String narsese = retNarseseOfBallAndBat(ballEntity.posX, ballEntity.posY, batEntity.posX, batEntity.posY);
+                informer2.addNarsese(narsese);
 
                 //informer2.informWhenNecessary(false);
 
@@ -1131,6 +1114,13 @@ public class Pong extends PApplet {
             timeoutForOpsEffective++;
             timeoutForOps++;
 
+            if (t % 1500 == 2) {
+                System.out.println("[d] remind NARS of tuples");
+
+                // remind NARS of action tuples
+                remindReasonerOfActionPairs();
+            }
+
             // move bat
             {
                 batEntity.posY += ((double)batDirection * 0.5); //  0.65
@@ -1254,11 +1244,11 @@ public class Pong extends PApplet {
             }
 
             if(t%4==0) {
-                reasoner.addInput("<{SELF} --> [good]>!");
+                reasoner.addInput("<{SELF1} --> [good]>!");
 
 
                 // give hint for attention
-                reasoner.addInput("<(&/,<?N --> [V]>,?t1,?op,?t2) =/> <{SELF} --> [good]>>?");
+                //reasoner.addInput("<(&/,<?N --> [V]>,?t1,?op,?t2) =/> <{SELF1} --> [good]>>?");
             }
 
 
@@ -1492,7 +1482,7 @@ public class Pong extends PApplet {
         t2++;
         t = t2/slowdownFactor;
 
-        for(int i=0;i<25;i++) {
+        for(int i=0;i<200;i++) {
             reasoner.cycles(1);
             temporalQa.endTimestep();
         }
@@ -1522,6 +1512,47 @@ public class Pong extends PApplet {
             System.out.println("#patches= " + patchTracker.trackingRecords.size());
         }
     }
+
+    private static String retNarseseOfBallAndBat(double ballX, double ballY, double batX, double batY) {
+        //return "<(*,y"+(int)(ballY / 8.0)+"x"+(int)(ballX / 2000.0) + ",y"+(int)(batY / 10.0)+")-->[ballBatPos]>";
+
+        if (ballY>batY) {
+            return "<{P}-->[ballBatPos]>";
+        }
+        else {
+            return "<{N}-->[ballBatPos]>";
+        }
+    }
+
+
+
+    private void remindReasonerOfActionPairs() {
+        int ballX = 0;
+        //for(int ballX=0; ballX < 100; ballX+=10)
+        {
+            for(int ballY=0; ballY<80;ballY+=8) {
+                for(int batY=0; batY<80; batY+=8) {
+                    String narseseOfBallBatPos = retNarseseOfBallAndBat(ballX, ballY, 0, batY);
+
+                    boolean up = ballY < batY;
+                    String narseseOpName = up ? "up" : "down";
+                    String narseseOfOp = "<(*,{SELF}) --> " + narseseOpName + ">";
+                    //String narseseOfOp = "<{callOp} --> [" + narseseOpName + "]>";
+
+                    // (C, O) =/> E
+                    String narsese = "<(&/," + narseseOfBallBatPos + ",+10," + narseseOfOp + ")" + "=/>" + "<{SELF1} --> [good]>>" + ".";
+
+                    System.out.println(narsese);
+
+                    reasoner.addInput(narsese);
+                }
+            }
+        }
+
+        int debug = 5;
+    }
+
+
 
     private void removeProtoObjects() {
         for(int idx=protoObjects.size()-1;idx>=0;idx--) {
@@ -1595,7 +1626,7 @@ public class Pong extends PApplet {
 
     @Override
     public void draw() {
-        for(int n=0;n<20;n++) {
+        for(int n=0;n<1;n++) {
             tick();
         }
 

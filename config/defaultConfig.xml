@@ -5,9 +5,9 @@
 
     <!-- NarParameters -->
     <conf name="NOVELTY_HORIZON" value="100000"/>
-    <conf name="DECISION_THRESHOLD" value="0.41"/>
-    <conf name="CONCEPT_BAG_SIZE" value="15000"/>
-    <conf name="CONCEPT_BAG_LEVELS" value="1000"/>
+    <conf name="DECISION_THRESHOLD" value="0.35"/>
+    <conf name="CONCEPT_BAG_SIZE" value="120000"/>
+    <conf name="CONCEPT_BAG_LEVELS" value="1800"/>
     
     <conf name="DURATION" value="5"/>
     <conf name="HORIZON" value="1"/>
