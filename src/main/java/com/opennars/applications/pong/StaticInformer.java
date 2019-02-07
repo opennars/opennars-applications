@@ -24,7 +24,7 @@ public class StaticInformer {
 
 
     public void informAboutReinforcmentGood() {
-        String narsese = "<{SELF} --> [good]>";
+        String narsese = "<{SELF1} --> [good]>";
         inputs.add(narsese);
         input += inputs.get(inputs.size()-1);
     }
@@ -37,8 +37,14 @@ public class StaticInformer {
     public boolean informWhenNecessary(final boolean force) {
         boolean hadInput = false;
         if(!input.equals(lastInput)||force) {
+
+
             for(String inp : inputs) {
-                consumer.addInput(inp + ". :|: %1.0;0.99%");
+                String narsese = inp + ". :|: %1.0;0.99%";
+
+                System.out.println(narsese);
+
+                consumer.addInput(narsese);
                 temporalQa.inputEventAsNarsese(inp);
                 hadInput = true;
             }

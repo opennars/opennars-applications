@@ -142,23 +142,6 @@ public class Pong2 extends PApplet {
 
 
 
-    public int retFoveaX() {
-        int foveaCenterX = 50;
-
-        int resultX = foveaCenterX + foveaBigX * 30;
-        resultX += (foveaFineX * 20);
-
-        return resultX;
-    }
-
-    public int retFoveaY() {
-        int foveaCenterY = 40;
-
-        int resultY = foveaCenterY + foveaBigY * 30;
-        resultY += (foveaFineY * 20);
-
-        return resultY;
-    }
 
 
 
@@ -424,7 +407,6 @@ public class Pong2 extends PApplet {
                 final String narsese = retNarseseOfBallAndBat(ballEntity.posX, ballEntity.posY, batEntity.posX, batEntity.posY);
                 informer2.addNarsese(narsese);
 
-                //informer2.informWhenNecessary(false);
 
                 /*{
                     int a = 423;
@@ -465,72 +447,6 @@ public class Pong2 extends PApplet {
                 informer2.informWhenNecessary(false);
                  */
 
-            }
-            else if(false) {
-                h.clear();
-
-                // commented because we give perfect information a try
-                //for(ProtoObject iPo: protoObjects) {
-                //    final String str = "y" + (int)(iPo.posY / 10.0) + "x" + (int)(iPo.posX / 10);
-                //    h.put(str, str);
-                //}
-
-                List<String> l = new ArrayList<>();
-
-                {
-                    final String str = "0y" + (int)(ballEntity.posY / 10.0) + "x" + (int)(ballEntity.posX / 800.0);
-                    //h.put(str, str);
-                    l.add(str);
-
-                    //String narsese = "<{" + str + "}-->[V0]>. :|:";
-                    //informer2.addNarsese(narsese);
-                }
-
-                {
-                    final String str = "1y" + (int)(batEntity.posY / 10.0) + "x" + (int)(batEntity.posX / 800.0);
-                    //h.put(str, str);
-                    l.add(str);
-
-                    //String narsese = "<{" + str + "}-->[V1]>. :|:";
-                    //informer2.addNarsese(narsese);
-                }
-
-
-                String narsese = "";
-
-                //for(String i : h.keySet()) {
-                //    narsese += i + ",";
-                //}
-
-                for(String i: l) {
-                    narsese += i + ",";
-                }
-
-                if (narsese.length() > 0) {
-                    narsese = narsese.substring(0, narsese.length()-1);
-
-                    String encoding = "product";
-
-                    if (encoding.equals("set")) {
-                        narsese = "<{" + narsese + "}-->[V]>";
-                    }
-                    else if(encoding.equals("product")){
-                        narsese = "<(*," + narsese + ")-->[V]>";
-                    }
-
-
-                    informer2.addNarsese(narsese);
-                }
-            }
-            else if(false) {
-                if (true) {
-                    String narsese = "<{y" + (int)(batEntity.posY / 10) + "} --> [batY]>";
-                    informer2.addNarsese(narsese);
-                }
-                if(true){
-                    String narsese = "<{y" + (int)(ballEntity.posY / 10) + "} --> [ballY]>";
-                    informer2.addNarsese(narsese);
-                }
             }
 
             {
@@ -778,53 +694,7 @@ public class Pong2 extends PApplet {
                 }
             }
 
-            // inform the tracker about the perception
-            {
-                // inform it about the perception - which we fake by just comparing the positions
-                // TODO< do real
-
-                final double diffX = ballEntity.posX - tracker.posX;
-                final double diffY = ballEntity.posY - tracker.posY;
-
-                String code1 = "";
-
-
-                String code2 = "";
-
-                if (diffY > 5.0) {
-                    code1 +="d"; // entity on the right of the tracked position
-                }
-                else if(diffY < -5.0) {
-                    code1 += "u"; // entity on the left of the tracked position
-                }
-
-
-                if (diffX > 5.0) {
-                    code1 +="r"; // entity on the right of the tracked position
-                }
-                else if(diffX < -5.0) {
-                    code1 += "l"; // entity on the left of the tracked position
-                }
-
-
-                //if (code1.isEmpty()) {
-                //    code1 = "c";
-                //}
-
-
-
-
-                if (code1.isEmpty()) {
-                    code1 = "c";
-                }
-
-                //tracker.informAndStep(code1, code2);
-            }
         }
-
-        //if(t%2==0) {
-        //
-        //}
 
 
         t2++;
@@ -865,8 +735,8 @@ public class Pong2 extends PApplet {
         int ballX = 0;
         //for(int ballX=0; ballX < 100; ballX+=10)
         {
-            for(int ballY=0; ballY<80;ballY+=8) {
-                for(int batY=0; batY<80; batY+=8) {
+            for(int ballY=0; ballY<80;ballY+=30) {
+                for(int batY=0; batY<80; batY+=30) {
                     String narseseOfBallBatPos = retNarseseOfBallAndBat(ballX, ballY, 0, batY);
 
                     boolean up = ballY > batY;
