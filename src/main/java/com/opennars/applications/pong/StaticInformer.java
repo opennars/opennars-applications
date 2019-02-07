@@ -38,7 +38,7 @@ public class StaticInformer {
         boolean hadInput = false;
         if(!input.equals(lastInput)||force) {
             for(String inp : inputs) {
-                consumer.addInput(inp + ".:|:");
+                consumer.addInput(inp + ". :|: %1.0;0.99%");
                 temporalQa.inputEventAsNarsese(inp);
                 hadInput = true;
             }
