@@ -62,10 +62,6 @@ public class Pong2 extends PApplet {
     int oldT = 0;
     public static boolean showAnomalies = false;
 
-    int perception_update = 1;
-
-    InformReasoner informReasoner = new InformReasoner();
-
     GridMapper mapper = new GridMapper();
 
 
@@ -92,12 +88,6 @@ public class Pong2 extends PApplet {
     Tracker tracker;
 
 
-    // used to keep track of snippets from the screen
-    // will be used to identify objects
-    PatchRecords patchRecords = new PatchRecords();
-
-    long patchIdCounter = 1;
-
     PixelScreen pixelScreen;
 
     // used for attention / object detection
@@ -108,10 +98,6 @@ public class Pong2 extends PApplet {
 
     PatchTracker patchTracker = new PatchTracker();
 
-    // protoobjects are used by higher level reasoning processes to identify and learn objects
-    List<ProtoObject> protoObjects = new ArrayList<>();
-
-    long protoObjectIdCounter = 1;
 
     // used as a optimization - we need to avoid to add patches where patches are already located
     PixelScreen patchScreen;
@@ -124,11 +110,6 @@ public class Pong2 extends PApplet {
 
 
 
-    // 0.3 may lead to false positives
-    public double sdrMinSimilarity = 0.5;
-
-    boolean enableVision = false;
-
     public int batDirection = 0;
 
     // fovea
@@ -137,14 +118,6 @@ public class Pong2 extends PApplet {
 
     public int foveaFineX = 0;
     public int foveaFineY = 0;
-
-
-
-
-
-
-
-
 
 
     @Override
@@ -225,10 +198,6 @@ public class Pong2 extends PApplet {
             batEntity.renderable = new BallRenderComponent();
             batEntity.behaviour = new BatBehaviour();
 
-            //MappedPositionInformer positionInformerForBall = new MappedPositionInformer(mapper);
-            //positionInformerForBall.nameOverride = "dot";
-            //batEntity.components.add(positionInformerForBall);
-
             entities.add(batEntity);
         }
 
@@ -243,11 +212,6 @@ public class Pong2 extends PApplet {
             ballEntity.renderable = new BallRenderComponent();
             ballEntity.behaviour = new BallBehaviour();
             ((BallBehaviour) ballEntity.behaviour).batEntity = batEntity;
-
-            // NOTE< commented because we inform NARS about the ball position in a tuple now >
-            //MappedPositionInformer positionInformerForBall = new MappedPositionInformer(mapper);
-            //positionInformerForBall.nameOverride = "dot";
-            //ballEntity.components.add(positionInformerForBall);
 
             entities.add(ballEntity);
         }
@@ -285,10 +249,6 @@ public class Pong2 extends PApplet {
 
     void tick() {
 
-        {
-            pixelScreenOn.clear();
-            pixelScreenOff.clear();
-        }
 
         { // draw to virtual screen
             pixelScreen.clear();
@@ -309,102 +269,6 @@ public class Pong2 extends PApplet {
             }
 
         }
-
-
-        // we need to draw the positions of already existing patches
-        {
-            patchScreen.clear();
-
-            for(PatchTracker.TrackingRecord iPatch : patchTracker.trackingRecords) {
-                if (iPatch.lastPosX < 0 || iPatch.lastPosX >= patchScreen.retWidth() || iPatch.lastPosY < 0 || iPatch.lastPosY >= patchScreen.retHeight()) {
-                    continue;
-                }
-
-                patchScreen.arr[iPatch.lastPosY][iPatch.lastPosX] = true;
-            }
-        }
-
-
-        /* commented because we don't need this sampling anymore - because we just look at the delta
-        if (t%2==0) {
-            samplePatchAtRandomPosition();
-            samplePatchAtRandomPosition();
-            samplePatchAtRandomPosition();
-        }
-        */
-
-        // attention< > / object segmentation
-        {
-            for(int x=0;x<pixelScreen.retWidth();x++) {
-                for (int y = 0; y < pixelScreen.retHeight(); y++) {
-                    if (pixelScreen.arr[y][x] && !oldPixelScreen.arr[y][x]) {
-                        pixelScreenOn.arr[y][x] = true;
-                    }
-                    else if (!pixelScreen.arr[y][x] && oldPixelScreen.arr[y][x]) {
-                        pixelScreenOff.arr[y][x] = true;
-                    }
-                }
-            }
-        }
-
-        // attention< we need to bias our attention to the changes in the environment >
-        {
-            HashMap<String, String> h = new HashMap<>();
-
-            int labelCounter = 0; // fine to count labels by x because pong is ordered by x
-
-            for(int x=0;x<pixelScreen.retWidth();x++) {
-                for(int y=0;y<pixelScreen.retHeight();y++) {
-
-
-
-                    // we don't need to sample every pixel
-                    //if ((x+y) % 2 == 0) {
-                    //    continue;
-                    //}
-
-
-
-
-                    // ignore if no change
-                    if(pixelScreen.arr[y][x] == oldPixelScreen.arr[y][x]) {
-                        continue;
-                    }
-
-                    // inform nars when it turned on
-                    /*if(pixelScreen.arr[y][x] == true) {
-                        String str = "<(*, y" + y / 10 + ", x" + x / 10 + ") --> [on" + labelCounter + "]>. :|:";
-
-                        h.put(str, str);
-
-                        labelCounter++;
-                    }*/
-
-                    // spawn
-                    //samplePatchAtPosition(x, y);
-
-                    /*
-                    PatchTracker.TrackingRecord r = new PatchTracker.TrackingRecord();
-                    r.lastPosX = x;
-                    r.lastPosY = y;
-                    r.timeSinceLastMove = -1;
-
-                    patchTracker.trackingRecords.add(r);
-                    */
-                }
-            }
-
-
-            // commented because we don't anymore inform NARS with labeled pixels
-            //for(String i : h.keySet()) {
-            //    informer2.addNarsese(i);
-            //}
-
-
-
-
-
-
 
 
 
@@ -429,14 +293,6 @@ public class Pong2 extends PApplet {
             }
 
 
-        }
-
-
-
-
-        //if (t%2==0) {
-            patchTracker.frame(pixelScreen);
-        //}
 
 
 
@@ -639,9 +495,6 @@ public class Pong2 extends PApplet {
             temporalQa.endTimestep();
         }
 
-        removeOutdatedPredictions(predictions);
-        removeOutdatedPredictions(disappointments);
-
 
         if (false) {
             System.out.println("Concepts: " + ((Nar)reasoner).memory.concepts.size());
@@ -733,109 +586,7 @@ public class Pong2 extends PApplet {
         }
 
 
-        //for (Entity e : entities) {
-        //    e.render(this);
-        //}
 
-        for (Prediction pred : predictions) {
-            Entity e = pred.ent;
-
-            float transparency = Util.truthToValue(pred.truth) * Util.timeToValue(pred.time - reasoner.time());
-
-            // HACK< we need to cast to some class with translucency >
-
-            BallRenderComponent ballRender = (BallRenderComponent)e.renderable;
-            ballRender.translucency = transparency;
-
-            e.render(this);
-        }
-        if(showAnomalies) {
-            // REFACTOR< TODO< render >
-            /*
-            for (ReasonerListener.Prediction pred : disappointments) {
-                Entity e = pred.ent;
-                if(e instanceof Car) {
-                    fill(255,0,0);
-                }
-                if(e instanceof Pedestrian) {
-                    fill(0,0,255);
-                }
-                this.text("ANOMALY", (float)e.posX, (float)e.posY);
-                e.draw(this, streets, trafficLights, entities, pred.truth, pred.time - ((Reasoner)reasoner).time());
-            }
-             */
-        }
-
-
-
-        // draw tracker
-        /*{
-
-            pushMatrix();
-            translate((float)tracker.posX, (float)tracker.posY);
-
-            fill(255, 0, 0, 0.0f);
-            stroke(0, 0,0, (float)255.0f);
-
-            line(0, -50, 0, 50);
-            line(-50, 0, 50, 0);
-
-            popMatrix();
-            fill(0);
-        }*/
-
-
-        // draw tracked patches of patch-tracker
-        {
-            for(final PatchTracker.TrackingRecord iTrackingRecord: patchTracker.trackingRecords) {
-                float posX = (float)iTrackingRecord.lastPosX;
-                float posY = (float)iTrackingRecord.lastPosY;
-
-                pushMatrix();
-                translate((float)posX, (float)posY);
-                rotate(45.0f);
-
-                fill(255, 0, 0, 0.0f);
-
-                if (iTrackingRecord.absTimeSinceLastMove == 0) {
-                    stroke(255.0f, 0,0, 0.8f * 255.0f);
-
-                    line(0, -5, 0, 5);
-                    line(-5, 0, 5, 0);
-                }
-                else if (false && iTrackingRecord.timeSinceLastMove < -420 && iTrackingRecord.wasMoving) {
-                    stroke(0.2f * 255.0f, 0,0, 0.8f * 255.0f);
-
-
-                    line(0, -5, 0, 5);
-                    line(-5, 0, 5, 0);
-                }
-                else if (false) {
-                    stroke(0, 0,0, 0.1f * 255.0f);
-
-
-                    line(0, -5, 0, 5);
-                    line(-5, 0, 5, 0);
-                }
-
-
-                popMatrix();
-                fill(0);
-            }
-        }
-
-
-
-    }
-
-    public void removeOutdatedPredictions(List<Prediction> predictions) {
-        List<Prediction> toDelete = new ArrayList<>();
-        for(Prediction pred : predictions) {
-            if(pred.time <= reasoner.time()) {
-                toDelete.add(pred);
-            }
-        }
-        predictions.removeAll(toDelete);
     }
 
     float mouseScroll = 0;
