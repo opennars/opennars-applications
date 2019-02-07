@@ -1,10 +1,12 @@
 <?xml version="1.0" encoding="utf-8" ?>
 
 <config>
+    <conf name="ANTICIPATION_CONFIDENCE" value="0.4"/>
+
     <!-- NarParameters -->
     <conf name="NOVELTY_HORIZON" value="100000"/>
-    <conf name="DECISION_THRESHOLD" value="0.51"/>
-    <conf name="CONCEPT_BAG_SIZE" value="80000"/>
+    <conf name="DECISION_THRESHOLD" value="0.41"/>
+    <conf name="CONCEPT_BAG_SIZE" value="15000"/>
     <conf name="CONCEPT_BAG_LEVELS" value="1000"/>
     
     <conf name="DURATION" value="5"/>
@@ -93,8 +95,8 @@
     
     <conf name="QUESTION_GENERATION_ON_DECISION_MAKING" value="false"/>
     <conf name="HOW_QUESTION_GENERATION_ON_DECISION_MAKING" value="false"/>
-    
-    <conf name="ANTICIPATION_CONFIDENCE" value="0.33"/>
+
+
     <conf name="ANTICIPATION_TOLERANCE" value="50.0"/>
     
     <conf name="CONSIDER_NEW_OPERATION_BIAS" value="0.05"/>
@@ -117,7 +119,7 @@
     <conf name="VARIABLE_INTRODUCTION_COMBINATIONS_MAX" value="8"/>
     <conf name="ANTICIPATIONS_PER_CONCEPT_MAX" value="8"/>
 
-    <conf name="THREADS_AMOUNT" value="1"/>
+    <conf name="THREADS_AMOUNT" value="8"/>
     <conf name="VOLUME" value="100"/>
     <conf name="MILLISECONDS_PER_STEP" value="0"/>
     <conf name="STEPS_CLOCK" value="true"/>
