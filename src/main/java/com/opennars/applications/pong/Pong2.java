@@ -1251,6 +1251,13 @@ public class Pong2 extends PApplet {
                 //reasoner.addInput("<(&/,<?N --> [V]>,?t1,?op,?t2) =/> <{SELF1} --> [good]>>?");
             }
 
+            if(t%4==0) {
+                boolean isMiddle = Math.abs(batEntity.posY-ballEntity.posY) < 7.0;
+                if (isMiddle) {
+                    reasoner.addInput("<{SELF1} --> [good]>. :|:");
+                }
+            }
+
             if(t%150 == 0) {
                 // weak punishment over time
                 reasoner.addInput("(--, <{SELF1} --> [good]>). :|: %0.5;0.05%");
@@ -1487,7 +1494,7 @@ public class Pong2 extends PApplet {
         t2++;
         t = t2/slowdownFactor;
 
-        for(int i=0;i<200;i++) {
+        for(int i=0;i<50;i++) {
             reasoner.cycles(1);
             temporalQa.endTimestep();
         }
