@@ -22,25 +22,36 @@ public class StaticInformer {
         this.consumer = consumer;
     }
 
+    public void informAboutReinforcment(double reward) {
+        informAboutReinforcment(reward, 0.8);
+    }
 
-    public void informAboutReinforcmentGood() {
-        String narsese = "<{SELF1} --> [good]>";
+    public void informAboutReinforcment(double reward, double conf) {
+        String narsese;
+        if (reward > 0.0) {
+            narsese = "<{SELF1} --> [good]>. :|: %" + Double.toString(reward) + ";" + Double.toString(conf) + "%";
+        }
+        else {
+            narsese = "(--, <{SELF1} --> [good]>). :|: %" + Double.toString(-reward) + ";" + Double.toString(conf) + "%";
+        }
         inputs.add(narsese);
         input += inputs.get(inputs.size()-1);
     }
 
     public void addNarsese(final String narsese) {
-        inputs.add(narsese);
+        inputs.add(narsese + ". :|: %1.0;0.99%");
         input += inputs.get(inputs.size()-1);
     }
 
     public boolean informWhenNecessary(final boolean force) {
         boolean hadInput = false;
         if(!input.equals(lastInput)||force) {
+            //System.out.println(">>" + input);
+            //System.out.println("#>" + lastInput);
 
 
             for(String inp : inputs) {
-                String narsese = inp + ". :|: %1.0;0.99%";
+                String narsese = inp;
 
                 System.out.println(narsese);
 

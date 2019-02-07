@@ -79,8 +79,6 @@ public class Pong2 extends PApplet {
 
     StaticInformer informer;
 
-    StaticInformer informer2;
-
     double pseudoscore = 0.0;
     int emittedBalls = 0;
 
@@ -198,7 +196,6 @@ public class Pong2 extends PApplet {
 
         informer = new StaticInformer(reasoner);
 
-        informer2 = new StaticInformer(reasoner);
 
         setupScene();
 
@@ -213,7 +210,7 @@ public class Pong2 extends PApplet {
 
         //informReasoner.temporalQa = temporalQa;
 
-        informer2.temporalQa = temporalQa;
+        informer.temporalQa = temporalQa;
     }
 
     void setupScene() {
@@ -403,87 +400,35 @@ public class Pong2 extends PApplet {
             //    informer2.addNarsese(i);
             //}
 
-            if(true) {
+
+
+
+
+
+
+
+
+            if(t%4==0) {
                 final String narsese = retNarseseOfBallAndBat(ballEntity.posX, ballEntity.posY, batEntity.posX, batEntity.posY);
-                informer2.addNarsese(narsese);
+                informer.addNarsese(narsese);
 
 
-                /*{
-                    int a = 423;
-                    a += (int)(ballEntity.posY / 10.0);
-                    a *= 423;
-                    a ^= (int)(batEntity.posY / 10.0);
-                    a *= 423;
 
-                    informer2.addNarsese("<{w" +a+ "}-->[z0]>. :|: %0.95;0.60%");
+
+                boolean isMiddle = Math.abs(batEntity.posY-ballEntity.posY) < 7.0;
+                if (isMiddle) {
+                    informer.informAboutReinforcment(1.0);
                 }
 
-                informer2.informWhenNecessary(false);
-                reasoner.cycles(10);
-
-                {
-                    int a = 423;
-                    a += (int)((ballEntity.posY+10) / 10.0);
-                    a *= 423;
-                    a ^= (int)(batEntity.posY / 10.0);
-                    a *= 423;
-
-                    informer2.addNarsese("<{w" +a+ "}-->[z0]>. :|: %0.95;0.3%");
-                }
-
-                informer2.informWhenNecessary(false);
-                reasoner.cycles(10);
-
-                {
-                    int a = 423;
-                    a += (int)((ballEntity.posY-10) / 10.0);
-                    a *= 423;
-                    a ^= (int)(batEntity.posY / 10.0);
-                    a *= 423;
-
-                    informer2.addNarsese("<{w" +a+ "}-->[z0]>. :|: %0.95;0.3%");
-                }
-
-                informer2.informWhenNecessary(false);
-                 */
-
+                informer.informWhenNecessary(false);
             }
 
-            {
-                double diffX = batEntity.posX - ballEntity.posX;
-                double diffY = batEntity.posY - ballEntity.posY;
-
-                /*
-                if (true || perceptionAxis == 0) {
-                    String narsese = "<x" + (int)(diffX / 10) + " --> [diffX]>. :|:";
-                    informer2.addNarsese(narsese);
-                }
-                if(true || perceptionAxis == 1){
-                    String narsese = "<y" + (int)(diffY / 10) + " --> [diffY]>. :|:";
-                    informer2.addNarsese(narsese);
-                }*/
-
-                /*
-                if (true) {
-                    // image because we want to bias the system to the y difference
-                    String narsese = "<{y" + (int)(diffY / 5) + "} --> (&/, [diffXYprod],_,"+ "{x" + (int)(diffX / 5) +"})>. :|:";
-                    informer2.addNarsese(narsese);
-                }
-                */
-
-
-                //String narsese = "<{x" + (int)(diffX / 10) +",y" + (int)(diffY / 10) + ",xy" + (int)(diffX / 10) +"_" + (int)(diffY / 10) +"} --> [diff]>. :|:";
-                //informer2.addNarsese(narsese);
-
-                /*{
-                    String narsese = "<x" + (int)(diffX / 10) +"_y" + (int)(diffY / 10) + " --> [diffXY]>. :|:";
-                    informer2.addNarsese(narsese);
-                }*/
-
-
+            if(t%150 == 0) {
+                // weak punishment over time
+                informer.informAboutReinforcment(-.5, 0.05);
             }
 
-            informer2.informWhenNecessary(false);
+
         }
 
 
@@ -572,17 +517,6 @@ public class Pong2 extends PApplet {
                 //reasoner.addInput("<(&/,<?N --> [V]>,?t1,?op,?t2) =/> <{SELF1} --> [good]>>?");
             }
 
-            if(t%4==0) {
-                boolean isMiddle = Math.abs(batEntity.posY-ballEntity.posY) < 7.0;
-                if (isMiddle) {
-                    reasoner.addInput("<{SELF1} --> [good]>. :|:");
-                }
-            }
-
-            if(t%150 == 0) {
-                // weak punishment over time
-                reasoner.addInput("(--, <{SELF1} --> [good]>). :|: %0.5;0.05%");
-            }
 
 
             if(t%8==0) {
@@ -669,7 +603,7 @@ public class Pong2 extends PApplet {
 
                 if (((BallBehaviour)ballEntity.behaviour).bouncedOfBat) {
                 //if (absDiffY <= 13.0 && absDiffX <= 15.0) {
-                    informer2.informAboutReinforcmentGood();
+                    informer.informAboutReinforcment(1.0);
 
                     System.out.println("GOOD NARS");
 
@@ -721,17 +655,24 @@ public class Pong2 extends PApplet {
     private static String retNarseseOfBallAndBat(double ballX, double ballY, double batX, double batY) {
         //return "<(*,y"+(int)(ballY / 8.0)+"x"+(int)(ballX / 2000.0) + ",y"+(int)(batY / 10.0)+")-->[ballBatPos]>";
 
+        if (Math.abs(ballY-batY) < 7) {
+            return "<{N}-->[ballBatPos]>";
+        }
+
         if (ballY>batY) {
-            return "<{P}-->[ballBatPos]>";
+            return "<{PP}-->[ballBatPos]>";
         }
         else {
-            return "<{N}-->[ballBatPos]>";
+            return "<{NN}-->[ballBatPos]>";
         }
     }
 
 
 
     private void remindReasonerOfActionPairs() {
+        return;
+
+        /*
         int ballX = 0;
         //for(int ballX=0; ballX < 100; ballX+=10)
         {
@@ -755,6 +696,7 @@ public class Pong2 extends PApplet {
         }
 
         int debug = 5;
+        */
     }
 
 
