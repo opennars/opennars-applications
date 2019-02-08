@@ -44,6 +44,8 @@ import processing.event.MouseEvent;
 import java.util.*;
 
 public class Pong2 extends PApplet {
+    String runDesc = "rel immReward";
+
     void tick() {
         { // draw to virtual screen
             pixelScreen.clear();
@@ -74,6 +76,8 @@ public class Pong2 extends PApplet {
 
             boolean isMiddle = Math.abs(batEntity.posY-ballEntity.posY) < 7.0;
             if (isMiddle) {
+                //System.out.println("GOOD NARS");
+
                 informer.informAboutReinforcment(1.0);
             }
 
@@ -95,10 +99,10 @@ public class Pong2 extends PApplet {
             timeoutForOps++;
 
             if (t % 1500 == 2) {
-                System.out.println("[d] remind NARS of tuples");
+                //System.out.println("[d] remind NARS of tuples");
 
                 // remind NARS of action tuples
-                remindReasonerOfActionPairs();
+                //remindReasonerOfActionPairs();
             }
 
             // move bat
@@ -262,7 +266,7 @@ public class Pong2 extends PApplet {
             }
 
             if(t%600==0) {
-                System.out.println("[i] #balls=" + emittedBalls + " pseudoscore=" + Double.toString(pseudoscore) + " t=" + Integer.toString(t));
+                System.out.println("[i] #balls=" + emittedBalls + " pseudoscore=" + Double.toString(pseudoscore) + " t=" + Integer.toString(t) + " desc=" + runDesc);
             }
 
 
@@ -299,7 +303,11 @@ public class Pong2 extends PApplet {
 
     private static String retNarseseOfBallAndBat(double ballX, double ballY, double batX, double batY) {
         //return "<(*,y"+(int)(ballY / 8.0)+"x"+(int)(ballX / 2000.0) + ",y"+(int)(batY / 10.0)+")-->[ballBatPos]>";
-        return "<{y"+(int)(ballY / 6.0)+"y"+(int)(batY / 6.0)+"}-->[ballBatPos]>";
+        //return "<{y"+(int)(ballY / 6.0)+"y"+(int)(batY / 6.0)+"}-->[ballBatPos]>";
+
+        // relative
+        double rel = ballY - batY;
+        return "<{r"+(int)(rel / 6.0)+"}-->[ballBatPos]>";
 
         /*
         if (Math.abs(ballY-batY) < 7) {
@@ -348,7 +356,7 @@ public class Pong2 extends PApplet {
 
     @Override
     public void draw() {
-        for(int n=0;n<1;n++) {
+        for(int n=0;n<15;n++) {
             tick();
         }
 
