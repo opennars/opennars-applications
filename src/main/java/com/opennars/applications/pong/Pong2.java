@@ -303,7 +303,7 @@ public class Pong2 extends PApplet {
 
     private static String retNarseseOfBallAndBat(double ballX, double ballY, double batX, double batY) {
         //return "<(*,y"+(int)(ballY / 8.0)+"x"+(int)(ballX / 2000.0) + ",y"+(int)(batY / 10.0)+")-->[ballBatPos]>";
-        return "<{y"+(int)(ballY / 6.0)+"y"+(int)(batY / 6.0)+"}-->[ballBatPos]>";
+        return "<{y"+(int)(ballY / 9.0)+"y"+(int)(batY / 9.0)+"}-->[ballBatPos]>";
 
         // relative
         //double rel = ballY - batY;
