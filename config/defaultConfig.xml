@@ -3,7 +3,7 @@
 <config>
     <!-- NarParameters -->
     <conf name="NOVELTY_HORIZON" value="100000"/>
-    <conf name="DECISION_THRESHOLD" value="0.1"/>
+    <conf name="DECISION_THRESHOLD" value="0.3"/>
     <conf name="CONCEPT_BAG_SIZE" value="80000"/>
     <conf name="CONCEPT_BAG_LEVELS" value="1500"/>
 
@@ -59,7 +59,7 @@
     <conf name="TERMLINK_MAX_REASONED" value="3"/>
     <conf name="TERM_LINK_RECORD_LENGTH" value="10"/>
 
-    <conf name="CONCEPT_BELIEFS_MAX" value="28"/>
+    <conf name="CONCEPT_BELIEFS_MAX" value="60"/>
     <conf name="CONCEPT_QUESTIONS_MAX" value="5"/>
     <conf name="CONCEPT_GOALS_MAX" value="7"/>
 

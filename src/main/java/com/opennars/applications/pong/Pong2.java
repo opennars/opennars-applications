@@ -44,7 +44,7 @@ import processing.event.MouseEvent;
 import java.util.*;
 
 public class Pong2 extends PApplet {
-    String runDesc = "rel immReward";
+    String runDesc = "abs immReward";
 
     void tick() {
         { // draw to virtual screen
@@ -303,11 +303,11 @@ public class Pong2 extends PApplet {
 
     private static String retNarseseOfBallAndBat(double ballX, double ballY, double batX, double batY) {
         //return "<(*,y"+(int)(ballY / 8.0)+"x"+(int)(ballX / 2000.0) + ",y"+(int)(batY / 10.0)+")-->[ballBatPos]>";
-        //return "<{y"+(int)(ballY / 6.0)+"y"+(int)(batY / 6.0)+"}-->[ballBatPos]>";
+        return "<{y"+(int)(ballY / 6.0)+"y"+(int)(batY / 6.0)+"}-->[ballBatPos]>";
 
         // relative
-        double rel = ballY - batY;
-        return "<{r"+(int)(rel / 6.0)+"}-->[ballBatPos]>";
+        //double rel = ballY - batY;
+        //return "<{r"+(int)(rel / 6.0)+"}-->[ballBatPos]>";
 
         /*
         if (Math.abs(ballY-batY) < 7) {
