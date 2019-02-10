@@ -44,7 +44,7 @@ import processing.event.MouseEvent;
 import java.util.*;
 
 public class Pong2 extends PApplet {
-    String runDesc = "abs immReward";
+    String runDesc = "abs_x_6_6 immReward (L763 fix, decision1 fix, complexity of precond without var)";
 
     void tick() {
         { // draw to virtual screen
@@ -70,7 +70,7 @@ public class Pong2 extends PApplet {
 
 
         if(t%4==0) {
-            final String narsese = retNarseseOfBallAndBat(ballEntity.posX, ballEntity.posY, batEntity.posX, batEntity.posY);
+            final String narsese = retNarseseOfBallAndBat(ballEntity.posX, ballEntity.posY, batEntity.posX, batEntity.posY, ballEntity.velocityY);
             informer.addNarsese(narsese);
 
 
@@ -86,7 +86,7 @@ public class Pong2 extends PApplet {
 
         if(t%150 == 0) {
             // weak punishment over time
-            informer.informAboutReinforcment(-.5, 0.05);
+            //informer.informAboutReinforcment(-.5, 0.05);
         }
 
 
@@ -256,7 +256,6 @@ public class Pong2 extends PApplet {
                 if (((BallBehaviour)ballEntity.behaviour).bouncedOfBat) {
                 //if (absDiffY <= 13.0 && absDiffX <= 15.0) {
                     informer.informAboutReinforcment(1.0);
-
                     System.out.println("GOOD NARS");
 
                     if (((BallBehaviour)ballEntity.behaviour).bouncedOfBat) {
@@ -301,9 +300,11 @@ public class Pong2 extends PApplet {
         }
     }
 
-    private static String retNarseseOfBallAndBat(double ballX, double ballY, double batX, double batY) {
+    private static String retNarseseOfBallAndBat(double ballX, double ballY, double batX, double batY, double ballVelY) {
+        String ballVelString = ""; // ballVelY > 0.0 ? "p":"m";
+
         //return "<(*,y"+(int)(ballY / 8.0)+"x"+(int)(ballX / 2000.0) + ",y"+(int)(batY / 10.0)+")-->[ballBatPos]>";
-        return "<{y"+(int)(ballY / 9.0)+"y"+(int)(batY / 9.0)+"}-->[ballBatPos]>";
+        return "<{y"+(int)(ballY / 6.0)+ballVelString+"y"+(int)(batY / 6.0)+"}-->[ballBatPos]>";
 
         // relative
         //double rel = ballY - batY;
@@ -331,7 +332,7 @@ public class Pong2 extends PApplet {
         {
             for(int ballY=0; ballY<80;ballY+=8) {
                 for(int batY=0; batY<80; batY+=8) {
-                    String narseseOfBallBatPos = retNarseseOfBallAndBat(ballX, ballY, 0, batY);
+                    String narseseOfBallBatPos = retNarseseOfBallAndBat(ballX, ballY, 0, batY, 0);
 
                     boolean up = ballY < batY;
                     String narseseOpName = up ? "up" : "down";
@@ -421,6 +422,7 @@ public class Pong2 extends PApplet {
 
         // we want instrumentation
         reasoner.addPlugin(new InstrumentationDerivations());
+        //reasoner.addPlugin(new InstrumentForgetting());
 
         Reasoner reasonerOfTracker = null;
         try {

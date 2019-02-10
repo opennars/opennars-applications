@@ -29,17 +29,17 @@ public class StaticInformer {
     public void informAboutReinforcment(double reward, double conf) {
         String narsese;
         if (reward > 0.0) {
-            narsese = "<{SELF1} --> [good]>. :|: %" + Double.toString(reward) + ";" + Double.toString(conf) + "%";
+            narsese = "<{SELF1} --> [good]>"; //. :|: %" + Double.toString(reward) + ";" + Double.toString(conf) + "%";
+            inputs.add(narsese);
         }
         else {
-            narsese = "(--, <{SELF1} --> [good]>). :|: %" + Double.toString(-reward) + ";" + Double.toString(conf) + "%";
+            //narsese = "(--, <{SELF1} --> [good]>). :|: %" + Double.toString(-reward) + ";" + Double.toString(conf) + "%";
         }
-        inputs.add(narsese);
         input += inputs.get(inputs.size()-1);
     }
 
     public void addNarsese(final String narsese) {
-        inputs.add(narsese + ". :|: %1.0;0.85%");
+        inputs.add(narsese);
         input += inputs.get(inputs.size()-1);
     }
 
@@ -51,7 +51,7 @@ public class StaticInformer {
 
 
             for(String inp : inputs) {
-                String narsese = inp;
+                String narsese = inp + ". :|: %1.0;0.85%";
 
                 //System.out.println(narsese);
 

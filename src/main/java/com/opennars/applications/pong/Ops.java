@@ -10,14 +10,14 @@ public class Ops {
     public NarseseConsumer consumer;
 
     public void up() {
-        System.out.println("[o] up");
+        //System.out.println("[o] up");
         //upDirection();
         upDirect();
         pong.timeoutForOps = -100;
     }
 
     public void down() {
-        System.out.println("[o] down");
+        //System.out.println("[o] down");
         //downDirection();
         downDirect();
         pong.timeoutForOps = -100;

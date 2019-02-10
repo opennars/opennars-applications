@@ -29,7 +29,7 @@ public class TemporalQa {
     public void inputEvent(Term term) {
         sequence.add(term.clone());
 
-        if (term.equals(goalTerms.get(0))) {
+        if (term.toString().contains(goalTerms.get(0).toString())) {
             informReasoner();
             informReasonerAboutPrecondOpGoalForm();
         }
@@ -38,7 +38,7 @@ public class TemporalQa {
     public void inputEventAsNarsese(String narsese) {
         sequence.add(narsese);
 
-        if (narsese.equals(goalTerms.get(0).toString())) {
+        if (narsese.toString().contains(goalTerms.get(0).toString())) {
             informReasoner();
             informReasonerAboutPrecondOpGoalForm();
         }
@@ -106,6 +106,10 @@ public class TemporalQa {
     }
 
     void informReasonerOfPossibleSlices(final List<Object> arr) {
+        if (arr.size() <= horizon) {
+            return;
+        }
+
         for(int startIdx=arr.size()-1-horizon;startIdx<arr.size()-1-3;startIdx++) {
             List<Object> slice = arr.subList(startIdx, arr.size()-1+1);
             informReasonerSlice(slice);
