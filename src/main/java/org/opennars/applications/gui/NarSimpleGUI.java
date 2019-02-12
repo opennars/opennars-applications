@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package org.opennars.applications.gui;
+package com.opennars.sgui;
 
 import javax.swing.text.DefaultCaret;
 import static javax.swing.text.DefaultCaret.ALWAYS_UPDATE;
@@ -12,6 +12,7 @@ import org.opennars.io.events.EventEmitter;
 import org.opennars.io.events.Events;
 import org.opennars.io.events.OutputHandler.EXE;
 import org.opennars.main.Nar;
+import org.opennars.operator.Operator;
 
 /**
  *
@@ -40,7 +41,9 @@ public class NarSimpleGUI extends javax.swing.JFrame {
                     }
                 }
                 if(event == EXE.class) {
-                    Task t = (Task) args[0];
+                    Operator.ExecutionResult exec = (Operator.ExecutionResult)args[0];
+
+                    Task t = exec.getTask();
                     narText += "Executed: " + t + "\n";
                     changed = true;
                 }
@@ -65,7 +68,7 @@ public class NarSimpleGUI extends javax.swing.JFrame {
         DefaultCaret caret = (DefaultCaret) jTextPane2.getCaret();
         caret.setUpdatePolicy(ALWAYS_UPDATE);
         jSlider1.setValue(nar.narParameters.VOLUME);
-        this.setTitle("OpenNARS v3.0.1 Simple GUI");
+        this.setTitle("OpenNARS v3.0.0 Simple GUI");
         NarListener handler = new NarListener();
         nar.on(Events.TaskAdd.class, handler);
         nar.on(Events.Answer.class, handler);
@@ -149,7 +152,7 @@ public class NarSimpleGUI extends javax.swing.JFrame {
         });
 
         jCheckBox1.setSelected(true);
-        jCheckBox1.setText("show derivations");
+        jCheckBox1.setText("Show derivaitons");
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
