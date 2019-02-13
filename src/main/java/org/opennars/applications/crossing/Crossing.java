@@ -27,16 +27,43 @@ import org.opennars.applications.crossing.NarListener.Prediction;
 import org.opennars.applications.gui.NarSimpleGUI;
 import java.util.ArrayList;
 import java.util.List;
+import org.opennars.entity.Task;
+import org.opennars.interfaces.Timable;
 import org.opennars.io.events.Events;
 import org.opennars.io.events.OutputHandler.DISAPPOINT;
+import org.opennars.language.Term;
 import org.opennars.main.Nar;
+import org.opennars.operator.Operation;
+import org.opennars.operator.Operator;
+import org.opennars.operator.mental.Want;
+import org.opennars.storage.Memory;
 import processing.core.PApplet;
 import processing.event.MouseEvent;
 
 public class Crossing extends PApplet {
-    Nar nar;
+    public static Nar nar;
     int entityID = 1;
+    public static String said = "";
     
+    public static class Say extends Operator {
+        public Say() {
+            super("^say");
+        }
+        @Override
+        public List<Task> execute(Operation operation, Term[] args, Memory memory, Timable time) {
+            String s = "SAY ";
+            for(Term t : args) {
+                s += t + " ";
+            }
+            synchronized(said) {
+                said += s+"\n";
+            }
+            return null;
+        }
+    }
+    
+    static List<Prediction> predictions_snapshot = new ArrayList<Prediction>();
+    static String input_snapshot = "";
     List<Prediction> predictions = new ArrayList<Prediction>();
     List<Prediction> disappointments = new ArrayList<Prediction>();
     final int streetWidth = 40;
@@ -46,6 +73,10 @@ public class Crossing extends PApplet {
         cameras.add(new Camera(500+streetWidth/2, 500+streetWidth/2));
         try {
             nar = new Nar();
+            //
+            nar.addPlugin(new Say());
+            nar.addPlugin(new Want());
+            //nar.addInput("(^want,{SELF},(^say,{SELF},\"DANGER\")).");
             nar.narParameters.VOLUME = 0;
             nar.narParameters.DURATION*=10;
             NarListener listener = new NarListener(cameras.get(0), nar, predictions, disappointments, entities);
@@ -87,11 +118,14 @@ public class Crossing extends PApplet {
     List<Street> streets = new ArrayList<Street>();
     List<TrafficLight> trafficLights = new ArrayList<TrafficLight>();
     List<Entity> entities = new ArrayList<Entity>();
-    List<Camera> cameras = new ArrayList<Camera>();
+    public static List<Entity> entitiesSnapshot = new ArrayList<Entity>();
+    public static List<Camera> cameras = new ArrayList<Camera>();
     int t = 0;
-    public static boolean showAnomalies = false;
+    public transient static boolean showAnomalies = false;
+    public transient static boolean saveSnapshot = false;
+    public transient static String snapshotName = "current.png";
 
-    String questions = "<trafficLight --> [?whatColor]>? :|:";
+    static String questions = "";
     int perception_update = 1;
     @Override
     public void draw() {
@@ -134,9 +168,11 @@ public class Crossing extends PApplet {
         nar.cycles(10);
         removeOutdatedPredictions(predictions);
         removeOutdatedPredictions(disappointments);
-        for (Prediction pred : predictions) {
-            Entity e = pred.ent;
-            e.draw(this, streets, trafficLights, entities, pred.truth, pred.time - nar.time());
+        synchronized(predictions) {
+            for (Prediction pred : predictions) {
+                Entity e = pred.ent;
+                e.draw(this, streets, trafficLights, entities, pred.truth, pred.time - nar.time());
+            }
         }
         if(showAnomalies) {
             for (Prediction pred : disappointments) {
@@ -154,17 +190,34 @@ public class Crossing extends PApplet {
         for(Camera c : cameras) {
             c.draw(this);
         }
-        System.out.println("Concepts: " + nar.memory.concepts.size());
+        
+        synchronized(predictions) {
+            if(saveSnapshot) {
+                this.saveSnapshot = false;
+                input_snapshot = "";
+                saveFrame(snapshotName);
+                predictions_snapshot.clear();
+                predictions_snapshot.addAll(predictions);
+                entitiesSnapshot.clear();
+                entitiesSnapshot.addAll(entities);
+                for(Camera c : cameras) {
+                    input_snapshot += c.informer.getLastReportedInput() + "\n";
+                }
+            }
+        }
+        //System.out.println("Concepts: " + nar.memory.concepts.size());
     }
 
     public void removeOutdatedPredictions(List<Prediction> predictions) {
         List<Prediction> toDelete = new ArrayList<Prediction>();
-        for(Prediction pred : predictions) {
-            if(pred.time <= nar.time()) {
-                toDelete.add(pred);
+        synchronized(predictions) {
+            for(Prediction pred : predictions) {
+                if(pred.time <= nar.time()) {
+                    toDelete.add(pred);
+                }
             }
+            predictions.removeAll(toDelete);
         }
-        predictions.removeAll(toDelete);
     }
     
     float mouseScroll = 0;

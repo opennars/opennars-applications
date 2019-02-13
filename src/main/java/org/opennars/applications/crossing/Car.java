@@ -49,4 +49,9 @@ public class Car extends Entity {
 
         applet.stroke(127);
     }
+    
+    @Override
+    public String toString() {
+        return "car" + this.id;
+    }
 }

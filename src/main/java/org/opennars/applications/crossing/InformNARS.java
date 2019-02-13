@@ -31,21 +31,30 @@ public class InformNARS {
     String lastInput = "";
     String input = "";
     List<String> inputs = new ArrayList<String>();
+    
+    int minX;
+    int minY;
+    public String getPosition(double x, double y) {
+        return Util.positionToTerm((int) x-minX, (int) y-minY);
+    }
+    
     //minX and minY define the lower end of the relative coordinate system
     public void informAboutEntity(Nar nar, Entity ent, int minX, int minY) {
+        this.minX = minX; //in case that camera moved
+        this.minY = minY; //in case that camera moved
         String id = String.valueOf(ent.id);
         boolean useMultipleIDs = true;
         if(!useMultipleIDs) {
             id = "0";
         }
-        String pos = Util.positionToTerm((int) ent.posX-minX, (int) ent.posY-minY);
+        String pos = getPosition(ent.posX, ent.posY);
         if (ent instanceof Car) {
-            inputs.add("<(*,car" + id + ","+ pos + ") --> at>. :|:");
-            input += inputs.get(inputs.size()-1);
+            inputs.add("<(*," + ent + ","+ pos + ") --> car_at>. :|:");
+            input += inputs.get(inputs.size()-1) + "\n";
         }
         if (ent instanceof Pedestrian) {
-            inputs.add("<(*,pedestrian" + id + "," + pos + ") --> at>. :|:");
-            input += inputs.get(inputs.size()-1);
+            inputs.add("<(*," + ent + "," + pos + ") --> pedestrian_at>. :|:");
+            input += inputs.get(inputs.size()-1) + "\n";
         }
     }
 
@@ -54,7 +63,12 @@ public class InformNARS {
         String colour = light.colour == 0 ? "green" : "red";
         String narsese = "<trafficLight --> ["+colour+"]>. :|:";
         inputs.add(narsese);
-        input+=narsese;
+        input += narsese + "\n";
+    }
+    
+    String lastReportedInput = "";
+    public String getLastReportedInput() {
+        return lastReportedInput;
     }
 
     // /param force are the inputs forced to be fed into the reasoner
@@ -67,6 +81,7 @@ public class InformNARS {
             }
             lastInput = input;
         }
+        lastReportedInput = input;
         input = "";
         inputs.clear();
         return hadInput;

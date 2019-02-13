@@ -61,4 +61,9 @@ public class Pedestrian extends Entity {
             this.posY = prevY;
         }
     }
+    
+    @Override
+    public String toString() {
+        return "pedestrian" + this.id;
+    }
 }

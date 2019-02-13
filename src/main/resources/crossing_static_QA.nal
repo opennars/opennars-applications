@@ -1,0 +1,1 @@
+<(&&,<(*,#1,#2) --> car_prediction>,<(*,#3,#2) --> pedestrian_prediction>) ==> (^want,{SELF},(^say,{SELF},\"DANGER\"))>. %1.00;0.99%
