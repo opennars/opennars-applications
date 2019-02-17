@@ -67,7 +67,7 @@
     <conf name="DISCOUNT_RATE" value="0.5"/>
     
     <conf name="IMMEDIATE_ETERNALIZATION" value="true"/>
-    <conf name="SEQUENCE_BAG_ATTEMPTS" value="20"/>
+    <conf name="SEQUENCE_BAG_ATTEMPTS" value="10"/>
     <conf name="CONDITION_BAG_ATTEMPTS" value="10"/>
     
     <conf name="DERIVATION_PRIORITY_LEAK" value="0.4"/>
