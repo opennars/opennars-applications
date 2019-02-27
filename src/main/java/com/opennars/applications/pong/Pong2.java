@@ -421,8 +421,9 @@ public class Pong2 extends PApplet {
         }
 
         // we want instrumentation
-        reasoner.addPlugin(new InstrumentationDerivations());
+        //reasoner.addPlugin(new InstrumentationDerivations());
         //reasoner.addPlugin(new InstrumentForgetting());
+        //reasoner.addPlugin(new InstrumentAnticipation());
 
         Reasoner reasonerOfTracker = null;
         try {
