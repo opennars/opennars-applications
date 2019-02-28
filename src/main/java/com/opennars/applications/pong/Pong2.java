@@ -44,7 +44,7 @@ import processing.event.MouseEvent;
 import java.util.*;
 
 public class Pong2 extends PApplet {
-    String runDesc = "abs_x_6_6 immReward (L763 fix, decision1 fix, complexity of precond without var)";
+    String runDesc = "abs_x_6_6 immReward (exp_variance_PR)";
 
     void tick() {
         { // draw to virtual screen
@@ -133,6 +133,11 @@ public class Pong2 extends PApplet {
             // respawn ball if it was not hit by the bat
             {
                 final boolean inRange = ballEntity.posX < 120.0;
+
+                if(!inRange) {
+                    pongMisses++;
+                }
+
                 if (!inRange) {
                     ballEntity.posX = 2.0;
                     ballEntity.posY = 30.0 + rng.nextDouble() * (80.0-30.0 - 2.0);
@@ -260,12 +265,13 @@ public class Pong2 extends PApplet {
 
                     if (((BallBehaviour)ballEntity.behaviour).bouncedOfBat) {
                         pseudoscore += 1.0;
+                        pongHits++;
                     }
                 }
             }
 
             if(t%600==0) {
-                System.out.println("[i] #balls=" + emittedBalls + " pseudoscore=" + Double.toString(pseudoscore) + " t=" + Integer.toString(t) + " desc=" + runDesc);
+                System.out.println("[i] #balls=" + emittedBalls + " hits= " + pongHits + " misses= " + pongMisses + " t=" + Integer.toString(t) + " desc=" + runDesc);
             }
 
 
@@ -636,6 +642,9 @@ public class Pong2 extends PApplet {
 
     public int foveaFineX = 0;
     public int foveaFineY = 0;
+
+    public long pongHits = 0;
+    public long pongMisses = 0;
 
 
 }
