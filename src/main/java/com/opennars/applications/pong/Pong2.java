@@ -78,7 +78,12 @@ public class Pong2 extends PApplet {
             if (isMiddle) {
                 //System.out.println("GOOD NARS");
 
-                informer.informAboutReinforcment(1.0);
+                boolean rewardWhenInMiddle = false;
+
+                if(rewardWhenInMiddle) {
+                    informer.informAboutReinforcment(1.0);
+                }
+
             }
 
             informer.informWhenNecessary(false);
