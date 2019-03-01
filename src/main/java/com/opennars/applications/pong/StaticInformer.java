@@ -18,6 +18,12 @@ public class StaticInformer {
     private List<String> inputs = new ArrayList<>();
     public TemporalQa temporalQa;
 
+    public long updateCounter = 0;
+
+    public void resetUpdateCounter() {
+        updateCounter = 0;
+    }
+
     public StaticInformer(final NarseseConsumer consumer) {
         this.consumer = consumer;
     }
@@ -49,6 +55,7 @@ public class StaticInformer {
             //System.out.println(">>" + input);
             //System.out.println("#>" + lastInput);
 
+            //System.out.println("---");
 
             for(String inp : inputs) {
                 String narsese = inp + ". :|: %1.0;0.85%";
@@ -56,10 +63,12 @@ public class StaticInformer {
                 //System.out.println(narsese);
 
                 consumer.addInput(narsese);
-                temporalQa.inputEventAsNarsese(inp);
+                //temporalQa.inputEventAsNarsese(inp);
                 hadInput = true;
             }
             lastInput = input;
+
+            updateCounter++;
         }
         input = "";
         inputs.clear();

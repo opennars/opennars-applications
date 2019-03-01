@@ -45,6 +45,9 @@ import java.util.*;
 
 public class Pong2 extends PApplet {
     String runDesc = "abs_x_6_6 immReward (exp_variance_PR)";
+    private StaticInformer informer2;
+
+    private String oldStimulus ="";
 
     void tick() {
         { // draw to virtual screen
@@ -65,6 +68,51 @@ public class Pong2 extends PApplet {
                 pixelScreen.drawDot((int)(batEntity.posX), (int)(batEntity.posY-i));
             }
 
+        }
+
+        boolean enableUpdateChangedInformation = true;
+        if(t%4 == 0 && enableUpdateChangedInformation) {
+            double diffY = ballEntity.posY - batEntity.posY;
+
+            //informer.addNarsese("<{SELF} --> [compared]>"); // add signaling event that we compared successfully
+
+            String yFineQuantized = "";
+
+            boolean isMiddle = Math.abs(diffY) < 7.0;
+            if(isMiddle) {
+                yFineQuantized ="middlefine";
+            }
+            else if( diffY < -(7+30.0) ) {
+                yFineQuantized ="greaterfine30";
+            }
+            else if( diffY < 0.0 ) {
+                yFineQuantized ="greaterfine";
+            }
+            else if( diffY > (7+30.0) ) {
+                yFineQuantized ="lowerfine30";
+            }
+            else if( diffY > 0.0 ) {
+                yFineQuantized ="lowerfine";
+            }
+
+            String yQuantized = "";
+
+            if(isMiddle) {
+                yQuantized ="middle";
+            }
+            else if( diffY < 0.0 ) {
+                yQuantized ="greater";
+            }
+            else if( diffY > 0.0 ) {
+                yQuantized ="lower";
+            }
+
+            String stimulus = "<(*, " + yFineQuantized + "," + yQuantized +") --> [on]>";
+            forceGoals = forceGoals || !stimulus.equals(oldStimulus);
+
+            oldStimulus = stimulus;
+
+            informer.addNarsese(stimulus);
         }
 
 
@@ -89,6 +137,13 @@ public class Pong2 extends PApplet {
 
         if(t%4==0) {
             informer.informWhenNecessary(false);
+
+            forceGoals = forceGoals || informer2.informWhenNecessary(false);
+        }
+
+        if(informer.updateCounter > 10) {
+            informer.updateCounter -= 10;
+            System.out.println("UPDATED 10");
         }
 
         if(t%150 == 0) {
@@ -123,9 +178,11 @@ public class Pong2 extends PApplet {
                 compare = false;
                 double diff = ballEntity.posY - batEntity.posY;
 
-                informer.addNarsese("<{SELF} --> [compared]>"); // add signaling event that we compared successfully
+
+                //informer.addNarsese("<{SELF} --> [compared]>"); // add signaling event that we compared successfully
 
 
+                /*
                 boolean isMiddle = Math.abs(diff) < 7.0;
                 if(isMiddle) {
                     informer.addNarsese("<{middle} --> [on]>");
@@ -136,6 +193,7 @@ public class Pong2 extends PApplet {
                 else {
                     informer.addNarsese("<{lower} --> [on]>");
                 }
+                */
             }
 
             {
@@ -191,15 +249,34 @@ public class Pong2 extends PApplet {
             }
 
 
-            if(t%13==0) {
-                reasoner.addInput("<{SELF} --> [good]>!");
-                reasoner.addInput("<{SELF} --> [compared]>!"); // we need another goal for comparing and moving
+            if(t%20==0) {
+                if(forceGoals) {
+                    reasoner.addInput("<{SELF} --> [good]>!");
 
-                //System.out.println("<{SELF} --> [good]>!");
+
+                    System.out.println("<{SELF} --> [good]>!  FORCED");
+                    forceGoals = false;
+                }
+
 
 
                 // give hint for attention
                 //reasoner.addInput("<(&/,<?N --> [V]>,?t1,?op,?t2) =/> <{SELF} --> [good]>>?");
+            }
+
+            if(t%150==0) {
+                reasoner.addInput("<{SELF} --> [good]>!");
+
+
+                System.out.println("<{SELF} --> [good]>!");
+
+
+                // give hint for attention
+                //reasoner.addInput("<(&/,<?N --> [V]>,?t1,?op,?t2) =/> <{SELF} --> [good]>>?");
+            }
+
+            if(t%26*8==0) { // lower priority
+                //reasoner.addInput("<{SELF1} --> [compared]>!"); // we need another goal for comparing and moving
             }
 
 
@@ -242,10 +319,10 @@ public class Pong2 extends PApplet {
                 { // inject random op from time to time by chance to avoid getting stuck in cycles from which the agent can't escape
                     int rngValue2 = rng.nextInt( 100);
 
-                    int chance = 16; // in percentage
+                    int chance = 8; // in percentage
 
                     if (timeoutForOpsEffective < 0) {
-                        chance = 16; // disable if op which changed the world was done
+                        chance = 8; // disable if op which changed the world was done
                     }
 
                     if (rngValue2 < chance) {
@@ -253,7 +330,7 @@ public class Pong2 extends PApplet {
 
                         int rngValue0 = rng.nextInt(100);
                         if(rngValue0 < 1000) {
-                            int rngValue1 = rng.nextInt( 3); // 2 for disabled cmp op
+                            int rngValue1 = rng.nextInt( 2); // 2 for disabled cmp op
 
                             switch (rngValue1) {
                                 case 0:
@@ -482,6 +559,7 @@ public class Pong2 extends PApplet {
         tracker.posX = 30.0; // so it has a chance to catch the ball
 
         informer = new StaticInformer(reasoner);
+        informer2 = new StaticInformer(reasoner);
 
 
         setupScene();
@@ -686,5 +764,7 @@ public class Pong2 extends PApplet {
     public long pongHits = 0;
     public long pongMisses = 0;
 
+
+    public boolean forceGoals = false; // are the goals forced by the environment - used for more efficient processing by forcing the goal only when the perception changed
 
 }

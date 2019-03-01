@@ -11,15 +11,15 @@ public class Ops {
 
     public void up() {
         //System.out.println("[o] up");
-        //upDirection();
-        upDirect();
+        upDirection();
+        //upDirect();
         pong.timeoutForOps = -100;
     }
 
     public void down() {
         //System.out.println("[o] down");
-        //downDirection();
-        downDirect();
+        downDirection();
+        //downDirect();
         pong.timeoutForOps = -100;
     }
 
