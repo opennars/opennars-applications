@@ -68,24 +68,26 @@ public class Pong2 extends PApplet {
         }
 
 
-
-        if(t%4==0) {
+        boolean enableImmedateInformation = false;
+        if(t%4==0 && enableImmedateInformation) {
             final String narsese = retNarseseOfBallAndBat(ballEntity.posX, ballEntity.posY, batEntity.posX, batEntity.posY, ballEntity.velocityY);
             informer.addNarsese(narsese);
 
 
-            boolean isMiddle = Math.abs(batEntity.posY-ballEntity.posY) < 7.0;
+            boolean isMiddle = Math.abs(batEntity.posY - ballEntity.posY) < 7.0;
             if (isMiddle) {
                 //System.out.println("GOOD NARS");
 
                 boolean rewardWhenInMiddle = false;
 
-                if(rewardWhenInMiddle) {
+                if (rewardWhenInMiddle) {
                     informer.informAboutReinforcment(1.0);
                 }
 
             }
+        }
 
+        if(t%4==0) {
             informer.informWhenNecessary(false);
         }
 
@@ -115,6 +117,25 @@ public class Pong2 extends PApplet {
                 batEntity.posY += ((double)batDirection * 0.5); //  0.65
                 batEntity.posY = Math.max(batEntity.posY, 13.0);
                 batEntity.posY = Math.min(batEntity.posY, 80.0 - 13.0);
+            }
+
+            if(compare) { // if the op decided to compare the positions of the entities
+                compare = false;
+                double diff = ballEntity.posY - batEntity.posY;
+
+                informer.addNarsese("<{SELF} --> [compared]>"); // add signaling event that we compared successfully
+
+
+                boolean isMiddle = Math.abs(diff) < 7.0;
+                if(isMiddle) {
+                    informer.addNarsese("<{middle} --> [on]>");
+                }
+                else if( diff < 0.0 ) {
+                    informer.addNarsese("<{greater} --> [on]>");
+                }
+                else {
+                    informer.addNarsese("<{lower} --> [on]>");
+                }
             }
 
             {
@@ -171,12 +192,14 @@ public class Pong2 extends PApplet {
 
 
             if(t%13==0) {
-                reasoner.addInput("<{SELF1} --> [good]>!");
-                //System.out.println("<{SELF1} --> [good]>!");
+                reasoner.addInput("<{SELF} --> [good]>!");
+                reasoner.addInput("<{SELF} --> [compared]>!"); // we need another goal for comparing and moving
+
+                //System.out.println("<{SELF} --> [good]>!");
 
 
                 // give hint for attention
-                //reasoner.addInput("<(&/,<?N --> [V]>,?t1,?op,?t2) =/> <{SELF1} --> [good]>>?");
+                //reasoner.addInput("<(&/,<?N --> [V]>,?t1,?op,?t2) =/> <{SELF} --> [good]>>?");
             }
 
 
@@ -230,7 +253,7 @@ public class Pong2 extends PApplet {
 
                         int rngValue0 = rng.nextInt(100);
                         if(rngValue0 < 1000) {
-                            int rngValue1 = rng.nextInt( 2);
+                            int rngValue1 = rng.nextInt( 3); // 2 for disabled cmp op
 
                             switch (rngValue1) {
                                 case 0:
@@ -244,6 +267,13 @@ public class Pong2 extends PApplet {
                                     reasoner.addInput("(^down, {SELF})!");
 
                                     temporalQa.inputEvent(Inheritance.makeTerm(new Product(new SetExt(new Term("SELF"))), new Term("down")));
+
+                                    break;
+
+                                case 2:
+                                    reasoner.addInput("(^cmp, {SELF})!");
+
+                                    temporalQa.inputEvent(Inheritance.makeTerm(new Product(new SetExt(new Term("SELF"))), new Term("cmp")));
 
                                     break;
                             }
@@ -351,7 +381,7 @@ public class Pong2 extends PApplet {
                     //String narseseOfOp = "<{callOp} --> [" + narseseOpName + "]>";
 
                     // (C, O) =/> E
-                    String narsese = "<(&/," + narseseOfBallBatPos + ",+1," + narseseOfOp + ")" + "=/>" + "<{SELF1} --> [good]>>" + ".";
+                    String narsese = "<(&/," + narseseOfBallBatPos + ",+1," + narseseOfOp + ")" + "=/>" + "<{SELF} --> [good]>>" + ".";
 
                     //System.out.println(narsese);
 
@@ -463,7 +493,7 @@ public class Pong2 extends PApplet {
         new NarSimpleGUI((Nar)reasonerOfTracker);
 
         temporalQa = new TemporalQa(reasoner);
-        temporalQa.goalTerms.add(Inheritance.make(new SetExt(new Term("SELF1")), new SetInt(new Term("good"))));
+        temporalQa.goalTerms.add(Inheritance.make(new SetExt(new Term("SELF")), new SetInt(new Term("good"))));
 
         //informReasoner.temporalQa = temporalQa;
 
@@ -516,6 +546,10 @@ public class Pong2 extends PApplet {
                 Operator opDown = new MethodInvocationOperator("^down", ops, ops.getClass().getMethod("down"), new Class[0]);
                 reasoner.addPlugin(opDown);
                 ((Nar) reasoner).memory.addOperator(opDown);
+
+                Operator opCompare = new MethodInvocationOperator("^cmp", ops, ops.getClass().getMethod("cmp"), new Class[]{});
+                reasoner.addPlugin(opCompare);
+                ((Nar) reasoner).memory.addOperator(opCompare);
 
                 Operator opSel = new MethodInvocationOperator("^selectAxis", ops, ops.getClass().getMethod("selectAxis", String.class), new Class[]{String.class});
                 reasoner.addPlugin(opSel);
@@ -638,6 +672,7 @@ public class Pong2 extends PApplet {
 
 
 
+    public boolean compare = false;
 
     public int batDirection = 0;
 

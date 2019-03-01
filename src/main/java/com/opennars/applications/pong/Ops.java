@@ -23,6 +23,12 @@ public class Ops {
         pong.timeoutForOps = -100;
     }
 
+    public void cmp() {
+        int debugHere = 5;
+
+        pong.compare = true;
+    }
+
     public void upDirection() {
         pong.batDirection = 1;
     }

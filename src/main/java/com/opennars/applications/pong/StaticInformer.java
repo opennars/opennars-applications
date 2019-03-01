@@ -29,7 +29,7 @@ public class StaticInformer {
     public void informAboutReinforcment(double reward, double conf) {
         String narsese;
         if (reward > 0.0) {
-            narsese = "<{SELF1} --> [good]>"; //. :|: %" + Double.toString(reward) + ";" + Double.toString(conf) + "%";
+            narsese = "<{SELF} --> [good]>"; //. :|: %" + Double.toString(reward) + ";" + Double.toString(conf) + "%";
             inputs.add(narsese);
         }
         else {
