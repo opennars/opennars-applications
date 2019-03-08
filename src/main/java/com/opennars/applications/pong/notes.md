@@ -252,7 +252,7 @@ experiment - without temporal Q&A
     
     [i] #balls=753 pseudoscore=462.0 t=228600
 
-## current commit
+## commit
 
 experiment - with temporal Q&A
 
@@ -260,6 +260,35 @@ experiment - with temporal Q&A
     #concepts is 120k
 
 [i] #balls=1193 pseudoscore=775.0 t=373800
+
+## current commit
+
+Pong2 experiment (with current master in OpenNARS):
+  * (OpenNARS environment optimization) goal is refed into the system when the state of the environment changed
+  * input format which was quantized in different quantization
+
+    Idea here was that it may learn to ignore the finer quantization when it is not necessary.
+
+    <(*,lowerfine30,lower) --> [on]>
+    <(*,lowerfine,lower) --> [on]>
+    <(*,middle,middle) --> [on]>
+    <(*,greaterfine30,greater) --> [on]>
+    <(*,greater,greater) --> [on]>
+Result:
+  * had trouble to learn a good association at all in one run (10 minutes per run)
+
+[i] #balls=104 hits= 100 misses= 104 t=40800 desc=abs_x_6_6 immReward
+[i] #balls=124 hits= 90 misses= 124 t=41400 desc=abs_x_6_6 immReward
+[i] #balls=191 hits= 77 misses= 191 t=48000 desc=abs_x_6_6 immReward
+[i] #balls=195 hits= 94 misses= 195 t=52800 desc=abs_x_6_6 immReward
+
+[i] #balls=187 hits= 170 misses= 187 t=70800 desc=abs_x_6_6 immReward
+[i] #balls=196 hits= 145 misses= 196 t=66000 desc=abs_x_6_6 immReward
+[i] #balls=94 hits= 181 misses= 94 t=60000 desc=abs_x_6_6 immReward
+[i] #balls=273 hits= 131 misses= 273 t=73800 desc=abs_x_6_6 immReward
+
+
+
 
 == TODO
 
