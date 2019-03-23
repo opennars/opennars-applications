@@ -15,6 +15,7 @@
     <conf name="BUDGET_THRESHOLD" value="0.01"/>
     
     <conf name="DEFAULT_CONFIRMATION_EXPECTATION" value="0.6"/>
+    <conf name="ALWAYS_CREATE_CONCEPT" value="true"/>
     <conf name="DEFAULT_CREATION_EXPECTATION" value="0.66"/>
     <conf name="DEFAULT_CREATION_EXPECTATION_GOAL" value="0.6"/>
     
@@ -73,28 +74,22 @@
     <conf name="DERIVATION_PRIORITY_LEAK" value="0.4"/>
     <conf name="DERIVATION_DURABILITY_LEAK" value="0.4"/>
     
-    <conf name="CURIOSITY_BUSINESS_THRESHOLD" value="0.18"/>
-    <conf name="CURIOSITY_PRIORITY_THRESHOLD" value="0.3"/>
-    <conf name="CURIOSITY_CONFIDENCE_THRESHOLD" value="0.8"/>
     <conf name="CURIOSITY_DESIRE_CONFIDENCE_MUL" value="0.1"/>
     <conf name="CURIOSITY_DESIRE_PRIORITY_MUL" value="0.1"/>
     <conf name="CURIOSITY_DESIRE_DURABILITY_MUL" value="0.3"/>
     <conf name="CURIOSITY_FOR_OPERATOR_ONLY" value="false"/>
-    <conf name="CURIOSITY_ALSO_ON_LOW_CONFIDENT_HIGH_PRIORITY_BELIEF" value="false"/>
     
     <conf name="HAPPY_EVENT_HIGHER_THRESHOLD" value="0.75"/>
     <conf name="HAPPY_EVENT_LOWER_THRESHOLD" value="0.25"/>
     
     <conf name="BUSY_EVENT_HIGHER_THRESHOLD" value="0.9"/>
     <conf name="BUSY_EVENT_LOWER_THRESHOLD" value="0.1"/>
-    
-    <conf name="CONSIDER_REMIND" value="false"/>
     <conf name="BREAK_NAL_HOL_BOUNDARY" value="false"/>
     
     <conf name="QUESTION_GENERATION_ON_DECISION_MAKING" value="false"/>
     <conf name="HOW_QUESTION_GENERATION_ON_DECISION_MAKING" value="false"/>
     
-    <conf name="ANTICIPATION_CONFIDENCE" value="0.05"/>
+    <conf name="ANTICIPATION_CONFIDENCE" value="0.1"/>
     <conf name="ANTICIPATION_TOLERANCE" value="100.0"/>
     <conf name="RETROSPECTIVE_ANTICIPATIONS" value="false"/>
     
@@ -115,6 +110,7 @@
     <conf name="VARIABLE_INTRODUCTION_COMBINATIONS_MAX" value="8"/>
     <conf name="VARIABLE_INTRODUCTION_CONFIDENCE_MUL" value="0.9"/>
     <conf name="ANTICIPATIONS_PER_CONCEPT_MAX" value="8"/>
+    <conf name="MOTOR_BABBLING_CONFIDENCE_THRESHOLD" value="0.8"/>
 
     <conf name="THREADS_AMOUNT" value="1"/>
     <conf name="VOLUME" value="100"/>
