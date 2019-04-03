@@ -34,7 +34,7 @@ public class Car extends Entity {
         maxSpeed = 2;
     }
 
-    public void draw(PApplet applet, List<Street> streets, List<TrafficLight> trafficLights, List<Entity> entities, TruthValue truth, long time) {
+    public void draw(PApplet applet, List<Street> streets, List<TrafficLight> trafficLights, List<Entity> entities, TruthValue truth, long time, boolean collided) {
         float mul = Util.truthToValue(truth) * Util.timeToValue(time);
         applet.fill(255, 0, 255, mul*255.0f);
 
@@ -45,7 +45,7 @@ public class Car extends Entity {
             applet.stroke(127);
         }
 
-        super.draw(applet, streets, trafficLights, entities, truth, time);
+        super.draw(applet, streets, trafficLights, entities, truth, time, collided);
 
         applet.stroke(127);
     }

@@ -46,6 +46,8 @@ public class Entity {
     public double lastPosX = 0;
     public double lastPosY = 0;
 
+    public boolean collisionOccured = false;
+
     public Entity() {
     }
 
@@ -75,7 +77,7 @@ public class Entity {
         return normalness < 0.3 && hasMoved();
     }
 
-    public void draw(PApplet applet, List<Street> streets, List<TrafficLight> trafficLights, List<Entity> entities, TruthValue truth, long time) {
+    public void draw(PApplet applet, List<Street> streets, List<TrafficLight> trafficLights, List<Entity> entities, TruthValue truth, long time, boolean collided) {
         applet.pushMatrix();
         //float posXDiscrete = (((int) this.posX)/Util.discretization * Util.discretization);
         //float posYDiscrete = (((int) this.posY)/Util.discretization * Util.discretization);
@@ -87,7 +89,10 @@ public class Entity {
         applet.ellipse(2.5f, 2.5f, Util.discretization*scale, Util.discretization*scale);
         applet.popMatrix();
         applet.fill(0);
-        applet.text(String.valueOf(id), (float)posX, (float)posY);
+
+        String collisionText = collided ? " COLLISION" : "";
+        applet.text(String.valueOf(id) + collisionText, (float)posX, (float)posY);
+
         if(truth != null) {
             return;
         }
@@ -103,6 +108,9 @@ public class Entity {
                 }
             }
         }
+
+        collisionOccured = false;
+
         for (Entity e : entities) {
             boolean collidable = !(this instanceof Pedestrian && e instanceof Pedestrian);
             if (e != this && collidable) {
@@ -111,6 +119,8 @@ public class Entity {
                     double pXNew = posX + k * Math.cos(angle);
                     double pYNew = posY + k * Math.sin(angle);
                     if (Util.distance(pXNew, pYNew, e.posX, e.posY) < nearEnough) {
+                        collisionOccured = true;
+
                         velocity *= 0.8;
                         accelerate = false;
                     }

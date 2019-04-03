@@ -43,15 +43,17 @@ import org.opennars.storage.Memory;
 public class NarListener implements EventEmitter.EventObserver {
     public class Prediction
     {
-        public Entity ent;
+        public final Entity ent;
         public long time;
-        public TruthValue truth;
-        public String type;
-        public Prediction(Entity ent, TruthValue truth, long time, String type) {
+        public final TruthValue truth;
+        public final String type;
+        public final boolean isCollision;
+        public Prediction(Entity ent, TruthValue truth, long time, String type, final boolean isCollision) {
             this.ent = ent;
             this.time = time;
             this.truth = truth;
             this.type = type;
+            this.isCollision = isCollision;
         }
     }
 
@@ -104,7 +106,9 @@ public class NarListener implements EventEmitter.EventObserver {
             Inheritance positionInh = (Inheritance) t.sentence.term;
             if(positionInh.getSubject() instanceof Product) {
                 Product prod = (Product) positionInh.getSubject();
-                if(prod.size() == 2) {
+                if(prod.size() == 3) {
+                    boolean isCollision = prod.term[2].toString().equals("CT");
+
                     Term type = prod.term[0];
                     String position = prod.term[1].toString();
                     if(position.contains("_")) {
@@ -117,14 +121,14 @@ public class NarListener implements EventEmitter.EventObserver {
                                 String id = type.toString().substring(car.toString().length(), type.toString().length());
                                 pred = new Car(Integer.valueOf(id), posX, posY, 0, 0);
                                 pred.isPredicted = true;
-                                prediction = new Prediction(pred, t.sentence.truth, t.sentence.getOccurenceTime(), "car");
+                                prediction = new Prediction(pred, t.sentence.truth, t.sentence.getOccurenceTime(), "car", isCollision);
                             }
                             else  
                             if(type.toString().startsWith(pedestrian.toString())) {
                                 String id = type.toString().substring(pedestrian.toString().length(), type.toString().length());
                                 pred = new Pedestrian(Integer.valueOf(id), posX, posY, 0, 0);
                                 pred.isPredicted = true;
-                                prediction = new Prediction(pred, t.sentence.truth, t.sentence.getOccurenceTime(), "pedestrian");
+                                prediction = new Prediction(pred, t.sentence.truth, t.sentence.getOccurenceTime(), "pedestrian", isCollision);
                             }
                         } catch(Exception ex) {} //wrong format, it's not such a type of prediction but something else
                     }

@@ -39,12 +39,15 @@ public class InformNARS {
             id = "0";
         }
         String pos = Util.positionToTerm((int) ent.posX-minX, (int) ent.posY-minY);
+
+        String collisionOccuredAsString = ent.collisionOccured ? "CT" : "CF"; // collision true/false
+
         if (ent instanceof Car) {
-            inputs.add("<(*,car" + id + ","+ pos + ") --> at>. :|:");
+            inputs.add("<(*,car" + id + ","+ pos + "," +collisionOccuredAsString+ ") --> at>. :|:");
             input += inputs.get(inputs.size()-1);
         }
         if (ent instanceof Pedestrian) {
-            inputs.add("<(*,pedestrian" + id + "," + pos + ") --> at>. :|:");
+            inputs.add("<(*,pedestrian" + id + "," + pos + "," +collisionOccuredAsString+ ") --> at>. :|:");
             input += inputs.get(inputs.size()-1);
         }
     }

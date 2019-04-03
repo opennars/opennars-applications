@@ -118,7 +118,7 @@ public class Crossing extends PApplet {
         }
 
         for (Entity e : entities) {
-            e.draw(this, streets, trafficLights, entities, null, 0);
+            e.draw(this, streets, trafficLights, entities, null, 0, false);
         }
         for (TrafficLight tl : trafficLights) {
             tl.draw(this, t);
@@ -136,7 +136,7 @@ public class Crossing extends PApplet {
         removeOutdatedPredictions(disappointments);
         for (Prediction pred : predictions) {
             Entity e = pred.ent;
-            e.draw(this, streets, trafficLights, entities, pred.truth, pred.time - nar.time());
+            e.draw(this, streets, trafficLights, entities, pred.truth, pred.time - nar.time(), pred.isCollision);
         }
         if(showAnomalies) {
             for (Prediction pred : disappointments) {
@@ -148,7 +148,7 @@ public class Crossing extends PApplet {
                     fill(0,0,255);
                 }
                 this.text("ANOMALY", (float)e.posX, (float)e.posY);
-                e.draw(this, streets, trafficLights, entities, pred.truth, pred.time - nar.time());
+                e.draw(this, streets, trafficLights, entities, pred.truth, pred.time - nar.time(), pred.isCollision);
             }
         }
         for(Camera c : cameras) {
