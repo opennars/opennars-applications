@@ -11,7 +11,8 @@ import java.util.*;
  */
 public class MetricReporter {
     public String narsVersion = Nar.VERSION;
-    public int runId = (int)Calendar.getInstance().getTimeInMillis();
+    public String narsName = Nar.NAME;
+    public long runId = Calendar.getInstance().getTimeInMillis();
 
     public List<MetricObserver> observers = new ArrayList<>();
 
@@ -34,6 +35,7 @@ public class MetricReporter {
     public void notifyFloat(String name, float value) {
         floatMap.put(name, value);
 
+        //pushReport();
         send(Float.toString(value), name);
     }
 
@@ -41,18 +43,12 @@ public class MetricReporter {
         for (Map.Entry<String, Integer> iEntry: integerMap.entrySet()) {
             send(Integer.toString(iEntry.getValue()), iEntry.getKey());
         }
-
-        for (Map.Entry<String, Float> iEntry: floatMap.entrySet()) {
-            send(Float.toString(iEntry.getValue()), iEntry.getKey());
-        }
     }
 
 
     private void send(final String dataAsString, final String metricPathName) {
-        final String timestampAsString = "-1"; // -1 leads to automatic timestamping on arrival of the message
-
         String narsVersionSerialized = narsVersion.replace('.', '_').replaceFirst("\\ ", "."); // required for graphite
-        String metricPath = narsVersionSerialized + "." +runId+ "." + metricPathName;
+        String metricPath = narsName + "." + narsVersionSerialized + "." +runId+ "." + metricPathName;
 
         String payload = metricPath +":"+ dataAsString + "|c" + "\n";
 
