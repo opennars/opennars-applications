@@ -130,6 +130,10 @@ public class NarListener implements EventEmitter.EventObserver {
                                 pred.isPredicted = true;
                                 prediction = new Prediction(pred, t.sentence.truth, t.sentence.getOccurenceTime(), "pedestrian", isCollision);
                             }
+
+                            if (t.sentence.truth.getFrequency() < 0.99) {
+                                System.out.println(t.sentence);
+                            }
                         } catch(Exception ex) {} //wrong format, it's not such a type of prediction but something else
                     }
                 }
@@ -146,7 +150,7 @@ public class NarListener implements EventEmitter.EventObserver {
 
             // distance of prediction
             final double dist = Util.distance(iEntity.posX, iEntity.posY, prediction.ent.posX, prediction.ent.posY);
-            if (dist > 17) {
+            if (dist > 2.0*Util.discretization) {
                 continue;
             }
 

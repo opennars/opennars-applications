@@ -12,6 +12,7 @@ import org.opennars.io.events.EventEmitter;
 import org.opennars.io.events.Events;
 import org.opennars.io.events.OutputHandler.EXE;
 import org.opennars.main.Nar;
+import org.opennars.operator.Operator;
 
 /**
  *
@@ -40,7 +41,9 @@ public class NarSimpleGUI extends javax.swing.JFrame {
                     }
                 }
                 if(event == EXE.class) {
-                    Task t = (Task) args[0];
+                    Operator.ExecutionResult exec = (Operator.ExecutionResult)args[0];
+
+                    Task t = exec.getTask();
                     narText += "Executed: " + t + "\n";
                     changed = true;
                 }

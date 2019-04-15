@@ -25,8 +25,15 @@ package org.opennars.applications.crossing;
 
 import org.opennars.applications.crossing.NarListener.Prediction;
 import org.opennars.applications.gui.NarSimpleGUI;
+
+import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.List;
+
+import org.opennars.applications.metric.MetricListener;
+import org.opennars.applications.metric.MetricObserver;
+import org.opennars.applications.metric.MetricReporter;
+import org.opennars.applications.metric.MetricReporterObserver;
 import org.opennars.io.events.Events;
 import org.opennars.io.events.OutputHandler.DISAPPOINT;
 import org.opennars.main.Nar;
@@ -41,8 +48,28 @@ public class Crossing extends PApplet {
     List<Prediction> disappointments = new ArrayList<Prediction>();
     final int streetWidth = 40;
     final int fps = 50;
+
+    public double predictionHitScore = 0.0;
+    public double predictionOverallSum = 0.0;
+
+    public MetricReporter metricReporter;
+    public MetricListener metricListener;
+    public MetricObserver metricObserver;
+
     @Override
     public void setup() {
+        metricListener = new MetricListener();
+
+        metricReporter = new MetricReporter();
+        try {
+            metricReporter.connect("127.0.0.1", 8125);
+        } catch (UnknownHostException e) {
+            //e.printStackTrace();
+        }
+
+        metricObserver = new MetricReporterObserver(metricListener, metricReporter);
+
+
         cameras.add(new Camera(500+streetWidth/2, 500+streetWidth/2));
         try {
             nar = new Nar();
@@ -154,7 +181,29 @@ public class Crossing extends PApplet {
         for(Camera c : cameras) {
             c.draw(this);
         }
-        System.out.println("Concepts: " + nar.memory.concepts.size());
+
+
+        // sum up predictions which hit the real objects
+        for (Prediction pred : predictions) {
+            Entity predEntity = pred.ent;
+
+            for (Entity ie : entities) {
+                double diffX = predEntity.posX-ie.posX;
+                double diffY = predEntity.posY-ie.posY;
+                double dist = Math.sqrt(diffX*diffX + diffY*diffY);
+                boolean hit = dist < Util.discretization * 2.5;// did the prediction hit an entity?
+                if (hit && pred.ent.id == ie.id) {
+                    predictionHitScore += pred.truth.getConfidence(); // accumulate confidence because we care about better predictions more
+                    metricObserver.notifyFloat("correctPredConf", pred.truth.getConfidence());
+                }
+
+                predictionOverallSum += pred.truth.getConfidence();
+                metricObserver.notifyFloat("overallPredConf", pred.truth.getConfidence());
+            }
+        }
+
+        System.out.println("predScore=" + Double.toString(predictionHitScore) + " predOverallSum=" + Double.toString(predictionOverallSum));
+        //System.out.println("Concepts: " + nar.memory.concepts.size());
     }
 
     public void removeOutdatedPredictions(List<Prediction> predictions) {
