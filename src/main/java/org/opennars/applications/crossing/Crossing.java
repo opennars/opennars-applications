@@ -52,6 +52,9 @@ public class Crossing extends PApplet {
     public double predictionHitScore = 0.0;
     public double predictionOverallSum = 0.0;
 
+    public long predicationsHits = 0;
+    public long predictionsCount = 0;
+
     public MetricReporter metricReporter;
     public MetricListener metricListener;
     public MetricObserver metricObserver;
@@ -195,14 +198,23 @@ public class Crossing extends PApplet {
                 if (hit && pred.ent.id == ie.id) {
                     predictionHitScore += pred.truth.getConfidence(); // accumulate confidence because we care about better predictions more
                     metricObserver.notifyFloat("correctPredConf", pred.truth.getConfidence());
+
+                    predicationsHits++;
+                    metricObserver.notifyInt("correctPred",(int)predicationsHits);
                 }
 
                 predictionOverallSum += pred.truth.getConfidence();
                 metricObserver.notifyFloat("overallPredConf", pred.truth.getConfidence());
+
+                predictionsCount++;
+                metricObserver.notifyInt("overallPred",(int)predictionsCount);
             }
         }
 
-        System.out.println("predScore=" + Double.toString(predictionHitScore) + " predOverallSum=" + Double.toString(predictionOverallSum));
+        //System.out.println("predScore=" + Double.toString(predictionHitScore) + " predOverallSum=" + Double.toString(predictionOverallSum));
+
+        System.out.println("ratioPredConf=" + Double.toString(predictionHitScore / predictionOverallSum) + " ratioPred=" + Double.toString((double)predicationsHits/Math.max(1,predictionsCount)));
+
         //System.out.println("Concepts: " + nar.memory.concepts.size());
     }
 
