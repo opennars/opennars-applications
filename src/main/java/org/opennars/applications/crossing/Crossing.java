@@ -190,12 +190,20 @@ public class Crossing extends PApplet {
         for (Prediction pred : predictions) {
             Entity predEntity = pred.ent;
 
+            if (!(pred.ent instanceof Car)) {
+                continue;
+            }
+
             for (Entity ie : entities) {
                 double diffX = predEntity.posX-ie.posX;
                 double diffY = predEntity.posY-ie.posY;
                 double dist = Math.sqrt(diffX*diffX + diffY*diffY);
-                boolean hit = dist < Util.discretization * 2.5;// did the prediction hit an entity?
-                if (hit && pred.ent.id == ie.id) {
+                boolean hit = dist < Util.discretization * 3.5;// did the prediction hit an entity?
+
+                long timeDiff = pred.time - nar.time();
+                timeDiff = Math.abs(timeDiff);
+
+                if (hit && pred.ent.id == ie.id && timeDiff < 500 ) {
                     predictionHitScore += pred.truth.getConfidence(); // accumulate confidence because we care about better predictions more
                     metricObserver.notifyFloat("correctPredConf", pred.truth.getConfidence());
 
@@ -203,12 +211,14 @@ public class Crossing extends PApplet {
                     metricObserver.notifyInt("correctPred",(int)predicationsHits);
                 }
 
-                predictionOverallSum += pred.truth.getConfidence();
-                metricObserver.notifyFloat("overallPredConf", pred.truth.getConfidence());
-
-                predictionsCount++;
-                metricObserver.notifyInt("overallPred",(int)predictionsCount);
             }
+
+
+            predictionOverallSum += pred.truth.getConfidence();
+            metricObserver.notifyFloat("overallPredConf", pred.truth.getConfidence());
+
+            predictionsCount++;
+            metricObserver.notifyInt("overallPred",(int)predictionsCount);
         }
 
         //System.out.println("predScore=" + Double.toString(predictionHitScore) + " predOverallSum=" + Double.toString(predictionOverallSum));
