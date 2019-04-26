@@ -203,12 +203,13 @@ public class Crossing extends PApplet {
                 long timeDiff = pred.time - nar.time();
                 timeDiff = Math.abs(timeDiff);
 
-                if (hit && pred.ent.id == ie.id && timeDiff < 500 ) {
+                if (hit && pred.ent.id == ie.id) {
                     predictionHitScore += pred.truth.getConfidence(); // accumulate confidence because we care about better predictions more
                     metricObserver.notifyFloat("correctPredConf", pred.truth.getConfidence());
 
                     predicationsHits++;
-                    metricObserver.notifyInt("correctPred",(int)predicationsHits);
+                    //metricObserver.notifyInt("correctPred",(int)predicationsHits);
+                    metricObserver.notifyInt("correctPred", 1);
                 }
 
             }
@@ -218,7 +219,8 @@ public class Crossing extends PApplet {
             metricObserver.notifyFloat("overallPredConf", pred.truth.getConfidence());
 
             predictionsCount++;
-            metricObserver.notifyInt("overallPred",(int)predictionsCount);
+            //metricObserver.notifyInt("overallPred",(int)predictionsCount);
+            metricObserver.notifyInt("overallPred",1);
         }
 
         //System.out.println("predScore=" + Double.toString(predictionHitScore) + " predOverallSum=" + Double.toString(predictionOverallSum));
