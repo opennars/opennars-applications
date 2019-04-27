@@ -186,9 +186,11 @@ public class Crossing extends PApplet {
         }
 
 
-        // sum up predictions which hit the real objects
+ // sum up predictions which hit the real objects
         for (Prediction pred : predictions) {
             Entity predEntity = pred.ent;
+            long timeDiff = Math.abs(pred.time - nar.time());
+            int[] distances = {50, 100, 200, 500, 1000};
 
             if (!(pred.ent instanceof Car)) {
                 continue;
@@ -200,34 +202,35 @@ public class Crossing extends PApplet {
                 double dist = Math.sqrt(diffX*diffX + diffY*diffY);
                 boolean hit = dist < Util.discretization * 3.5;// did the prediction hit an entity?
 
-                long timeDiff = pred.time - nar.time();
-                timeDiff = Math.abs(timeDiff);
-
                 if (hit && pred.ent.id == ie.id) {
-                    predictionHitScore += pred.truth.getConfidence(); // accumulate confidence because we care about better predictions more
-                    metricObserver.notifyFloat("correctPredConf", pred.truth.getConfidence());
-
-                    predicationsHits++;
-                    //metricObserver.notifyInt("correctPred",(int)predicationsHits);
+                    metricObserver.notifyFloat("correctPredConf", pred.truth.getExpectation());
                     metricObserver.notifyInt("correctPred", 1);
-                }
 
+                    for (int i = 0; i < distances.length; i++)
+                    {
+                        if(timeDiff < distances[i]) {
+                            String name1 = "correctShortTermPred" + i + "Conf";
+                            metricObserver.notifyFloat(name1, pred.truth.getExpectation());
+                            String name2 = "correctShortTerm" + i + "Pred";
+                            metricObserver.notifyInt(name2, 1);
+                        }
+                    }
+                }
             }
 
+            metricObserver.notifyFloat("overallPredConf", pred.truth.getExpectation());
+            metricObserver.notifyInt("overallPred", 1);
 
-            predictionOverallSum += pred.truth.getConfidence();
-            metricObserver.notifyFloat("overallPredConf", pred.truth.getConfidence());
-
-            predictionsCount++;
-            //metricObserver.notifyInt("overallPred",(int)predictionsCount);
-            metricObserver.notifyInt("overallPred",1);
+            for (int i = 0; i < distances.length; i++)
+            {
+                if(timeDiff < distances[i]) {
+                    String name1 = "overallShortTermPred" + i + "Conf";
+                    metricObserver.notifyFloat(name1, pred.truth.getExpectation());
+                    String name2 = "overallShortTerm" + i + "Pred";
+                    metricObserver.notifyInt(name2, 1);
+                }
+            }
         }
-
-        //System.out.println("predScore=" + Double.toString(predictionHitScore) + " predOverallSum=" + Double.toString(predictionOverallSum));
-
-        System.out.println("ratioPredConf=" + Double.toString(predictionHitScore / predictionOverallSum) + " ratioPred=" + Double.toString((double)predicationsHits/Math.max(1,predictionsCount)));
-
-        //System.out.println("Concepts: " + nar.memory.concepts.size());
     }
 
     public void removeOutdatedPredictions(List<Prediction> predictions) {
