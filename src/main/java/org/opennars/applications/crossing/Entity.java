@@ -75,19 +75,23 @@ public class Entity {
         return normalness < 0.3 && hasMoved();
     }
 
+    public static boolean DrawDirection = true;
+    public static boolean DrawID = true;
     public void draw(PApplet applet, List<Street> streets, List<TrafficLight> trafficLights, List<Entity> entities, TruthValue truth, long time) {
         applet.pushMatrix();
         //float posXDiscrete = (((int) this.posX)/Util.discretization * Util.discretization);
         //float posYDiscrete = (((int) this.posY)/Util.discretization * Util.discretization);
         applet.translate((float) posX, (float) posY);
         applet.rotate((float) angle);
-        if(truth == null) {
+        if(truth == null && DrawDirection) {
             applet.rect(0, 0, Util.discretization*scale, Util.discretization/2*scale);
         }
         applet.ellipse(2.5f, 2.5f, Util.discretization*scale, Util.discretization*scale);
         applet.popMatrix();
         applet.fill(0);
-        applet.text(String.valueOf(id), (float)posX, (float)posY);
+        if(DrawID) {
+            applet.text(String.valueOf(id), (float)posX, (float)posY);
+        }
         if(truth != null) {
             return;
         }
