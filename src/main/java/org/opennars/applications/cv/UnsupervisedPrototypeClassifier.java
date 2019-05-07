@@ -25,7 +25,7 @@ public class UnsupervisedPrototypeClassifier {
 
     public long idCounter = 0;
 
-    public float minDistance = 3.0f;
+    public float minDistance = 5.0f;//3.0f;
 
     // stimulus - classify or add new
     public long classify(float[] arr) {

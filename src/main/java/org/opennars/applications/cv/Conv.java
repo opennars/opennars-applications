@@ -38,7 +38,13 @@ public class Conv {
 
 
     // configurations of all kernels
-    public static KernelConf[] kernels = new KernelConf[]{new KernelConf(1.0f, 0.0f), new KernelConf(-1.0f, 0.0f), new KernelConf(0.0f, -1.0f),new KernelConf(0.0f, 1.0f)};
+    public static KernelConf[] kernels = new KernelConf[]{
+        new KernelConf(1.0f, 0.0f), new KernelConf(-1.0f, 0.0f), new KernelConf(0.0f, -1.0f),new KernelConf(0.0f, 1.0f),
+            new KernelConf(1.0f/(float)Math.sqrt(2.0f), 1.0f/(float)Math.sqrt(2.0f)),
+            new KernelConf(-1.0f/(float)Math.sqrt(2.0f), 1.0f/(float)Math.sqrt(2.0f)),
+            new KernelConf(1.0f/(float)Math.sqrt(2.0f), -1.0f/(float)Math.sqrt(2.0f)),
+            new KernelConf(-1.0f/(float)Math.sqrt(2.0f), -1.0f/(float)Math.sqrt(2.0f)),
+    };
 
     public static void precalcKernels() {
         for(int kernelIdx=0;kernelIdx<kernels.length;kernelIdx++) {
