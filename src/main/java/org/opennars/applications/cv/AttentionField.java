@@ -35,37 +35,31 @@ public class AttentionField {
 
     public void decay() {
         for(int i=0;i<map.arr.length;i++) {
-            for(int j=0;j<map.arr[i].length;j++) {
-                map.arr[i][j] *= decayFactor;
-            }
+            map.arr[i] *= decayFactor;
         }
     }
 
     public void addAt(int y, int x, float value) {
-        map.arr[y][x] += value;
-        map.arr[y][x] = Math.min(map.arr[y][x], 1.0f);
+        map.arr[y*map.retWidth() + x] += value;
+        map.arr[y*map.retWidth() + x] = Math.min(map.arr[y*map.retWidth() + x], 1.0f);
     }
 
     public float readAtUnbound(int y, int x) {
-        return map.readAtUnbound(y, x);
+        return map.readAtSafe(y, x);
     }
 
 
     public void blur() {
-        float[][] newField = new float[map.arr.length][map.arr[0].length];
-        for(int i=0;i<map.arr.length;i++) {
-            for(int j=0;j<map.arr[i].length;j++) {
-                newField[i][j] = map.arr[i][j];
-            }
-        }
+        float[] newField = new float[map.arr.length];
+        System.arraycopy(map.arr, 0, newField, 0, map.arr.length);
 
         for(int i=0;i<map.retHeight();i++) {
             for(int j=0;j<map.retWidth();j++) {
-                newField[i][j] += readAtUnbound(i+1, j) * 0.125f;
-                newField[i][j] += readAtUnbound(i-1, j) * 0.125f;
-                newField[i][j] += readAtUnbound(i, j-1) * 0.125f;
-                newField[i][j] += readAtUnbound(i, j+1) * 0.125f;
-                newField[i][j] += readAtUnbound(i, j) * 0.5f;
+                newField[i*map.retWidth()+ j] += readAtUnbound(i+1, j) * 0.125f;
+                newField[i*map.retWidth()+ j] += readAtUnbound(i-1, j) * 0.125f;
+                newField[i*map.retWidth()+ j] += readAtUnbound(i, j-1) * 0.125f;
+                newField[i*map.retWidth()+ j] += readAtUnbound(i, j+1) * 0.125f;
+                newField[i*map.retWidth()+ j] += readAtUnbound(i, j) * 0.5f;
                 //newField[i][j] /= (0.5f*4+1.0f);
             }
         }

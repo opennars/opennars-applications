@@ -162,11 +162,11 @@ public class UnrealCrossing extends PApplet {
 
 
 
-                    float diff = lastframe.arr[iy][ix] - grayscale; // difference to last frame
+                    float diff = lastframe.readAtSafe(iy, ix) - grayscale; // difference to last frame
                     float absDiff = Math.abs(diff);
 
-                    attentionField.map.arr[iy][ix] += absDiff;
-                    attentionField.map.arr[iy][ix] = Math.min(attentionField.map.arr[iy][ix], 1.0f);
+                    attentionField.map.arr[iy*attentionField.retWidth() + ix] += absDiff;
+                    attentionField.map.arr[iy*attentionField.retWidth() + ix] = Math.min(attentionField.map.arr[iy*attentionField.retWidth() + ix], 1.0f);
                 }
             }
 
@@ -205,7 +205,7 @@ public class UnrealCrossing extends PApplet {
 
                     // TODO< integrate over all pixels >
 
-                    lastframe.arr[iy][ix] = grayscale;
+                    lastframe.writeAtSafe(iy, ix, grayscale);
                 }
             }
 
@@ -222,7 +222,19 @@ public class UnrealCrossing extends PApplet {
         if (imageSampler != null) {
             debugCursors.clear();
 
-            imageSampler.heatmap = attentionField.map;
+
+
+            // we need to map the heatmap with an "utility" function to prefer to sample moving regions over nonmoving ones
+            Map2d remappedHeatmap = new Map2d(attentionField.map.retHeight(), attentionField.map.retWidth());
+            for(int iy=0;iy<attentionField.map.retHeight();iy++) {
+                for(int ix=0;ix<attentionField.map.retWidth();ix++) {
+                    float v = attentionField.map.readAtSafe(iy, ix);
+                    float remapped = v*v; // nonlinear function to prefer hot values
+                    remappedHeatmap.writeAtSafe(iy,ix,remapped);
+                }
+            }
+
+            imageSampler.heatmap = remappedHeatmap;
             imageSampler.heatmapCellsize = heatmapCellsize;
 
             // pull classifications from it

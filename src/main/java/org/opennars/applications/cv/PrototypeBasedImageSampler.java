@@ -31,14 +31,31 @@ public class PrototypeBasedImageSampler {
 
     public Random rng = new Random();
 
-    public int numberOfSamples = 8;
+    public int numberOfSamples = 16;
 
     public List<Classification> sample(PImage img) {
+        Map2d grayscaleImage = new Map2d(img.height, img.width);
+        for(int iy=0;iy<img.height;iy++) {
+            for(int ix=0;ix<img.width;ix++) {
+
+                int colorcode =  img.pixels[iy*img.width+ix];
+                //TODO check if the rgb is extracted correctly
+                float r = (colorcode & 0xff) / 255.0f;
+                float g = ((colorcode >> 8) & 0xFF) / 255.0f;
+                float b = ((colorcode >> 8*2) & 0xFF) / 255.0f;
+
+                float grayscale = (r+g+b)/3.0f;
+
+                grayscaleImage.writeAtUnsafe(iy, ix, grayscale);
+            }
+        }
+
+
         List<Classification> classifications = new ArrayList<>();
 
         float integralOfHeatmap = 0;
         if (heatmap != null) {
-            integralOfHeatmap = integralOfHeatmap();
+            integralOfHeatmap = calcIntegralOfHeatmap();
         }
 
 
@@ -52,7 +69,7 @@ public class PrototypeBasedImageSampler {
                 boolean intrlDone = false;
                 for(int iy=0;iy<heatmap.retHeight();iy++) {
                     for(int ix=0;ix<heatmap.retWidth();ix++) {
-                        currentIntrl += heatmap.readAtUnbound(iy,ix);
+                        currentIntrl += heatmap.readAtSafe(iy,ix);
 
                         if(currentIntrl >= chosenIntgrlVal) { // integration finished, we found the position of this sample
                             posX = ix * heatmapCellsize;
@@ -72,9 +89,9 @@ public class PrototypeBasedImageSampler {
                 posY = rng.nextInt(img.height);
             }
 
-            int prototypeSize = 24; // size of the prototype
+            int prototypeSize = 16; // size of the prototype
             int stride = 4;
-            float[] convResult = Conv.convAt(img, posX, posY, prototypeSize, stride);
+            float[] convResult = Conv.convAt(grayscaleImage, posX, posY, prototypeSize, stride);
 
             long classification = classifier.classify(convResult);
 
@@ -93,11 +110,11 @@ public class PrototypeBasedImageSampler {
         return classifications;
     }
 
-    private float integralOfHeatmap() {
+    private float calcIntegralOfHeatmap() {
         float integral = 0;
         for(int iy=0;iy<heatmap.retHeight();iy++) {
             for(int ix=0;ix<heatmap.retWidth();ix++) {
-                integral += heatmap.readAtUnbound(iy, ix);
+                integral += heatmap.readAtSafe(iy, ix);
             }
         }
         return integral;

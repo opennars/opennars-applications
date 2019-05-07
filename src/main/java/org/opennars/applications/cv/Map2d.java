@@ -16,30 +16,42 @@
 
 package org.opennars.applications.cv;
 
-public class Map2d {
-    public float[][] arr;
+final public class Map2d {
+    public float[] arr;
+    private int width;
 
     public Map2d(int height, int width) {
-        arr = new float[height][width];
-        for(int i=0;i<arr.length;i++) {
-            for(int j=0;j<arr[i].length;j++) {
-                arr[i][j] = 0;
-            }
-        }
+        arr = new float[height*width];
+        this.width = width;
     }
 
     public int retHeight() {
-        return arr.length;
+        return arr.length / width;
     }
 
     public int retWidth() {
-        return arr[0].length;
+        return width;
     }
 
-    public float readAtUnbound(int y, int x) {
-        if (y < 0 || y >= arr.length || x < 0 || x >= arr[0].length) {
+    public float readAtSafe(int y, int x) {
+        if (y < 0 || y >= retHeight() || x < 0 || x >= retWidth()) {
             return 0.0f;
         }
-        return arr[y][x];
+        return arr[y*retWidth() + x];
+    }
+
+    public void writeAtSafe(int y, int x, float value) {
+        if (y < 0 || y >= retHeight() || x < 0 || x >= retWidth()) {
+            return;
+        }
+        arr[y*retWidth() + x] = value;
+    }
+
+    public void writeAtUnsafe(int y, int x, float value) {
+        arr[y*retWidth() + x] = value;
+    }
+
+    public float readAtUnsafe(int y, int x) {
+        return arr[y*retWidth() + x];
     }
 }
