@@ -38,6 +38,13 @@
             <artifactId>core</artifactId>
             <version>2.2.1</version>
         </dependency>
+
+        <!-- https://mvnrepository.com/artifact/com.nativelibs4java/javacl -->
+        <dependency>
+            <groupId>com.nativelibs4java</groupId>
+            <artifactId>javacl</artifactId>
+            <version>1.0.0-RC4</version>
+        </dependency>
     </dependencies>
     
     <build>
