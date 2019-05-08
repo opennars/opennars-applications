@@ -19,13 +19,17 @@ package org.opennars.applications.cv;
 import java.util.ArrayList;
 import java.util.List;
 
-// Prototype based classifier
-public class UnsupervisedPrototypeClassifier {
+/**
+ * Prototype based classifier
+ * Input is a vector of real values
+ * Output is a class
+ */
+public class UlProtoClassifier {
     public List<Prototype> prototypes = new ArrayList<>();
 
     public long idCounter = 0;
 
-    public float minDistance = 5.0f;//3.0f;
+    public float minDistance = 70.0f;//7.0f;//5.0f;//3.0f;
 
     // stimulus - classify or add new
     public long classify(float[] arr) {
@@ -40,7 +44,7 @@ public class UnsupervisedPrototypeClassifier {
             }
         }
 
-        System.out.println("[d ] best classification distance = " + Float.toString(bestClassificationDist));
+        //System.out.println("[d ] UlProtoClassifier   best classification distance = " + Float.toString(bestClassificationDist));
 
         if (bestClassificationDist > minDistance) {
             float arrCopied[] = new float[arr.length];

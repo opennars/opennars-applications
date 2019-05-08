@@ -24,7 +24,7 @@ import java.util.Random;
 
 // samples a image and stores the prototypes
 public class PrototypeBasedImageSampler {
-    public UnsupervisedPrototypeClassifier classifier = new UnsupervisedPrototypeClassifier();
+    public UlProtoClassifier classifier = new UlProtoClassifier();
 
     public Map2d heatmap = null; // heatmap used for stochastic sampling
     public int heatmapCellsize = 32;

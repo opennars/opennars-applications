@@ -24,18 +24,20 @@ package org.opennars.applications.crossing;
  * THE SOFTWARE.
  */
 
-// TODO< add simple attention by the difference between the frames >
+
+
+
+// TODO< use SDR Prototype classifier to classify the drawn SDR's >
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import org.opennars.applications.crossing.NarListener.Prediction;
-import org.opennars.applications.cv.AttentionField;
-import org.opennars.applications.cv.Map2d;
-import org.opennars.applications.cv.PrototypeBasedImageSampler;
+import org.opennars.applications.cv.*;
 import org.opennars.applications.gui.NarSimpleGUI;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.opennars.io.events.Events;
@@ -101,6 +103,15 @@ public class UnrealCrossing extends PApplet {
         size(1920, 1080);
         frameRate(fps);
         new NarSimpleGUI(nar);
+
+
+        sdrAllocator = new SdrAllocator();
+        sdrAllocator.sdrSize = 16000;
+        sdrAllocator.sdrUsedBits = 5;
+
+        layer1Classifier.minDistance = 1020.0f; // TODO< tune >
+
+        foldImagesPerm = Sdr.createRandomPermutation(sdrAllocator.sdrSize, new Random()); // create permutation for folding of images
     }
 
     List<Street> streets = new ArrayList<Street>();
@@ -125,7 +136,17 @@ public class UnrealCrossing extends PApplet {
     public static String trackletpath = null; //"/home/tc/Dateien/CROSSING/Test001/";
     public static double movementThreshold = 10;
 
-    public int heatmapCellsize = 32;
+    public int heatmapCellsize = 16;
+
+    SdrAllocator sdrAllocator;
+    UlSdrProtoClassifier layer1Classifier = new UlSdrProtoClassifier();
+    Random rng = new Random();
+
+    // threshold for region proposal
+    float regionProposalAttentionThreshold = 0.2f;
+
+    // permutation used to "fold" images for layer2
+    int[] foldImagesPerm;
 
     @Override
     public void draw() {
@@ -142,7 +163,7 @@ public class UnrealCrossing extends PApplet {
         if (attentionField == null) { // we need to allocate the attention field
 
 
-            attentionField = new AttentionField(60,60);//img.height / heatmapCellsize + 1, img.width / heatmapCellsize + 1);
+            attentionField = new AttentionField(img.height / heatmapCellsize + 1, img.width / heatmapCellsize + 1);
 
             attentionField.decayFactor = 0.6f;
         }
@@ -219,8 +240,66 @@ public class UnrealCrossing extends PApplet {
             //attentionField.blur();
         }
 
+        // region proposals for classification of potentially new objects from the last layer
+        List<RegionProposal> regionProposals = new ArrayList<>();
+        { // compute region proposals
+            for(int iy=0;iy<attentionField.retHeight();iy++) {
+                for(int ix=0;ix<attentionField.retWidth();ix++) {
+                    if (attentionField.readAtUnbound(iy, ix) < regionProposalAttentionThreshold) {
+                        continue;
+                    }
+
+                    int absX = ix*heatmapCellsize;
+                    int absY = iy*heatmapCellsize;
+
+                    RegionProposal rp = new RegionProposal(); // build region proposal
+                    rp.minX = absX - 15;
+                    rp.minY = absY - 15;
+
+                    rp.maxX = absX + 15;
+                    rp.maxY = absY + 15;
+
+                    regionProposals.add(rp);
+                }
+            }
+        }
+
+        List<RegionProposal> bigRegions = new ArrayList<>();
+        for(RegionProposal irp : regionProposals) {
+            boolean merged = false;
+
+            for(RegionProposal iBigRegion : bigRegions) {
+                if (RegionProposal.checkOverlap(iBigRegion, irp)) {
+                    iBigRegion.merge(irp);
+                    merged = true;
+                }
+            }
+
+            if (!merged) {
+                bigRegions.add(irp.clone());
+            }
+        }
+
+        regionProposals = bigRegions;
+
+
+        debugCursors.clear();
+
+        // debug region proposals
+        boolean debugRegionProposals = true;
+        if (debugRegionProposals) {
+            for(RegionProposal iRp:regionProposals) {
+                DebugCursor dc = new DebugCursor();
+                dc.posX = iRp.minX;
+                dc.posY = iRp.minY;
+                dc.extendX = iRp.maxX - iRp.minX;
+                dc.extendY = iRp.maxY - iRp.minY;
+                debugCursors.add(dc);
+            }
+        }
+
         if (imageSampler != null) {
-            debugCursors.clear();
+
 
 
 
@@ -238,15 +317,151 @@ public class UnrealCrossing extends PApplet {
             imageSampler.heatmapCellsize = heatmapCellsize;
 
             // pull classifications from it
-            List<PrototypeBasedImageSampler.Classification> classifications = imageSampler.sample(img);
-            for(PrototypeBasedImageSampler.Classification iClassification : classifications) {
-                DebugCursor dc = new DebugCursor();
-                dc.posX = iClassification.posX;
-                dc.posY = iClassification.posY;
-                dc.text = "class=" + Long.toString(iClassification.class_);
+            List<PrototypeBasedImageSampler.Classification> classificationsOfLayer0 = imageSampler.sample(img);
+            if (false) {
+                for(PrototypeBasedImageSampler.Classification iClassification : classificationsOfLayer0) {
+                    DebugCursor dc = new DebugCursor();
+                    dc.posX = iClassification.posX;
+                    dc.posY = iClassification.posY;
+                    dc.text = "L0 class=" + Long.toString(iClassification.class_);
 
-                debugCursors.add(dc);
+                    debugCursors.add(dc);
+                }
             }
+
+            boolean enableLayer1 = true;
+
+            if (enableLayer1) {
+
+                Map2d grayscaleImage = new Map2d(img.height, img.width);
+                for(int iy=0;iy<img.height;iy++) {
+                    for(int ix=0;ix<img.width;ix++) {
+
+                        int colorcode =  img.pixels[iy*img.width+ix];
+                        //TODO check if the rgb is extracted correctly
+                        float r = (colorcode & 0xff) / 255.0f;
+                        float g = ((colorcode >> 8) & 0xFF) / 255.0f;
+                        float b = ((colorcode >> 8*2) & 0xFF) / 255.0f;
+
+                        float grayscale = (r+g+b)/3.0f;
+
+                        grayscaleImage.writeAtUnsafe(iy, ix, grayscale);
+                    }
+                }
+
+
+
+                // draw classifications for processing with next layer
+                for(RegionProposal iRegionProposal : regionProposals) {
+                    // selected relative classifications from previous layer
+                    List<PrototypeBasedImageSampler.Classification> selectedRelativeClassificationsForLayer1 = new ArrayList<>();
+
+                    // top left corder of this classification for layer 1
+                    int baseX = iRegionProposal.minX;
+                    int baseY = iRegionProposal.minY;
+
+                    // we need to classify spots of layer0 for this
+                    List<PrototypeBasedImageSampler.Classification> classifcationsLayer0OfThisRegion = new ArrayList<>();
+                    {
+                        for(int dy=0;dy < iRegionProposal.maxY-iRegionProposal.minY; dy += 5) {
+                            for(int dx=0;dx < iRegionProposal.maxX-iRegionProposal.minX; dx += 5) {
+                                int posX = iRegionProposal.minX + dx;
+                                int posY = iRegionProposal.minY + dy;
+
+                                int prototypeSize = 16; // size of the prototype
+                                int stride = 4;
+
+                                float[] convResult = Conv.convAt(grayscaleImage, posX, posY, prototypeSize, stride);
+
+                                long classification = imageSampler.classifier.classify(convResult);
+
+                                //System.out.println("[d ] classification = " + Long.toString(classification));
+
+                                {
+                                    PrototypeBasedImageSampler.Classification cl = new PrototypeBasedImageSampler.Classification();
+                                    cl.posX = posX;
+                                    cl.posY = posY;
+                                    cl.class_ = classification;
+                                    classifcationsLayer0OfThisRegion.add(cl);
+                                }
+                            }
+                        }
+
+
+                    }
+
+
+
+                    for(PrototypeBasedImageSampler.Classification iClassification :classifcationsLayer0OfThisRegion ) {
+                        if (iClassification.posX > iRegionProposal.maxX || iClassification.posX < iRegionProposal.minX) {
+                            continue;
+                        }
+                        if (iClassification.posY > iRegionProposal.maxY || iClassification.posY < iRegionProposal.minY) {
+                            continue;
+                        }
+
+                        PrototypeBasedImageSampler.Classification relativeClassification = new PrototypeBasedImageSampler.Classification();
+                        relativeClassification.class_ = iClassification.class_;
+                        relativeClassification.posX = iClassification.posX - baseX;
+                        relativeClassification.posX = iClassification.posX - baseY;
+                        selectedRelativeClassificationsForLayer1.add(relativeClassification);
+                    }
+
+                    int sdrImageWidth = 32;
+                    int sdrImageHeight = 32;
+
+                    int sdrImageCellsize = 6;
+
+                    Sdr[][] sdrImg = new Sdr[sdrImageHeight][sdrImageWidth];
+                    for(int j=0;j<sdrImg.length;j++) {
+                        for(int i=0;i<sdrImageWidth;i++) {
+                            sdrImg[j][i] = Sdr.makeNull(sdrAllocator.sdrSize);
+                        }
+                    }
+
+                    // draw to sdrImg
+                    for(PrototypeBasedImageSampler.Classification iClassification :selectedRelativeClassificationsForLayer1) {
+                        Sdr sdrColor = sdrAllocator.retSdrById(iClassification.class_);
+                        int radius = 5;
+                        SdrDraw.drawConeCircle(sdrImg, sdrColor, iClassification.posX/sdrImageCellsize, iClassification.posY/sdrImageCellsize, radius, rng);
+                    }
+
+                    // classify with prototype classifier
+                    int sizeOfSdr = sdrImg[0][0].arr.length;
+                    Sdr foldedSdr = Sdr.makeNull(sizeOfSdr);
+                    {
+                        for(int j=0;j<sdrImg.length;j++) {
+                            for(int i=0;i<sdrImg[j].length;i++) {
+                                Sdr pixelSdr = sdrImg[j][i];
+
+                                Sdr permutedFoldedSdr = foldedSdr.permutate(foldImagesPerm);
+                                foldedSdr = Sdr.union(permutedFoldedSdr, pixelSdr);
+                            }
+                        }
+                    }
+                    long layer1Classification = layer1Classifier.classify(foldedSdr);
+
+                    System.out.println("[d ] layer1 class=" + Long.toString(layer1Classification));
+
+                    DebugCursor dc = new DebugCursor();
+                    dc.posX = (iRegionProposal.minX+iRegionProposal.maxX)/2;
+                    dc.posY = (iRegionProposal.minY+iRegionProposal.maxY)/2;
+                    dc.text = "L1 class=" + Long.toString(layer1Classification);
+
+                    debugCursors.add(dc);
+                }
+
+
+
+
+
+
+            }
+
+
+
+
+
 
 
         }
@@ -329,9 +544,19 @@ public class UnrealCrossing extends PApplet {
         }
 
         for (DebugCursor iDebugCursor : debugCursors) {
-            line((int)(iDebugCursor.posX - 5), (int)iDebugCursor.posY, (int)(iDebugCursor.posX + 5), (int)iDebugCursor.posY);
-            line((int)iDebugCursor.posX, (int)(iDebugCursor.posY - 5), (int)iDebugCursor.posX, (int)(iDebugCursor.posY + 5));
+            boolean hasExtend = iDebugCursor.extendX != 0 || iDebugCursor.extendY != 0;
 
+            if (hasExtend) {
+                fill(0, 0, 255, 127);
+                rect((int)iDebugCursor.posX, (int)iDebugCursor.posY, (int)(iDebugCursor.extendX), (int)(iDebugCursor.extendY));
+            }
+            else
+            {
+                line((int)(iDebugCursor.posX - 5), (int)iDebugCursor.posY, (int)(iDebugCursor.posX + 5), (int)iDebugCursor.posY);
+                line((int)iDebugCursor.posX, (int)(iDebugCursor.posY - 5), (int)iDebugCursor.posX, (int)(iDebugCursor.posY + 5));
+            }
+
+            fill(127);
             text(iDebugCursor.text, (float)iDebugCursor.posX, (float)iDebugCursor.posY);
         }
 
