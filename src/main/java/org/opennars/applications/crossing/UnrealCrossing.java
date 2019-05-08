@@ -148,6 +148,8 @@ public class UnrealCrossing extends PApplet {
     // permutation used to "fold" images for layer2
     int[] foldImagesPerm;
 
+    UlProtoClassifier objectPrototypeClassifier = new UlProtoClassifier();
+
     @Override
     public void draw() {
         viewport.Transform();
@@ -329,6 +331,7 @@ public class UnrealCrossing extends PApplet {
                 }
             }
 
+            /*
             boolean enableLayer1 = true;
 
             if (enableLayer1) {
@@ -457,6 +460,99 @@ public class UnrealCrossing extends PApplet {
 
 
             }
+            */
+
+            { // feed events of big enough region proposals to NARS
+                entities.clear();
+
+                for(RegionProposal iRegionProposal : regionProposals) {
+                    int width = iRegionProposal.maxX - iRegionProposal.minX;
+                    int height = iRegionProposal.maxY - iRegionProposal.minY;
+
+                    System.out.println("[d ] width=" + Integer.toString(iRegionProposal.maxX - iRegionProposal.minX) + " height=" + Integer.toString(iRegionProposal.maxY - iRegionProposal.minY));
+
+                    if (width < 80 && height < 80) {
+                        continue; // we are just interested in cars
+                    }
+
+                    int id = 0; // we don't know the ID because classification isn't working
+
+                    entities.add(new Car(id, iRegionProposal.minX + width/2, iRegionProposal.minY + height/2, 0, 0));
+                }
+
+
+
+                i++;
+
+                if (t % perception_update == 0) {
+                    boolean hadInput = false;
+                    for(Camera c : cameras) {
+                        final boolean force = false; // not required HACK
+                        hadInput = hadInput || c.see(nar, entities, trafficLights, force);
+                    }
+                    if(hadInput) {
+                        nar.addInput(questions);
+                    }
+                }
+            }
+
+
+
+            { // classification with one layer of Prototypes
+                objectPrototypeClassifier.minDistance = 25.0f; //20.0f; //10.0f;
+
+                Map2d grayscaleImage = new Map2d(img.height, img.width);
+                for(int iy=0;iy<img.height;iy++) {
+                    for(int ix=0;ix<img.width;ix++) {
+
+                        int colorcode =  img.pixels[iy*img.width+ix];
+                        //TODO check if the rgb is extracted correctly
+                        float r = (colorcode & 0xff) / 255.0f;
+                        float g = ((colorcode >> 8) & 0xFF) / 255.0f;
+                        float b = ((colorcode >> 8*2) & 0xFF) / 255.0f;
+
+                        float grayscale = (r+g+b)/3.0f;
+
+                        grayscaleImage.writeAtUnsafe(iy, ix, grayscale);
+                    }
+                }
+
+
+                for(RegionProposal iRegionProposal : regionProposals) {
+                    int width = iRegionProposal.maxX-iRegionProposal.minX;
+                    int height = iRegionProposal.maxY-iRegionProposal.minY;
+
+                    System.out.println("[d ] width="+Integer.toString(iRegionProposal.maxX-iRegionProposal.minX) + " height="+Integer.toString(iRegionProposal.maxY-iRegionProposal.minY));
+
+                    if (width<80 && height<80) {
+                        continue; // we are just interested in cars
+                    }
+
+                    int posX = iRegionProposal.minX + 160/2;
+                    int posY = iRegionProposal.minY + 160/2;
+
+                    int prototypeSize = 32; // size of the prototype
+                    int stride = 4;
+
+                    float[] convResult = Conv.convAt(grayscaleImage, posX, posY, prototypeSize, stride);
+
+                    long classification = objectPrototypeClassifier.classify(convResult);
+
+                    System.out.println("[d ] obj classification = " + Long.toString(classification));
+
+
+                    DebugCursor dc = new DebugCursor();
+                    dc.posX = (iRegionProposal.minX+iRegionProposal.maxX)/2;
+                    dc.posY = (iRegionProposal.minY+iRegionProposal.maxY)/2;
+                    dc.text = "OBJ class=" + Long.toString(classification);
+
+                    debugCursors.add(dc);
+
+
+                }
+
+            }
+
 
 
 

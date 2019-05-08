@@ -31,7 +31,7 @@ public class PrototypeBasedImageSampler {
 
     public Random rng = new Random();
 
-    public int numberOfSamples = 16;
+    public int numberOfSamples = 0;
 
     public List<Classification> sample(PImage img) {
         Map2d grayscaleImage = new Map2d(img.height, img.width);
