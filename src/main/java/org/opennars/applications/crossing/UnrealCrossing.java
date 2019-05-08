@@ -112,6 +112,8 @@ public class UnrealCrossing extends PApplet {
         layer1Classifier.minDistance = 1020.0f; // TODO< tune >
 
         foldImagesPerm = Sdr.createRandomPermutation(sdrAllocator.sdrSize, new Random()); // create permutation for folding of images
+
+        convCl = new ConvCl();
     }
 
     List<Street> streets = new ArrayList<Street>();
@@ -150,6 +152,8 @@ public class UnrealCrossing extends PApplet {
 
     UlProtoClassifier objectPrototypeClassifier = new UlProtoClassifier();
 
+    ConvCl convCl;
+
     @Override
     public void draw() {
         viewport.Transform();
@@ -167,8 +171,18 @@ public class UnrealCrossing extends PApplet {
 
             attentionField = new AttentionField(img.height / heatmapCellsize + 1, img.width / heatmapCellsize + 1);
 
-            attentionField.decayFactor = 0.6f;
+            attentionField.decayFactor = 0.0f;
         }
+
+
+        if (attentionField != null) { // if we compute the attention
+
+            attentionField.decay();
+
+            // commented because it doesn't work
+            //attentionField.blur();
+        }
+
 
         if (lastframe != null) {
             for(int iy=0;iy<lastframe.retHeight();iy++) {
@@ -232,14 +246,6 @@ public class UnrealCrossing extends PApplet {
                 }
             }
 
-        }
-
-        if (attentionField != null) { // if we compute the attention
-
-            attentionField.decay();
-
-            // commented because it doesn't work
-            //attentionField.blur();
         }
 
         // region proposals for classification of potentially new objects from the last layer
@@ -477,7 +483,7 @@ public class UnrealCrossing extends PApplet {
 
                     int id = 0; // we don't know the ID because classification isn't working
 
-                    entities.add(new Car(id, iRegionProposal.minX + width/2, iRegionProposal.minY + height/2, 0, 0));
+                    //entities.add(new Car(id, iRegionProposal.minX + width/2, iRegionProposal.minY + height/2, 0, 0));
                 }
 
 
@@ -499,9 +505,10 @@ public class UnrealCrossing extends PApplet {
 
 
             { // classification with one layer of Prototypes
-                objectPrototypeClassifier.minDistance = 25.0f; //20.0f; //10.0f;
+                objectPrototypeClassifier.minDistance = 7000.0f; //20.0f; //10.0f;
 
-                Map2d grayscaleImage = new Map2d(img.height, img.width);
+                //Map2d grayscaleImage = new Map2d(img.height, img.width);
+                short[] imgGrayscale = new short[img.height*img.width];
                 for(int iy=0;iy<img.height;iy++) {
                     for(int ix=0;ix<img.width;ix++) {
 
@@ -513,7 +520,9 @@ public class UnrealCrossing extends PApplet {
 
                         float grayscale = (r+g+b)/3.0f;
 
-                        grayscaleImage.writeAtUnsafe(iy, ix, grayscale);
+                        //grayscaleImage.writeAtUnsafe(iy, ix, grayscale);
+
+                        imgGrayscale[iy*img.width + ix] = (short)(grayscale*255.0f);
                     }
                 }
 
@@ -522,23 +531,58 @@ public class UnrealCrossing extends PApplet {
                     int width = iRegionProposal.maxX-iRegionProposal.minX;
                     int height = iRegionProposal.maxY-iRegionProposal.minY;
 
-                    System.out.println("[d ] width="+Integer.toString(iRegionProposal.maxX-iRegionProposal.minX) + " height="+Integer.toString(iRegionProposal.maxY-iRegionProposal.minY));
+                    if(false)   System.out.println("[d ] width="+Integer.toString(iRegionProposal.maxX-iRegionProposal.minX) + " height="+Integer.toString(iRegionProposal.maxY-iRegionProposal.minY));
 
                     if (width<80 && height<80) {
                         continue; // we are just interested in cars
                     }
 
-                    int posX = iRegionProposal.minX + 160/2;
-                    int posY = iRegionProposal.minY + 160/2;
+                    int centerX = iRegionProposal.minX + 128/2;
+                    int centerY = iRegionProposal.minY + 128/2;
 
                     int prototypeSize = 32; // size of the prototype
                     int stride = 4;
 
-                    float[] convResult = Conv.convAt(grayscaleImage, posX, posY, prototypeSize, stride);
+                    //float[] convResult = Conv.convAt(grayscaleImage, posX, posY, prototypeSize, stride);
+
+                    List<Float> convResultList = new ArrayList<>();
+
+                    for(Conv.KernelConf iKernel : Conv.kernels){
+
+
+                        int numberOfAppliedKernel = prototypeSize*prototypeSize; // how often was the kernel applied?
+                        int[] posXArr = new int[prototypeSize*prototypeSize];
+
+                        int[] posYArr = new int[prototypeSize*prototypeSize];
+
+                        // fill positions of the (same) kernel
+                        for(int iy=0;iy<prototypeSize;iy++) {
+                            for(int ix=0;ix<prototypeSize;ix++) {
+                                posXArr[iy*prototypeSize + ix] = centerX + ix * stride;
+                                posYArr[iy*prototypeSize + ix] = centerY + iy * stride;
+                            }
+                        }
+
+                        float[] convResultOfThisKernel = convCl.runConv(imgGrayscale, img.width, iKernel.precaculatedFlattenedKernel, iKernel.precalculatedKernel.retWidth(),  posXArr, posYArr,  numberOfAppliedKernel);
+
+                        int debugHere = 5;
+
+                        for(int idx=0;idx<convResultOfThisKernel.length;idx++) {
+                            convResultList.add(convResultOfThisKernel[idx]);
+                        }
+                    }
+
+                    float[] convResult = new float[convResultList.size()];
+                    for(int idx=0;idx<convResultList.size();idx++) {
+                        convResult[idx] = convResultList.get(idx);
+                    }
+
+
 
                     long classification = objectPrototypeClassifier.classify(convResult);
 
                     System.out.println("[d ] obj classification = " + Long.toString(classification));
+
 
 
                     DebugCursor dc = new DebugCursor();
@@ -547,7 +591,6 @@ public class UnrealCrossing extends PApplet {
                     dc.text = "OBJ class=" + Long.toString(classification);
 
                     debugCursors.add(dc);
-
 
                 }
 

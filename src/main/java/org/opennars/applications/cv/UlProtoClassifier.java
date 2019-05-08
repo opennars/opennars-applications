@@ -44,7 +44,7 @@ public class UlProtoClassifier {
             }
         }
 
-        //System.out.println("[d ] UlProtoClassifier   best classification distance = " + Float.toString(bestClassificationDist));
+        System.out.println("[d ] UlProtoClassifier   best classification distance = " + Float.toString(bestClassificationDist));
 
         if (bestClassificationDist > minDistance) {
             float arrCopied[] = new float[arr.length];

@@ -16,13 +16,11 @@
 
 package org.opennars.applications.cv;
 
-import processing.core.PImage;
-
 public class Conv {
     /**
      * Configuration of a kernel
      */
-    private static final class KernelConf {
+    public static final class KernelConf {
         public final float dx;
         public final float dy;
 
@@ -32,6 +30,7 @@ public class Conv {
         }
 
         public Map2d precalculatedKernel;
+        public float[] precaculatedFlattenedKernel;
     }
 
 
@@ -66,6 +65,14 @@ public class Conv {
             }
 
             kernels[kernelIdx].precalculatedKernel = kernel;
+
+            // compute flattened kernel
+            kernels[kernelIdx].precaculatedFlattenedKernel = new float[kernel.retWidth()*kernel.retHeight()];
+            for(int iy=0;iy<kernel.retHeight();iy++) {
+                for(int ix=0;ix<kernel.retWidth();ix++) {
+                    kernels[kernelIdx].precaculatedFlattenedKernel[iy * kernel.retWidth() + ix] = kernel.readAtSafe(iy, ix);
+                }
+            }
         }
     }
 
