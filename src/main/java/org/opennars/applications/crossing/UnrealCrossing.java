@@ -154,8 +154,15 @@ public class UnrealCrossing extends PApplet {
 
     ConvCl convCl;
 
+    List<SpatialTracklet> spatialTracklets = new ArrayList<>();
+    long trackletIdCounter = 1;
+
+    double spatialTrackletCatchDistance = 70.0;
+
     @Override
     public void draw() {
+
+
         viewport.Transform();
         background(64,128,64);
         fill(0);
@@ -165,6 +172,27 @@ public class UnrealCrossing extends PApplet {
         String nr = String.format("%05d", i);
         PImage img = loadImage(videopath+nr+".jpg"); //1 2 3 7
         image(img, 0, 0);
+
+
+        short[] imgGrayscale = new short[img.height*img.width]; // flattened grayscale image
+        for(int iy=0;iy<img.height;iy++) {
+            for(int ix=0;ix<img.width;ix++) {
+
+                int colorcode =  img.pixels[iy*img.width+ix];
+                //TODO check if the rgb is extracted correctly
+                float r = (colorcode & 0xff) / 255.0f;
+                float g = ((colorcode >> 8) & 0xFF) / 255.0f;
+                float b = ((colorcode >> 8*2) & 0xFF) / 255.0f;
+
+                float grayscale = (r+g+b)/3.0f;
+
+                //grayscaleImage.writeAtUnsafe(iy, ix, grayscale);
+
+                imgGrayscale[iy*img.width + ix] = (short)(grayscale*255.0f);
+            }
+        }
+
+
 
         if (attentionField == null) { // we need to allocate the attention field
 
@@ -310,6 +338,22 @@ public class UnrealCrossing extends PApplet {
 
 
         debugCursors.clear();
+
+
+        // increment idletime of tracklets
+        for(SpatialTracklet iSt : spatialTracklets) {
+            iSt.idletime++;
+            iSt.notTrainedSince++;
+        }
+
+        // remove to old tracklets
+        for(int idx=spatialTracklets.size()-1;idx>=0;idx--) {
+            if (spatialTracklets.get(idx).idletime > 40) {
+                spatialTracklets.remove(idx);
+            }
+        }
+
+
 
         // debug region proposals
         boolean debugRegionProposals = true;
@@ -522,27 +566,48 @@ public class UnrealCrossing extends PApplet {
 
 
 
+
+
             { // classification with one layer of Prototypes
                 objectPrototypeClassifier.minDistance = 7000.0f; //20.0f; //10.0f;
 
-                //Map2d grayscaleImage = new Map2d(img.height, img.width);
-                short[] imgGrayscale = new short[img.height*img.width];
-                for(int iy=0;iy<img.height;iy++) {
-                    for(int ix=0;ix<img.width;ix++) {
 
-                        int colorcode =  img.pixels[iy*img.width+ix];
-                        //TODO check if the rgb is extracted correctly
-                        float r = (colorcode & 0xff) / 255.0f;
-                        float g = ((colorcode >> 8) & 0xFF) / 255.0f;
-                        float b = ((colorcode >> 8*2) & 0xFF) / 255.0f;
 
-                        float grayscale = (r+g+b)/3.0f;
+                // manage and recatch spatial tracklets
+                for(RegionProposal iRegionProposal : regionProposals) {
+                    int width = iRegionProposal.maxX - iRegionProposal.minX;
+                    int height = iRegionProposal.maxY - iRegionProposal.minY;
 
-                        //grayscaleImage.writeAtUnsafe(iy, ix, grayscale);
+                    int centerX = iRegionProposal.minX + width / 2;
+                    int centerY = iRegionProposal.minY + height / 2;
 
-                        imgGrayscale[iy*img.width + ix] = (short)(grayscale*255.0f);
+
+                    boolean wasAnyTrackletRecaptured = false;
+                    for(SpatialTracklet iTracklet : spatialTracklets) {
+                        double diffX = iTracklet.posX - centerX;
+                        double diffY = iTracklet.posY - centerY;
+                        double dist = Math.sqrt(diffX*diffX+diffY*diffY);
+                        boolean inDist = dist < spatialTrackletCatchDistance;
+                        if (inDist) {
+                            wasAnyTrackletRecaptured = true;
+                            // capture
+                            iTracklet.posX = centerX;
+                            iTracklet.posY = centerY;
+                            iTracklet.idletime = 0;
+                            break;
+                        }
+
                     }
+
+                    if (!wasAnyTrackletRecaptured) {
+                        // spawn new tracklet
+                        SpatialTracklet st = new SpatialTracklet(centerX, centerY, trackletIdCounter);
+                        trackletIdCounter++;
+                        spatialTracklets.add(st);
+                    }
+
                 }
+
 
 
                 for(RegionProposal iRegionProposal : regionProposals) {
@@ -558,57 +623,58 @@ public class UnrealCrossing extends PApplet {
                     int centerX = iRegionProposal.minX + 128/2;
                     int centerY = iRegionProposal.minY + 128/2;
 
-                    int prototypeSize = 32; // size of the prototype
-                    int stride = 4;
+                    float[] convResult = convolutionImg(img, imgGrayscale, centerX, centerY);
 
-                    //float[] convResult = Conv.convAt(grayscaleImage, posX, posY, prototypeSize, stride);
+                    /*{
 
-                    List<Float> convResultList = new ArrayList<>();
+                        List<NnPrototypeTrainer.TrainingTuple> trainingTuples = new ArrayList<>();
+                        NnPrototypeTrainer.TrainingTuple trainingTuple = new NnPrototypeTrainer.TrainingTuple();
+                        trainingTuple.input = convResult;
+                        trainingTuple.class_ = 0;
+                        trainingTuples.add(trainingTuple);
 
-                    for(Conv.KernelConf iKernel : Conv.kernels){
+                        NnPrototypeTrainer.trainModel(trainingTuples);
+                    }*/
 
 
-                        int numberOfAppliedKernel = prototypeSize*prototypeSize; // how often was the kernel applied?
-                        int[] posXArr = new int[prototypeSize*prototypeSize];
+                    //long classification = objectPrototypeClassifier.classify(convResult);
 
-                        int[] posYArr = new int[prototypeSize*prototypeSize];
+                    //System.out.println("[d ] obj classification = " + Long.toString(classification));
 
-                        // fill positions of the (same) kernel
-                        for(int iy=0;iy<prototypeSize;iy++) {
-                            for(int ix=0;ix<prototypeSize;ix++) {
-                                posXArr[iy*prototypeSize + ix] = centerX + ix * stride;
-                                posYArr[iy*prototypeSize + ix] = centerY + iy * stride;
-                            }
+
+
+                    //DebugCursor dc = new DebugCursor();
+                    //dc.posX = (iRegionProposal.minX+iRegionProposal.maxX)/2;
+                    //dc.posY = (iRegionProposal.minY+iRegionProposal.maxY)/2;
+                    //dc.text = "OBJ class=" + Long.toString(classification);
+
+                    //debugCursors.add(dc);
+
+
+                    // search best tracklet - the one which is in the region and has the most training samples to add it
+                    SpatialTracklet bestTracklet = null;
+                    for(SpatialTracklet iSt : spatialTracklets) {
+                        double diffX = iSt.posX - centerX;
+                        double diffY = iSt.posY - centerY;
+
+                        boolean isInBound = Math.abs(diffX) < width/2 && Math.abs(diffY) < height/2;
+                        if(!isInBound) {
+                            continue;
                         }
 
-                        float[] convResultOfThisKernel = convCl.runConv(imgGrayscale, img.width, iKernel.precaculatedFlattenedKernel, iKernel.precalculatedKernel.retWidth(),  posXArr, posYArr,  numberOfAppliedKernel);
+                        if(bestTracklet == null) {
+                            bestTracklet = iSt;
+                            continue;
+                        }
 
-                        int debugHere = 5;
-
-                        for(int idx=0;idx<convResultOfThisKernel.length;idx++) {
-                            convResultList.add(convResultOfThisKernel[idx]);
+                        if(iSt.trainingDataOfThisClass.size() > bestTracklet.trainingDataOfThisClass.size()) {
+                            bestTracklet = iSt;
                         }
                     }
 
-                    float[] convResult = new float[convResultList.size()];
-                    for(int idx=0;idx<convResultList.size();idx++) {
-                        convResult[idx] = convResultList.get(idx);
+                    if (bestTracklet != null) {
+                        bestTracklet.trainingDataOfThisClass.add(convResult);
                     }
-
-
-
-                    long classification = objectPrototypeClassifier.classify(convResult);
-
-                    System.out.println("[d ] obj classification = " + Long.toString(classification));
-
-
-
-                    DebugCursor dc = new DebugCursor();
-                    dc.posX = (iRegionProposal.minX+iRegionProposal.maxX)/2;
-                    dc.posY = (iRegionProposal.minY+iRegionProposal.maxY)/2;
-                    dc.text = "OBJ class=" + Long.toString(classification);
-
-                    debugCursors.add(dc);
 
                 }
 
@@ -704,7 +770,7 @@ public class UnrealCrossing extends PApplet {
             boolean hasExtend = iDebugCursor.extendX != 0 || iDebugCursor.extendY != 0;
 
             if (hasExtend) {
-                fill(0, 0, 255, 127);
+                fill(0, 0, 255, 50);
                 rect((int)iDebugCursor.posX, (int)iDebugCursor.posY, (int)(iDebugCursor.extendX), (int)(iDebugCursor.extendY));
             }
             else
@@ -716,6 +782,8 @@ public class UnrealCrossing extends PApplet {
             fill(127);
             text(iDebugCursor.text, (float)iDebugCursor.posX, (float)iDebugCursor.posY);
         }
+
+
 
         // tick
         for (Entity ie : entities) {
@@ -758,7 +826,121 @@ public class UnrealCrossing extends PApplet {
         }
 
 
+        for(SpatialTracklet ist : spatialTracklets) {
+            int posX = (int)ist.posX;
+            int posY = (int)ist.posY;
+
+            int crossRadius = 30;
+
+            boolean isRecent = ist.idletime < 5;
+
+            stroke(255,0,0, isRecent ? 255 : 80);
+            strokeWeight(2.0f);
+
+
+            line(posX-crossRadius,posY-crossRadius,posX+crossRadius,posY+crossRadius);
+            line(posX+crossRadius,posY-crossRadius,posX-crossRadius,posY+crossRadius);
+
+            fill(255,0,0);
+            text("st id="+Long.toString(ist.id) + " cnt=" +Integer.toString(ist.trainingDataOfThisClass.size()), (float)ist.posX, (float)ist.posY);
+        }
+
+
+
+        for(SpatialTracklet iSt : spatialTracklets) {
+            if (iSt.trainingDataOfThisClass.size() < 8 || iSt.notTrainedSince < 500) {
+                continue;
+            }
+
+            iSt.notTrainedSince = 0;
+
+
+            List<NnPrototypeTrainer.TrainingTuple> trainingTuples = new ArrayList<>();
+
+            // add positives to training
+            for(float[] iPositiveSample : iSt.trainingDataOfThisClass) {
+                NnPrototypeTrainer.TrainingTuple createdTrainingTuple = new NnPrototypeTrainer.TrainingTuple();
+                createdTrainingTuple.input = iPositiveSample;
+                createdTrainingTuple.class_ = 0; // positive sample class
+                trainingTuples.add(createdTrainingTuple);
+            }
+
+            // add negatives to training by sampling random positions in the image
+            // TODO< ensure that the image is different by computing the distance of the samples and checking it >
+
+            int nnClassifierNumberOfNegativeSamples = 20;
+
+            for(int iSampleCounter=0;iSampleCounter<nnClassifierNumberOfNegativeSamples;iSampleCounter++) {
+                int samplePosX = rng.nextInt(img.width - 64)+64;
+                int samplePosY = rng.nextInt(img.height - 64)+64;
+
+                float[] negativeSampleVector = convolutionImg(img, imgGrayscale, samplePosX, samplePosY);
+
+                NnPrototypeTrainer.TrainingTuple createdTrainingTuple = new NnPrototypeTrainer.TrainingTuple();
+                createdTrainingTuple.input = negativeSampleVector;
+                createdTrainingTuple.class_ = 1; // negative sample class
+                trainingTuples.add(createdTrainingTuple);
+            }
+
+
+
+            NnPrototypeTrainer.nEpochs = 10;
+
+            // commented because it belongs into own thread
+            //NnPrototypeTrainer.trainModel(trainingTuples);
+
+            int here = 5;
+
+
+        }
+
+        // set back to patrick standard
+        stroke(128);
+        strokeWeight(1.0f);
+
+
         System.out.println("Concepts: " + nar.memory.concepts.size());
+    }
+
+    // convolute image and return the flattened array
+    private float[] convolutionImg(PImage img, short[] imgGrayscale, int centerX, int centerY) {
+        int prototypeSize = 64; // size of the prototype
+        int stride = 2;
+
+        //float[] convResult = Conv.convAt(grayscaleImage, posX, posY, prototypeSize, stride);
+
+        List<Float> convResultList = new ArrayList<>();
+
+        for(Conv.KernelConf iKernel : Conv.kernels){
+
+
+            int numberOfAppliedKernel = prototypeSize*prototypeSize; // how often was the kernel applied?
+            int[] posXArr = new int[prototypeSize*prototypeSize];
+
+            int[] posYArr = new int[prototypeSize*prototypeSize];
+
+            // fill positions of the (same) kernel
+            for(int iy=0;iy<prototypeSize;iy++) {
+                for(int ix=0;ix<prototypeSize;ix++) {
+                    posXArr[iy*prototypeSize + ix] = centerX + ix * stride;
+                    posYArr[iy*prototypeSize + ix] = centerY + iy * stride;
+                }
+            }
+
+            float[] convResultOfThisKernel = convCl.runConv(imgGrayscale, img.width, iKernel.precaculatedFlattenedKernel, iKernel.precalculatedKernel.retWidth(),  posXArr, posYArr,  numberOfAppliedKernel);
+
+            int debugHere = 5;
+
+            for(int idx=0;idx<convResultOfThisKernel.length;idx++) {
+                convResultList.add(convResultOfThisKernel[idx]);
+            }
+        }
+
+        float[] convResult = new float[convResultList.size()];
+        for(int idx=0;idx<convResultList.size();idx++) {
+            convResult[idx] = convResultList.get(idx);
+        }
+        return convResult;
     }
 
     public void removeOutdatedPredictions(List<Prediction> predictions) {
