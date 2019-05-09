@@ -41,19 +41,19 @@ import java.util.Random;
 
 public class NnPrototypeTrainer {
 
-    public static int outputNum = 10;
-    public static int nEpochs = 1000;
+    public int outputNum = 10;
+    public int nEpochs = 1000;
 
-    public static int batchsize = 5;
+    public int batchsize = 5;
 
-    public static int depthPerPixel = 8;
+    public int depthPerPixel = 8;
 
     public static class TrainingTuple {
         public float[] input;
         public int class_;
     }
 
-    public static void trainModel(List<TrainingTuple> tuples) {
+    public void trainModel(List<TrainingTuple> tuples) {
 
         int rngSeed = 43;
         int rngSeed2 = 44;
@@ -107,7 +107,7 @@ public class NnPrototypeTrainer {
         network.init();
 
         // pass a training listener that reports score every 10 iterations
-        int eachIterations = 1;
+        int eachIterations = 10;
         network.addListeners(new MyScoreIterationListener(eachIterations));
 
         // fit a dataset for a single epoch
@@ -125,7 +125,7 @@ public class NnPrototypeTrainer {
 
     }
 
-    private static DataSetIterator getTrainingData(List<TrainingTuple> tuples, int batchSize, Random rand){
+    private DataSetIterator getTrainingData(List<TrainingTuple> tuples, int batchSize, Random rand){
         final Random rng = new Random(44);
 
 
@@ -162,7 +162,6 @@ public class NnPrototypeTrainer {
 
         Collections.shuffle(listDs, rng);
         return new ListDataSetIterator(listDs,batchSize);
-
     }
 
     private static class MyScoreIterationListener extends BaseTrainingListener {

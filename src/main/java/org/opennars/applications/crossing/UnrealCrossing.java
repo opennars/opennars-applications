@@ -38,6 +38,7 @@ import org.opennars.applications.gui.NarSimpleGUI;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
+import java.util.concurrent.ForkJoinPool;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.opennars.io.events.Events;
@@ -158,6 +159,8 @@ public class UnrealCrossing extends PApplet {
     long trackletIdCounter = 1;
 
     double spatialTrackletCatchDistance = 70.0;
+
+    ForkJoinPool pool = new ForkJoinPool(1);
 
     @Override
     public void draw() {
@@ -537,7 +540,7 @@ public class UnrealCrossing extends PApplet {
                     int width = iRegionProposal.maxX - iRegionProposal.minX;
                     int height = iRegionProposal.maxY - iRegionProposal.minY;
 
-                    System.out.println("[d ] width=" + Integer.toString(iRegionProposal.maxX - iRegionProposal.minX) + " height=" + Integer.toString(iRegionProposal.maxY - iRegionProposal.minY));
+                    //System.out.println("[d ] width=" + Integer.toString(iRegionProposal.maxX - iRegionProposal.minX) + " height=" + Integer.toString(iRegionProposal.maxY - iRegionProposal.minY));
 
                     if (width < 80 && height < 80) {
                         continue; // we are just interested in cars
@@ -884,14 +887,14 @@ public class UnrealCrossing extends PApplet {
 
 
 
-            NnPrototypeTrainer.nEpochs = 10;
+            // send to pool for async training
+            pool.execute(new NnTrainerRunner(trainingTuples));
 
-            // commented because it belongs into own thread
-            //NnPrototypeTrainer.trainModel(trainingTuples);
+
+
+            System.out.println("[i 1] queue taskCount ="+Long.toString(pool.getQueuedSubmissionCount()));
 
             int here = 5;
-
-
         }
 
         // set back to patrick standard
@@ -899,7 +902,25 @@ public class UnrealCrossing extends PApplet {
         strokeWeight(1.0f);
 
 
-        System.out.println("Concepts: " + nar.memory.concepts.size());
+        //System.out.println("[d 1] Concepts: " + nar.memory.concepts.size());
+    }
+
+    private static class NnTrainerRunner implements Runnable {
+        private final List<NnPrototypeTrainer.TrainingTuple> trainingTuples;
+
+        public NnTrainerRunner(List<NnPrototypeTrainer.TrainingTuple> trainingTuples) {
+            this.trainingTuples = trainingTuples;
+        }
+
+        @Override
+        public void run() {
+            NnPrototypeTrainer trainer = new NnPrototypeTrainer();
+            trainer.nEpochs = 15;
+
+            trainer.trainModel(trainingTuples);
+
+
+        }
     }
 
     // convolute image and return the flattened array
