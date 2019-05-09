@@ -248,6 +248,8 @@ public class UnrealCrossing extends PApplet {
 
         }
 
+        int regionProposalWidth = 20;
+
         // region proposals for classification of potentially new objects from the last layer
         List<RegionProposal> regionProposals = new ArrayList<>();
         { // compute region proposals
@@ -261,11 +263,11 @@ public class UnrealCrossing extends PApplet {
                     int absY = iy*heatmapCellsize;
 
                     RegionProposal rp = new RegionProposal(); // build region proposal
-                    rp.minX = absX - 15;
-                    rp.minY = absY - 15;
+                    rp.minX = absX - regionProposalWidth;
+                    rp.minY = absY - regionProposalWidth;
 
-                    rp.maxX = absX + 15;
-                    rp.maxY = absY + 15;
+                    rp.maxX = absX + regionProposalWidth;
+                    rp.maxY = absY + regionProposalWidth;
 
                     regionProposals.add(rp);
                 }
@@ -289,6 +291,22 @@ public class UnrealCrossing extends PApplet {
         }
 
         regionProposals = bigRegions;
+
+        // narrow region proposals again because we want to have tight bounds
+        for(RegionProposal irp : regionProposals) {
+            int width = irp.maxX-irp.minX;
+            int height = irp.maxY-irp.minY;
+
+            if (width > regionProposalWidth) {
+                irp.maxX -= regionProposalWidth;
+                irp.minX += regionProposalWidth;
+            }
+
+            if (height > regionProposalWidth) {
+                irp.maxY -= regionProposalWidth;
+                irp.minY += regionProposalWidth;
+            }
+        }
 
 
         debugCursors.clear();
