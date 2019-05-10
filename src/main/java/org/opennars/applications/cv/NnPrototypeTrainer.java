@@ -48,6 +48,9 @@ public class NnPrototypeTrainer {
 
     public int depthPerPixel = 8;
 
+    public MultiLayerNetwork network;
+
+
     public static class TrainingTuple {
         public float[] input;
         public int class_;
@@ -103,7 +106,7 @@ public class NnPrototypeTrainer {
 
 
         // create the MLN
-        MultiLayerNetwork network = new MultiLayerNetwork(conf);
+        network = new MultiLayerNetwork(conf);
         network.init();
 
         // pass a training listener that reports score every 10 iterations

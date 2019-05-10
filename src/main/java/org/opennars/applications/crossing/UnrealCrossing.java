@@ -26,19 +26,26 @@ package org.opennars.applications.crossing;
 
 
 
-
-// TODO< use SDR Prototype classifier to classify the drawn SDR's >
+// TODO< store trained NN's and use them for later classification >
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+
+import org.deeplearning4j.nn.api.Layer;
+import org.deeplearning4j.nn.multilayer.MultiLayerNetwork;
+import org.nd4j.linalg.api.ndarray.INDArray;
+import org.nd4j.linalg.factory.Nd4j;
 import org.opennars.applications.crossing.NarListener.Prediction;
 import org.opennars.applications.cv.*;
 import org.opennars.applications.gui.NarSimpleGUI;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ForkJoinPool;
+import java.util.concurrent.Future;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.opennars.io.events.Events;
@@ -161,6 +168,12 @@ public class UnrealCrossing extends PApplet {
     double spatialTrackletCatchDistance = 70.0;
 
     ForkJoinPool pool = new ForkJoinPool(1);
+
+    // array with all futures for NN training tasks
+    public List<Future<NnTrainerRunner>> nnTrainingFutures = new ArrayList<>();
+
+    // counter for the positive classes for NN based classification
+    public long nnPositiveClassCounter = 1;
 
     @Override
     public void draw() {
@@ -820,12 +833,44 @@ public class UnrealCrossing extends PApplet {
 
             for(int iy=0;iy<attentionField.retHeight();iy++) {
                 for(int ix=0;ix<attentionField.retWidth();ix++) {
-                    fill(255, 0, 0, (int)(attentionField.readAtUnbound(iy, ix) * 255.0f));
-                    rect(ix * heatmapCellsize, iy * heatmapCellsize, heatmapCellsize, heatmapCellsize);
+                    float attentionValue = attentionField.readAtUnbound(iy, ix);
+                    if (attentionValue > 0.02f) {
+                        stroke(0,0,0,0); // transparent frame
+                        fill(255, 0, 0, (int)(attentionValue * 255.0f));
+                        rect(ix * heatmapCellsize, iy * heatmapCellsize, heatmapCellsize, heatmapCellsize);
+                    }
                 }
             }
 
+            stroke(127); // set back to standard
 
+
+        }
+
+        // classify
+        for(SpatialTracklet iSt : spatialTracklets) {
+            if (iSt.idletime > 5) {
+                continue; // we don't care about things which didn't move
+            }
+
+            System.out.println("---");
+
+            float[] convResult = convolutionImg(img, imgGrayscale, (int)iSt.posX, (int)iSt.posY);
+
+            for(TrainedNn iTrainedNn : trainedNns) {
+
+                INDArray arr = Nd4j.create(convResult);
+                INDArray result = iTrainedNn.network.activate(arr, Layer.TrainingMode.TEST);
+
+                double positiveClassification = result.getDouble(0);
+
+                if (positiveClassification > 0.0001) {
+                    System.out.println("[d 5] cls=" +iTrainedNn.positiveClass+ "   classification{0}=" + Double.toString(positiveClassification));
+                }
+
+
+                int here = 5;
+            }
         }
 
 
@@ -888,13 +933,39 @@ public class UnrealCrossing extends PApplet {
 
 
             // send to pool for async training
-            pool.execute(new NnTrainerRunner(trainingTuples));
-
-
+            NnTrainerRunner nnTrainingRunner = new NnTrainerRunner(trainingTuples);
+            nnTrainingRunner.positiveClass = nnPositiveClassCounter++; // set the class for which it is training for
+            Future<NnTrainerRunner> trainingtaskFuture = (Future<NnTrainerRunner>)pool.submit(nnTrainingRunner);
+            nnTrainingFutures.add(trainingtaskFuture);
 
             System.out.println("[i 1] queue taskCount ="+Long.toString(pool.getQueuedSubmissionCount()));
 
             int here = 5;
+        }
+
+        // look for completed training of NN's and store them
+        for(int idx=nnTrainingFutures.size()-1;idx>=0;idx--) {
+            if (nnTrainingFutures.get(idx).isDone()) { // training is done
+                // store into specific class for trained Nn together with the class for which it was trained for
+                TrainedNn trainedNn = new TrainedNn();
+                try {
+                    NnTrainerRunner trainerRunner = nnTrainingFutures.get(idx).get();
+
+                    trainedNn.network = trainerRunner.trainer.network;
+                    trainedNn.positiveClass = trainerRunner.positiveClass;
+                    trainedNns.add(trainedNn);
+
+                    System.out.println("[d 1] # trained NN's="+Long.toString(trainedNns.size()));
+                } catch (InterruptedException e) {
+                    //
+                    int here = 5;
+                } catch (ExecutionException e) {
+                    //
+                    int here = 5;
+                }
+
+                nnTrainingFutures.remove(idx);
+            }
         }
 
         // set back to patrick standard
@@ -905,21 +976,37 @@ public class UnrealCrossing extends PApplet {
         //System.out.println("[d 1] Concepts: " + nar.memory.concepts.size());
     }
 
-    private static class NnTrainerRunner implements Runnable {
+    // all trained NN's used for identification
+    List<TrainedNn> trainedNns = new ArrayList<>();
+
+    private static class TrainedNn {
+        // metadata
+        public long positiveClass = -1; // id of the positive class for which the NN is trained for
+
+        public MultiLayerNetwork network;
+    }
+
+    private static class NnTrainerRunner implements Callable<NnTrainerRunner> {
         private final List<NnPrototypeTrainer.TrainingTuple> trainingTuples;
+
+        // metadata
+        public long positiveClass = -1; // id of the positive class for which the NN is trained for
+
+        public NnPrototypeTrainer trainer;
+
 
         public NnTrainerRunner(List<NnPrototypeTrainer.TrainingTuple> trainingTuples) {
             this.trainingTuples = trainingTuples;
         }
 
         @Override
-        public void run() {
-            NnPrototypeTrainer trainer = new NnPrototypeTrainer();
+        public NnTrainerRunner call() throws Exception {
+            trainer = new NnPrototypeTrainer();
             trainer.nEpochs = 15;
 
             trainer.trainModel(trainingTuples);
 
-
+            return this;
         }
     }
 
@@ -1045,6 +1132,7 @@ public class UnrealCrossing extends PApplet {
         mp.imageSampler = new PrototypeBasedImageSampler();
 
         videopath = "S:\\win10host\\files\\nda\\traffic\\Train\\Train001\\";
+        videopath = "S:\\win10host\\files\\nda\\traffic\\Train\\Train046\\";
 
         new IncidentSimulator().show();
         PApplet.runSketch(args2, mp);
