@@ -8,8 +8,8 @@ public class RegionProposal {
         //xOverlap = xOverlap || (a.minX <= b.maxX && b.maxX < a.maxX);
 
 
-        boolean xNoOverlap = a.maxX < b.minX || a.minX > b.maxX;
-        boolean yNoOverlap = a.maxY < b.minY || a.minY > b.maxY;
+        boolean xNoOverlap = a.maxX <= b.minX || a.minX >= b.maxX;
+        boolean yNoOverlap = a.maxY <= b.minY || a.minY >= b.maxY;
 
         return !xNoOverlap && !yNoOverlap;
     }

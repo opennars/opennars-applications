@@ -25,8 +25,7 @@ package org.opennars.applications.crossing;
  */
 
 
-
-// TODO< store trained NN's and use them for later classification >
+// TODO< remove NN's which classify all classes of a new added NN when a new NN is added >
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -66,7 +65,7 @@ public class UnrealCrossing extends PApplet {
 
     public PrototypeBasedImageSampler imageSampler = null;
     public AttentionField attentionField = null;
-    public Map2d lastframe;
+
 
     @Override
     public void setup() {
@@ -146,14 +145,14 @@ public class UnrealCrossing extends PApplet {
     public static String trackletpath = null; //"/home/tc/Dateien/CROSSING/Test001/";
     public static double movementThreshold = 10;
 
-    public int heatmapCellsize = 16;
+    public int heatmapCellsize = 16; // configuration
 
     SdrAllocator sdrAllocator;
     UlSdrProtoClassifier layer1Classifier = new UlSdrProtoClassifier();
     Random rng = new Random();
 
     // threshold for region proposal
-    float regionProposalAttentionThreshold = 0.2f;
+    float regionProposalAttentionThreshold = 0.07f; // 0.1f was to less  was 0.2f which was to less
 
     // permutation used to "fold" images for layer2
     int[] foldImagesPerm;
@@ -162,18 +161,60 @@ public class UnrealCrossing extends PApplet {
 
     ConvCl convCl;
 
-    List<SpatialTracklet> spatialTracklets = new ArrayList<>();
-    long trackletIdCounter = 1;
 
-    double spatialTrackletCatchDistance = 70.0;
+
 
     ForkJoinPool pool = new ForkJoinPool(1);
+
+
+
+    double spatialTrackletCatchDistance = 70.0; // configuration
+    public int trackletMinimumTrainingSamples = 8; // configuration
+
+
+
+    // counter for the positive classes for NN based classification
+    public long nnPositiveClassCounter = 1;
+
+
+
 
     // array with all futures for NN training tasks
     public List<Future<NnTrainerRunner>> nnTrainingFutures = new ArrayList<>();
 
-    // counter for the positive classes for NN based classification
-    public long nnPositiveClassCounter = 1;
+
+
+    List<SpatialTracklet> spatialTracklets = new ArrayList<>();
+    long trackletIdCounter = 1;
+
+    PImage lastframe2 = null;
+
+
+    private float integrateImgGrayscalePixel(int posY, int posX, int size, int stride, PImage img) {
+        int numberOfSamples = 0;
+
+        float integral = 0;
+
+        for(int dy=0;dy<size;dy+=stride) {
+            for(int dx=0;dx<size;dx+=stride) {
+                int ix = posX+dx;
+                int iy = posY+dy;
+
+                int colorcode =  img.pixels[iy*img.width+ix];
+                //TODO check if the rgb is extracted correctly
+                float r = (colorcode & 0xff) / 255.0f;
+                float g = ((colorcode >> 8) & 0xFF) / 255.0f;
+                float b = ((colorcode >> 8*2) & 0xFF) / 255.0f;
+
+                float grayscale = (r+g+b)/3.0f;
+
+                integral += grayscale;
+                numberOfSamples++;
+            }
+        }
+
+        return integral / numberOfSamples;
+    }
 
     @Override
     public void draw() {
@@ -228,22 +269,14 @@ public class UnrealCrossing extends PApplet {
         }
 
 
-        if (lastframe != null) {
-            for(int iy=0;iy<lastframe.retHeight();iy++) {
-                for(int ix=0;ix<lastframe.retWidth();ix++) {
+        if (lastframe2 != null) {
+            for(int iy=0;iy<attentionField.retHeight()-1;iy++) {
+                for(int ix=0;ix<attentionField.retWidth()-1;ix++) {
 
+                    float thisFrameGrayscale = integrateImgGrayscalePixel(iy*heatmapCellsize, ix*heatmapCellsize, heatmapCellsize, 2, img);
+                    float lastFrameGrayscale = integrateImgGrayscalePixel(iy*heatmapCellsize, ix*heatmapCellsize, heatmapCellsize, 2, lastframe2);
 
-                    int colorcode = img.get(ix* heatmapCellsize, iy* heatmapCellsize);
-                    //TODO check if the rgb is extracted correctly
-                    float r = (colorcode & 0xff) / 255.0f;
-                    float g = ((colorcode >> 8) & 0xFF) / 255.0f;
-                    float b = ((colorcode >> 8*2) & 0xFF) / 255.0f;
-
-                    float grayscale = (r+g+b)/3.0f;
-
-
-
-                    float diff = lastframe.readAtSafe(iy, ix) - grayscale; // difference to last frame
+                    float diff = lastFrameGrayscale - thisFrameGrayscale; // difference to last frame
                     float absDiff = Math.abs(diff);
 
                     attentionField.map.arr[iy*attentionField.retWidth() + ix] += absDiff;
@@ -266,31 +299,6 @@ public class UnrealCrossing extends PApplet {
 
         }
 
-        {
-            if (lastframe == null) {
-                lastframe = new Map2d(img.height / heatmapCellsize + 1, img.width / heatmapCellsize + 1);
-            }
-
-
-
-            for(int iy=0;iy<lastframe.retHeight();iy++) {
-                for(int ix=0;ix<lastframe.retWidth();ix++) {
-                    int colorcode = img.get(ix* heatmapCellsize, iy* heatmapCellsize);
-                    //TODO check if the rgb is extracted correctly
-                    float r = (colorcode & 0xff) / 255.0f;
-                    float g = ((colorcode >> 8) & 0xFF) / 255.0f;
-                    float b = ((colorcode >> 8*2) & 0xFF) / 255.0f;
-
-                    float grayscale = (r+g+b)/3.0f;
-
-
-                    // TODO< integrate over all pixels >
-
-                    lastframe.writeAtSafe(iy, ix, grayscale);
-                }
-            }
-
-        }
 
         int regionProposalWidth = 20;
 
@@ -362,9 +370,26 @@ public class UnrealCrossing extends PApplet {
             iSt.notTrainedSince++;
         }
 
-        // remove to old tracklets
+        // remove old tracklets
         for(int idx=spatialTracklets.size()-1;idx>=0;idx--) {
             if (spatialTracklets.get(idx).idletime > 40) {
+                SpatialTracklet tracklet = spatialTracklets.get(idx);
+
+
+                if( tracklet.trainingDataOfThisClass.size() > trackletMinimumTrainingSamples) {
+                    // we store the samples from the tracklet as training data
+
+                    List<float[]> trainingSamples = tracklet.trainingDataOfThisClass;
+                    long class_ = tracklet.id; // simply store the tracklet id as the class
+
+                    // store data
+                    SampleData sd = new SampleData();
+                    sd.class_ = class_;
+                    sd.samples = trainingSamples;
+                    nnSampleData.add(sd);
+                }
+
+
                 spatialTracklets.remove(idx);
             }
         }
@@ -835,8 +860,13 @@ public class UnrealCrossing extends PApplet {
                 for(int ix=0;ix<attentionField.retWidth();ix++) {
                     float attentionValue = attentionField.readAtUnbound(iy, ix);
                     if (attentionValue > 0.02f) {
+                        float displayedTransparency = attentionValue * 10.0f; // multiply to see even small changes
+                        displayedTransparency = Math.min(displayedTransparency, 1.0f); // limit for display
+
+                        displayedTransparency *= 0.3f; // soften for better display
+
                         stroke(0,0,0,0); // transparent frame
-                        fill(255, 0, 0, (int)(attentionValue * 255.0f));
+                        fill(255, 0, 0, (int)(displayedTransparency * 255.0f));
                         rect(ix * heatmapCellsize, iy * heatmapCellsize, heatmapCellsize, heatmapCellsize);
                     }
                 }
@@ -853,7 +883,7 @@ public class UnrealCrossing extends PApplet {
                 continue; // we don't care about things which didn't move
             }
 
-            System.out.println("---");
+            //System.out.println("---");
 
             float[] convResult = convolutionImg(img, imgGrayscale, (int)iSt.posX, (int)iSt.posY);
 
@@ -862,11 +892,30 @@ public class UnrealCrossing extends PApplet {
                 INDArray arr = Nd4j.create(convResult);
                 INDArray result = iTrainedNn.network.activate(arr, Layer.TrainingMode.TEST);
 
-                double positiveClassification = result.getDouble(0);
+                int highestPositiveClassIdx = -1;
+                double highestPositiveClasssProbability = 0;
 
-                if (positiveClassification > 0.0001) {
-                    System.out.println("[d 5] cls=" +iTrainedNn.positiveClass+ "   classification{0}=" + Double.toString(positiveClassification));
+                for(int idx=0;idx<iTrainedNn.positiveClasses.size();idx++) { // iterate over classes
+                    double positiveClassificationProbability = result.getDouble(idx);
+
+                    if (positiveClassificationProbability > highestPositiveClasssProbability) {
+                        highestPositiveClassIdx = idx;
+                        highestPositiveClasssProbability = positiveClassificationProbability;
+                    }
                 }
+
+                double negativeClassProbability = result.getDouble(iTrainedNn.positiveClasses.size());
+
+                if (negativeClassProbability > highestPositiveClasssProbability) {
+                    // negative class was stronger
+                    highestPositiveClassIdx = -1;
+                    highestPositiveClasssProbability = 0;
+                }
+
+                if (highestPositiveClassIdx != -1) {
+                    System.out.println("[d 5] cls=" +iTrainedNn.positiveClasses.get(highestPositiveClassIdx)+ "   classification{"+highestPositiveClassIdx+"}=" + Double.toString(highestPositiveClasssProbability));
+                }
+
 
 
                 int here = 5;
@@ -905,13 +954,61 @@ public class UnrealCrossing extends PApplet {
 
             List<NnPrototypeTrainer.TrainingTuple> trainingTuples = new ArrayList<>();
 
+            int iPositiveClassId = 0;
+
+            List<Long> nnPositiveClasses = new ArrayList<>(); // real classes of the positive classes
+            nnPositiveClasses.add(iSt.id); // add the id as the positive class
+
             // add positives to training
             for(float[] iPositiveSample : iSt.trainingDataOfThisClass) {
                 NnPrototypeTrainer.TrainingTuple createdTrainingTuple = new NnPrototypeTrainer.TrainingTuple();
                 createdTrainingTuple.input = iPositiveSample;
-                createdTrainingTuple.class_ = 0; // positive sample class
+                createdTrainingTuple.class_ = iPositiveClassId; // positive sample class
                 trainingTuples.add(createdTrainingTuple);
             }
+
+            int maxCountOfOtherClasses = 5; // configuration - how many other classes should be used for training
+
+            if (nnSampleData.size() > 0) {
+                List<Integer> chosenIndices = new ArrayList<>();
+
+                List<Integer> candidateIndices = new ArrayList<>();
+                for(int idx=0;idx<nnSampleData.size();idx++) { // loop to add candidate indices
+                    if (nnSampleData.get(idx).class_ != iSt.id) { // class must be different - this may be always true
+                        candidateIndices.add(idx);
+                    }
+                }
+
+                for(int i=0;i<maxCountOfOtherClasses;i++) { // loop to chose indices
+                    if (candidateIndices.size() == 0) {
+                        break;
+                    }
+
+                    int idxidx = rng.nextInt(candidateIndices.size());
+                    int idx = candidateIndices.get(idxidx);
+                    candidateIndices.remove(idxidx); // may be buggy
+
+                    chosenIndices.add(idx);
+                }
+
+                for(int iChosenIdx : chosenIndices) {
+                    SampleData chosenSampleData = nnSampleData.get(iChosenIdx);
+
+                    nnPositiveClasses.add(chosenSampleData.class_); // add the class as the positive class
+
+                    for(float[] iPositiveSample : chosenSampleData.samples) {
+                        NnPrototypeTrainer.TrainingTuple createdTrainingTuple = new NnPrototypeTrainer.TrainingTuple();
+                        createdTrainingTuple.input = iPositiveSample;
+                        createdTrainingTuple.class_ = iPositiveClassId; // positive sample class
+                        trainingTuples.add(createdTrainingTuple);
+                    }
+                }
+
+                iPositiveClassId++;
+            }
+
+
+            int negativeClassId = iPositiveClassId+1;// allocate a class for the negative class
 
             // add negatives to training by sampling random positions in the image
             // TODO< ensure that the image is different by computing the distance of the samples and checking it >
@@ -926,16 +1023,19 @@ public class UnrealCrossing extends PApplet {
 
                 NnPrototypeTrainer.TrainingTuple createdTrainingTuple = new NnPrototypeTrainer.TrainingTuple();
                 createdTrainingTuple.input = negativeSampleVector;
-                createdTrainingTuple.class_ = 1; // negative sample class
+                createdTrainingTuple.class_ = negativeClassId; // negative sample class
                 trainingTuples.add(createdTrainingTuple);
             }
 
+            int trainedNumberOfClasses = negativeClassId+1;
+
+            System.out.println("[d 2] queue training of NN with #classes=" + Integer.toString(trainedNumberOfClasses));
 
 
             // send to pool for async training
             NnTrainerRunner nnTrainingRunner = new NnTrainerRunner(trainingTuples);
-            nnTrainingRunner.positiveClass = nnPositiveClassCounter++; // set the class for which it is training for
-            Future<NnTrainerRunner> trainingtaskFuture = (Future<NnTrainerRunner>)pool.submit(nnTrainingRunner);
+            nnTrainingRunner.positiveClasses = nnPositiveClasses; // set the classes for which it is training for
+            Future<NnTrainerRunner> trainingtaskFuture = pool.submit(nnTrainingRunner);
             nnTrainingFutures.add(trainingtaskFuture);
 
             System.out.println("[i 1] queue taskCount ="+Long.toString(pool.getQueuedSubmissionCount()));
@@ -951,8 +1051,19 @@ public class UnrealCrossing extends PApplet {
                 try {
                     NnTrainerRunner trainerRunner = nnTrainingFutures.get(idx).get();
 
+                    // try to kick out old NN's which classify all classes
+                    for(int oldNnIdx=trainedNns.size()-1;oldNnIdx>=0;oldNnIdx--) {
+                        boolean oldNnClassifiesAllClasses = trainerRunner.positiveClasses.containsAll(trainedNns.get(oldNnIdx).positiveClasses);
+                        if (oldNnClassifiesAllClasses) {
+
+
+                            trainedNns.remove(oldNnIdx);
+                        }
+
+                    }
+
                     trainedNn.network = trainerRunner.trainer.network;
-                    trainedNn.positiveClass = trainerRunner.positiveClass;
+                    trainedNn.positiveClasses = trainerRunner.positiveClasses;
                     trainedNns.add(trainedNn);
 
                     System.out.println("[d 1] # trained NN's="+Long.toString(trainedNns.size()));
@@ -968,6 +1079,8 @@ public class UnrealCrossing extends PApplet {
             }
         }
 
+        lastframe2 = img; // store last frame for attention and so on
+
         // set back to patrick standard
         stroke(128);
         strokeWeight(1.0f);
@@ -976,12 +1089,22 @@ public class UnrealCrossing extends PApplet {
         //System.out.println("[d 1] Concepts: " + nar.memory.concepts.size());
     }
 
+    // list of all classes we are using for training of the NN
+    List<SampleData> nnSampleData = new ArrayList<>();
+
+    // training data of a classification which we remember
+    private static class SampleData {
+        public long class_;
+        public List<float[]> samples;
+    }
+
+
     // all trained NN's used for identification
     List<TrainedNn> trainedNns = new ArrayList<>();
 
     private static class TrainedNn {
         // metadata
-        public long positiveClass = -1; // id of the positive class for which the NN is trained for
+        public List<Long> positiveClasses = new ArrayList<>(); // ids of the positive class for which the NN is trained for
 
         public MultiLayerNetwork network;
     }
@@ -990,7 +1113,7 @@ public class UnrealCrossing extends PApplet {
         private final List<NnPrototypeTrainer.TrainingTuple> trainingTuples;
 
         // metadata
-        public long positiveClass = -1; // id of the positive class for which the NN is trained for
+        public List<Long> positiveClasses = new ArrayList<>(); // ids of the positive class for which the NN is trained for
 
         public NnPrototypeTrainer trainer;
 
@@ -1133,6 +1256,7 @@ public class UnrealCrossing extends PApplet {
 
         videopath = "S:\\win10host\\files\\nda\\traffic\\Train\\Train001\\";
         videopath = "S:\\win10host\\files\\nda\\traffic\\Train\\Train046\\";
+        videopath = "S:\\win10host\\files\\nda\\traffic\\Test\\Test010\\";
 
         new IncidentSimulator().show();
         PApplet.runSketch(args2, mp);

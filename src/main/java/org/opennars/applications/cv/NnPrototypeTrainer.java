@@ -46,7 +46,7 @@ public class NnPrototypeTrainer {
 
     public int batchsize = 5;
 
-    public int depthPerPixel = 8;
+    public int depthPerPixel = 4;
 
     public MultiLayerNetwork network;
 
