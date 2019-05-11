@@ -25,7 +25,7 @@ import java.nio.ShortBuffer;
 // convolutions on a grayscale image
 public class ConvCl {
     CLQueue queue;
-    CLContext context;
+    public CLContext context;
     CLProgram program;
     CLKernel kernel;
 
@@ -78,9 +78,20 @@ public class ConvCl {
         kernel = program.createKernel("conv0");
     }
 
+    // class for caching the image between calls
+    public static class CachedImage {
+        public CLBuffer<Short> imgGrayscaleBuf;
+
+        // convert && upload image
+        public void update(short[] imgGrayscale, CLContext ctx) {
+            ShortBuffer imgGrayscaleBuffer = ShortBuffer.wrap(imgGrayscale);
+            imgGrayscaleBuf = ctx.createShortBuffer(CLMem.Usage.Input, imgGrayscaleBuffer, true);
+        }
+    }
+
     // method to run the convolution kernel on the GPU
-    public synchronized Pointer<Float> runConvKernel(ShortBuffer imgGrayscale, int imgWidth, FloatBuffer kernel, int kernelSize, IntBuffer posX, IntBuffer posY, int length) {
-        CLBuffer<Short> imgGrayscaleBuf = context.createShortBuffer(CLMem.Usage.Input, imgGrayscale, true);
+    public synchronized Pointer<Float> runConvKernel(CachedImage cachedImage, int imgWidth, FloatBuffer kernel, int kernelSize, IntBuffer posX, IntBuffer posY, int length) {
+        CLBuffer<Short> imgGrayscaleBuf = cachedImage.imgGrayscaleBuf;
         CLBuffer<Float> kernelBuf = context.createFloatBuffer(CLMem.Usage.Input, kernel, true);
         CLBuffer<Integer> posXBuf = context.createIntBuffer(CLMem.Usage.Input, posX, true);
         CLBuffer<Integer> posYBuf = context.createIntBuffer(CLMem.Usage.Input, posY, true);
@@ -112,8 +123,8 @@ public class ConvCl {
     }
 
     // Wrapper method that takes and returns float array
-    public float[] runConv(short[] imgGrayscale, int imgWidth, float[] kernel, int kernelSize, int[] posX, int[] posY, int length) {
-        Pointer<Float> outBuffer = runConvKernel(ShortBuffer.wrap(imgGrayscale), imgWidth, FloatBuffer.wrap(kernel), kernelSize, IntBuffer.wrap(posX), IntBuffer.wrap(posY), length);
+    public float[] runConv(CachedImage cachedImage,  int imgWidth, float[] kernel, int kernelSize, int[] posX, int[] posY, int length) {
+        Pointer<Float> outBuffer = runConvKernel(cachedImage, imgWidth, FloatBuffer.wrap(kernel), kernelSize, IntBuffer.wrap(posX), IntBuffer.wrap(posY), length);
         float[] out = new float[length];
         for(int idx=0;idx<length;idx++) {
             out[idx]=outBuffer.get(idx);

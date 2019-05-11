@@ -41,7 +41,7 @@ import java.util.Random;
 
 public class NnPrototypeTrainer {
 
-    public int outputNum = 10;
+    public int outputNum = 50;
     public int nEpochs = 1000;
 
     public int batchsize = 5;
@@ -142,12 +142,7 @@ public class NnPrototypeTrainer {
                 int here = 5;
             }
 
-            double [] input = new double[iTuple.input.length];
-            for(int i=0;i<iTuple.input.length;i++) {
-                input[i] = iTuple.input[i];
-            }
-
-            double [] out = new double[10];
+            double []out = new double[outputNum];
             for (int i= 0; i< out.length; i++) {
                 out[i] = 0.0;
             }
@@ -155,7 +150,7 @@ public class NnPrototypeTrainer {
 
 
 
-            INDArray inputNDArray1 = Nd4j.create(input);
+            INDArray inputNDArray1 = Nd4j.create(iTuple.input);
             INDArray outPut = Nd4j.create(out);
             DataSet dataSet = new org.nd4j.linalg.dataset.DataSet(inputNDArray1, outPut);
 

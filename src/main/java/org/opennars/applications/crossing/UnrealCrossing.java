@@ -249,6 +249,9 @@ public class UnrealCrossing extends PApplet {
             }
         }
 
+        ConvCl.CachedImage cachedImage = new ConvCl.CachedImage();
+        cachedImage.update(imgGrayscale, convCl.context); // send image to GPU
+
 
 
         if (attentionField == null) { // we need to allocate the attention field
@@ -664,7 +667,7 @@ public class UnrealCrossing extends PApplet {
                     int centerX = iRegionProposal.minX + 128/2;
                     int centerY = iRegionProposal.minY + 128/2;
 
-                    float[] convResult = convolutionImg(img, imgGrayscale, centerX, centerY);
+                    float[] convResult = convolutionImg(img, cachedImage, centerX, centerY);
 
                     /*{
 
@@ -807,22 +810,6 @@ public class UnrealCrossing extends PApplet {
             tl.draw(this, t);
         }
 
-        for (DebugCursor iDebugCursor : debugCursors) {
-            boolean hasExtend = iDebugCursor.extendX != 0 || iDebugCursor.extendY != 0;
-
-            if (hasExtend) {
-                fill(0, 0, 255, 50);
-                rect((int)iDebugCursor.posX, (int)iDebugCursor.posY, (int)(iDebugCursor.extendX), (int)(iDebugCursor.extendY));
-            }
-            else
-            {
-                line((int)(iDebugCursor.posX - 5), (int)iDebugCursor.posY, (int)(iDebugCursor.posX + 5), (int)iDebugCursor.posY);
-                line((int)iDebugCursor.posX, (int)(iDebugCursor.posY - 5), (int)iDebugCursor.posX, (int)(iDebugCursor.posY + 5));
-            }
-
-            fill(127);
-            text(iDebugCursor.text, (float)iDebugCursor.posX, (float)iDebugCursor.posY);
-        }
 
 
 
@@ -885,7 +872,10 @@ public class UnrealCrossing extends PApplet {
 
             //System.out.println("---");
 
-            float[] convResult = convolutionImg(img, imgGrayscale, (int)iSt.posX, (int)iSt.posY);
+            long bestClassificationClass = -1;
+            double bestClassificationProbability = 0;
+
+            float[] convResult = convolutionImg(img, cachedImage, (int)iSt.posX, (int)iSt.posY);
 
             for(TrainedNn iTrainedNn : trainedNns) {
 
@@ -913,12 +903,27 @@ public class UnrealCrossing extends PApplet {
                 }
 
                 if (highestPositiveClassIdx != -1) {
-                    System.out.println("[d 5] cls=" +iTrainedNn.positiveClasses.get(highestPositiveClassIdx)+ "   classification{"+highestPositiveClassIdx+"}=" + Double.toString(highestPositiveClasssProbability));
+                    if(false)  System.out.println("[d 5] cls=" +iTrainedNn.positiveClasses.get(highestPositiveClassIdx)+ "   classification{"+highestPositiveClassIdx+"}=" + Double.toString(highestPositiveClasssProbability));
+                }
+
+                if (highestPositiveClassIdx != -1 && highestPositiveClasssProbability > bestClassificationProbability) {
+                    bestClassificationClass = iTrainedNn.positiveClasses.get(highestPositiveClassIdx); // retrieve class by index. Indirection is necessary for NN reasons
+                    bestClassificationProbability = highestPositiveClasssProbability;
                 }
 
 
 
                 int here = 5;
+            }
+
+            { // add debug cursor
+                if (bestClassificationClass != -1) {
+                    DebugCursor dc = new DebugCursor();
+                    dc.posX = iSt.posX;
+                    dc.posY = iSt.posY;
+                    dc.text  = "CLASS "+Long.toString(bestClassificationClass) + " prop=" + Double.toString(bestClassificationProbability);
+                    debugCursors.add(dc);
+                }
             }
         }
 
@@ -967,10 +972,10 @@ public class UnrealCrossing extends PApplet {
                 trainingTuples.add(createdTrainingTuple);
             }
 
-            int maxCountOfOtherClasses = 5; // configuration - how many other classes should be used for training
+            int maxCountOfOtherClasses = 15; // configuration - how many other classes should be used for training
 
             if (nnSampleData.size() > 0) {
-                List<Integer> chosenIndices = new ArrayList<>();
+
 
                 List<Integer> candidateIndices = new ArrayList<>();
                 for(int idx=0;idx<nnSampleData.size();idx++) { // loop to add candidate indices
@@ -979,6 +984,9 @@ public class UnrealCrossing extends PApplet {
                     }
                 }
 
+                System.out.println("DBG "+Integer.toString(candidateIndices.size()));
+
+                List<Integer> chosenIndices = new ArrayList<>();
                 for(int i=0;i<maxCountOfOtherClasses;i++) { // loop to chose indices
                     if (candidateIndices.size() == 0) {
                         break;
@@ -986,7 +994,8 @@ public class UnrealCrossing extends PApplet {
 
                     int idxidx = rng.nextInt(candidateIndices.size());
                     int idx = candidateIndices.get(idxidx);
-                    candidateIndices.remove(idxidx); // may be buggy
+
+                    candidateIndices.remove(idxidx);
 
                     chosenIndices.add(idx);
                 }
@@ -1002,9 +1011,9 @@ public class UnrealCrossing extends PApplet {
                         createdTrainingTuple.class_ = iPositiveClassId; // positive sample class
                         trainingTuples.add(createdTrainingTuple);
                     }
-                }
 
-                iPositiveClassId++;
+                    iPositiveClassId++;
+                }
             }
 
 
@@ -1019,7 +1028,7 @@ public class UnrealCrossing extends PApplet {
                 int samplePosX = rng.nextInt(img.width - 64)+64;
                 int samplePosY = rng.nextInt(img.height - 64)+64;
 
-                float[] negativeSampleVector = convolutionImg(img, imgGrayscale, samplePosX, samplePosY);
+                float[] negativeSampleVector = convolutionImg(img, cachedImage, samplePosX, samplePosY);
 
                 NnPrototypeTrainer.TrainingTuple createdTrainingTuple = new NnPrototypeTrainer.TrainingTuple();
                 createdTrainingTuple.input = negativeSampleVector;
@@ -1079,6 +1088,34 @@ public class UnrealCrossing extends PApplet {
             }
         }
 
+
+
+
+
+        for (DebugCursor iDebugCursor : debugCursors) {
+            boolean hasExtend = iDebugCursor.extendX != 0 || iDebugCursor.extendY != 0;
+
+            if (hasExtend) {
+                // set back to patrick standard
+                stroke(128);
+                strokeWeight(1.0f);
+
+                fill(0, 0, 255, 50);
+                rect((int)iDebugCursor.posX, (int)iDebugCursor.posY, (int)(iDebugCursor.extendX), (int)(iDebugCursor.extendY));
+            }
+            else
+            {
+                line((int)(iDebugCursor.posX - 5), (int)iDebugCursor.posY, (int)(iDebugCursor.posX + 5), (int)iDebugCursor.posY);
+                line((int)iDebugCursor.posX, (int)(iDebugCursor.posY - 5), (int)iDebugCursor.posX, (int)(iDebugCursor.posY + 5));
+            }
+
+            fill(127);
+            text(iDebugCursor.text, (float)iDebugCursor.posX, (float)iDebugCursor.posY);
+        }
+
+
+
+
         lastframe2 = img; // store last frame for attention and so on
 
         // set back to patrick standard
@@ -1134,7 +1171,7 @@ public class UnrealCrossing extends PApplet {
     }
 
     // convolute image and return the flattened array
-    private float[] convolutionImg(PImage img, short[] imgGrayscale, int centerX, int centerY) {
+    private float[] convolutionImg(PImage img, ConvCl.CachedImage cachedImage, int centerX, int centerY) {
         int prototypeSize = 64; // size of the prototype
         int stride = 2;
 
@@ -1158,7 +1195,7 @@ public class UnrealCrossing extends PApplet {
                 }
             }
 
-            float[] convResultOfThisKernel = convCl.runConv(imgGrayscale, img.width, iKernel.precaculatedFlattenedKernel, iKernel.precalculatedKernel.retWidth(),  posXArr, posYArr,  numberOfAppliedKernel);
+            float[] convResultOfThisKernel = convCl.runConv(cachedImage, img.width, iKernel.precaculatedFlattenedKernel, iKernel.precalculatedKernel.retWidth(),  posXArr, posYArr,  numberOfAppliedKernel);
 
             int debugHere = 5;
 
