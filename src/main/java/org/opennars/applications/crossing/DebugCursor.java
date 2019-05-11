@@ -19,6 +19,8 @@ package org.opennars.applications.crossing;
 public class DebugCursor {
     public double posX = 0, posY = 0;
     public String text = "";
+    //public boolean isTextAtTopLeftCorner = false;
+    public boolean hasTextBackground = false;
 
     public double extendX = 0, extendY = 0;
 }

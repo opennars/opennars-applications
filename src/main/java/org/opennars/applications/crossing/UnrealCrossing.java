@@ -915,9 +915,13 @@ public class UnrealCrossing extends PApplet {
             { // add debug cursor
                 if (bestClassificationClass != -1) {
                     DebugCursor dc = new DebugCursor();
-                    dc.posX = iSt.posX;
-                    dc.posY = iSt.posY;
-                    dc.text  = "CLASS "+Long.toString(bestClassificationClass) + " prop=" + Double.toString(bestClassificationProbability);
+                    // TODO< fetch size from applied NN >
+                    dc.posX = iSt.posX - 60;
+                    dc.posY = iSt.posY - 60;
+                    dc.extendX = 120;
+                    dc.extendY = 120;
+                    dc.hasTextBackground = true; // because we want to see the text clearly
+                    dc.text  = "CLASS "+Long.toString(bestClassificationClass) + " prop=" +  String.format("%.2f", (bestClassificationProbability));
                     debugCursors.add(dc);
                 }
             }
@@ -1134,8 +1138,15 @@ public class UnrealCrossing extends PApplet {
                 line((int)iDebugCursor.posX, (int)(iDebugCursor.posY - 5), (int)iDebugCursor.posX, (int)(iDebugCursor.posY + 5));
             }
 
-            fill(127);
-            text(iDebugCursor.text, (float)iDebugCursor.posX, (float)iDebugCursor.posY);
+            if (iDebugCursor.hasTextBackground) {
+                // draw black background for text
+                fill(0,0,0);
+                stroke(0,0,0,0); // transparent
+                rect((int)iDebugCursor.posX, (int)iDebugCursor.posY, (int)(iDebugCursor.extendX), (int)(20));
+            }
+
+            fill(255);
+            text(iDebugCursor.text, (float)iDebugCursor.posX, (float)iDebugCursor.posY+20-5);
         }
 
 
