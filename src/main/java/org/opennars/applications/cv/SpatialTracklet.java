@@ -29,6 +29,9 @@ public class SpatialTracklet {
     // meta data - collected training samples of this class
     public List<float[]> trainingDataOfThisClass = new ArrayList<>();
 
+    // decoration - classifier used for tracking this
+    public MultichannelProtoClassifier prototypeClassifier = null;
+
     public SpatialTracklet(double posX, double posY, long id) {
         this.posX = posX;
         this.posY = posY;

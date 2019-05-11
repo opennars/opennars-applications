@@ -517,9 +517,7 @@ public class UnrealCrossing extends PApplet {
         { // add new motion particles
             int motionparticleSize = 12; // configuration - size of a motion particle
 
-            // we add the motion particles at positions which changed
-
-            int numberOfSpawnedMotionParticles = 1;
+            int numberOfSpawnedMotionParticles = 0; // NOTE< disabled motion particles for now because cars move to fast, but pedestriants seem to have the right speed to "pick up" >
 
             for(int i=0;i<numberOfSpawnedMotionParticles;i++) {
                 double spawnPosX = 16 + rng.nextDouble() * (img.width-16*2);
@@ -556,23 +554,26 @@ public class UnrealCrossing extends PApplet {
             }
         }
 
-        List<RegionProposal> bigRegions = new ArrayList<>();
-        for(RegionProposal irp : regionProposals) {
-            boolean merged = false;
+        { // merge region proposals
+            List<RegionProposal> bigRegions = new ArrayList<>();
+            for(RegionProposal irp : regionProposals) {
+                boolean merged = false;
 
-            for(RegionProposal iBigRegion : bigRegions) {
-                if (RegionProposal.checkOverlap(iBigRegion, irp)) {
-                    iBigRegion.merge(irp);
-                    merged = true;
+                for(RegionProposal iBigRegion : bigRegions) {
+                    if (RegionProposal.checkOverlap(iBigRegion, irp)) {
+                        iBigRegion.merge(irp);
+                        merged = true;
+                    }
+                }
+
+                if (!merged) {
+                    bigRegions.add(irp.clone());
                 }
             }
 
-            if (!merged) {
-                bigRegions.add(irp.clone());
-            }
+            regionProposals = bigRegions;
         }
 
-        regionProposals = bigRegions;
 
         // narrow region proposals again because we want to have tight bounds
         for(RegionProposal irp : regionProposals) {
@@ -1091,76 +1092,82 @@ public class UnrealCrossing extends PApplet {
 
         }
 
+        boolean debug_enableClassification = false; // used for debugging - best to be kept enabled in "production"
+
+
         // classify
-        for(SpatialTracklet iSt : spatialTracklets) {
-            if (iSt.idletime > 5) {
-                continue; // we don't care about things which didn't move
-            }
+        if (debug_enableClassification) {
+            for(SpatialTracklet iSt : spatialTracklets) {
+                if (iSt.idletime > 5) {
+                    continue; // we don't care about things which didn't move
+                }
 
-            //System.out.println("---");
+                //System.out.println("---");
 
-            long bestClassificationClass = -1;
-            double bestClassificationProbability = 0;
+                long bestClassificationClass = -1;
+                double bestClassificationProbability = 0;
 
-            float[] convResult = convolutionImg(img, cachedImage, (int)iSt.posX, (int)iSt.posY);
+                float[] convResult = convolutionImg(img, cachedImage, (int)iSt.posX, (int)iSt.posY);
 
-            for(int iTrainedNnIdx=trainedNns.size()-1;iTrainedNnIdx>=0;iTrainedNnIdx--) {
-                TrainedNn iTrainedNn = trainedNns.get(iTrainedNnIdx);
+                for(int iTrainedNnIdx=trainedNns.size()-1;iTrainedNnIdx>=0;iTrainedNnIdx--) {
+                    TrainedNn iTrainedNn = trainedNns.get(iTrainedNnIdx);
 
-                INDArray arr = Nd4j.create(convResult);
-                INDArray result = iTrainedNn.network.activate(arr, Layer.TrainingMode.TEST);
+                    INDArray arr = Nd4j.create(convResult);
+                    INDArray result = iTrainedNn.network.activate(arr, Layer.TrainingMode.TEST);
 
-                int highestPositiveClassIdx = -1;
-                double highestPositiveClasssProbability = 0;
+                    int highestPositiveClassIdx = -1;
+                    double highestPositiveClasssProbability = 0;
 
-                for(int idx=0;idx<iTrainedNn.positiveClasses.size();idx++) { // iterate over classes
-                    double positiveClassificationProbability = result.getDouble(idx);
+                    for(int idx=0;idx<iTrainedNn.positiveClasses.size();idx++) { // iterate over classes
+                        double positiveClassificationProbability = result.getDouble(idx);
 
-                    if (positiveClassificationProbability > highestPositiveClasssProbability) {
-                        highestPositiveClassIdx = idx;
-                        highestPositiveClasssProbability = positiveClassificationProbability;
+                        if (positiveClassificationProbability > highestPositiveClasssProbability) {
+                            highestPositiveClassIdx = idx;
+                            highestPositiveClasssProbability = positiveClassificationProbability;
+                        }
                     }
+
+                    double negativeClassProbability = result.getDouble(iTrainedNn.positiveClasses.size());
+
+                    if (negativeClassProbability > highestPositiveClasssProbability) {
+                        // negative class was stronger
+                        highestPositiveClassIdx = -1;
+                        highestPositiveClasssProbability = 0;
+                    }
+
+                    if (highestPositiveClassIdx != -1) {
+                        if(false)  System.out.println("[d 5] cls=" +iTrainedNn.positiveClasses.get(highestPositiveClassIdx)+ "   classification{"+highestPositiveClassIdx+"}=" + Double.toString(highestPositiveClasssProbability));
+                    }
+
+                    if (highestPositiveClassIdx != -1 && highestPositiveClasssProbability > bestClassificationProbability) {
+                        bestClassificationClass = iTrainedNn.positiveClasses.get(highestPositiveClassIdx); // retrieve class by index. Indirection is necessary for NN reasons
+                        bestClassificationProbability = highestPositiveClasssProbability;
+                    }
+
+                    if (highestPositiveClassIdx != -1) { // if it classified a positive class
+                        break; // then don't check any other older NN's because they are outdated anyways for this classification
+                    }
+
+
+                    int here = 5;
                 }
 
-                double negativeClassProbability = result.getDouble(iTrainedNn.positiveClasses.size());
-
-                if (negativeClassProbability > highestPositiveClasssProbability) {
-                    // negative class was stronger
-                    highestPositiveClassIdx = -1;
-                    highestPositiveClasssProbability = 0;
-                }
-
-                if (highestPositiveClassIdx != -1) {
-                    if(false)  System.out.println("[d 5] cls=" +iTrainedNn.positiveClasses.get(highestPositiveClassIdx)+ "   classification{"+highestPositiveClassIdx+"}=" + Double.toString(highestPositiveClasssProbability));
-                }
-
-                if (highestPositiveClassIdx != -1 && highestPositiveClasssProbability > bestClassificationProbability) {
-                    bestClassificationClass = iTrainedNn.positiveClasses.get(highestPositiveClassIdx); // retrieve class by index. Indirection is necessary for NN reasons
-                    bestClassificationProbability = highestPositiveClasssProbability;
-                }
-
-                if (highestPositiveClassIdx != -1) { // if it classified a positive class
-                    break; // then don't check any other older NN's because they are outdated anyways for this classification
-                }
-
-
-                int here = 5;
-            }
-
-            { // add debug cursor
-                if (bestClassificationClass != -1) {
-                    DebugCursor dc = new DebugCursor();
-                    // TODO< fetch size from applied NN >
-                    dc.posX = iSt.posX - 60;
-                    dc.posY = iSt.posY - 60;
-                    dc.extendX = 120;
-                    dc.extendY = 120;
-                    dc.hasTextBackground = true; // because we want to see the text clearly
-                    dc.text  = "CLASS "+Long.toString(bestClassificationClass) + " prop=" +  String.format("%.2f", (bestClassificationProbability));
-                    debugCursors.add(dc);
+                { // add debug cursor
+                    if (bestClassificationClass != -1) {
+                        DebugCursor dc = new DebugCursor();
+                        // TODO< fetch size from applied NN >
+                        dc.posX = iSt.posX - 60;
+                        dc.posY = iSt.posY - 60;
+                        dc.extendX = 120;
+                        dc.extendY = 120;
+                        dc.hasTextBackground = true; // because we want to see the text clearly
+                        dc.text  = "CLASS "+Long.toString(bestClassificationClass) + " prop=" +  String.format("%.2f", (bestClassificationProbability));
+                        debugCursors.add(dc);
+                    }
                 }
             }
         }
+
 
 
         for(SpatialTracklet ist : spatialTracklets) {
@@ -1352,6 +1359,82 @@ public class UnrealCrossing extends PApplet {
             //System.out.println("[i 1] queue taskCount ="+Long.toString(pool.getTaskCount()));
 
             int here = 5;
+        }
+
+
+
+        { // try to track spatial tracklet with prototypes
+            for(SpatialTracklet iSt : spatialTracklets) {
+
+                // look for overlapping region proposals
+                RegionProposal bestOverlappingRegionProposal = null;
+                for (RegionProposal iRegionProposal : regionProposals) {
+                    if (iRegionProposal.minX < iSt.posX && iRegionProposal.maxX > iSt.posX && iRegionProposal.minY < iSt.posY && iRegionProposal.maxY > iSt.posY) {
+                        bestOverlappingRegionProposal = iRegionProposal;// just take any
+                    }
+                }
+
+                if (bestOverlappingRegionProposal != null) {
+                    int width = bestOverlappingRegionProposal.maxX - bestOverlappingRegionProposal.minX;
+                    int height = bestOverlappingRegionProposal.maxY - bestOverlappingRegionProposal.minY;
+
+                    if (iSt.prototypeClassifier == null) {
+                        // create prototype classifier and add sample
+
+                        iSt.prototypeClassifier = new MultichannelProtoClassifier();
+
+                        // (*) add sample
+                        long class_ = iSt.prototypeClassifier.classifyAt((int)iSt.posX, (int)iSt.posY, width, height, true, img);
+
+                        int debugHere = 5;
+                    }
+                    else {
+                        // track with classifier
+
+                        // for this we search for the prototype and pick the best position
+
+                        int prototypeSearchDistance = 20; // distance in pixels for the search of the same prototype
+
+                        int bestPositionX = 0;
+                        int bestPositionY = 0;
+                        float bestClassificationDistance = Float.POSITIVE_INFINITY;
+
+                        // TODO< optimize by searching with a stepsize of 2 and then searching for the best pixel again >
+                        for(int dy=-prototypeSearchDistance;dy<prototypeSearchDistance;dy++) {
+                            for(int dx=-prototypeSearchDistance;dx<prototypeSearchDistance;dx++) {
+                                iSt.prototypeClassifier.classifyAt((int)iSt.posX + dx, (int)iSt.posY + dy, width, height, false, img);
+                                float classificationDistance = iSt.prototypeClassifier.classificationLastDistance;
+
+                                if (classificationDistance < bestClassificationDistance) {
+                                    bestClassificationDistance = classificationDistance;
+                                    bestPositionX = (int)iSt.posX + dx;
+                                    bestPositionY = (int)iSt.posY + dy;
+                                }
+                            }
+                        }
+
+                        { // add debug cursor
+                            if (bestClassificationDistance < Float.POSITIVE_INFINITY) {
+                                DebugCursor dc = new DebugCursor();
+                                dc.text = "PROTOTYPE BEST FOUND";
+                                dc.posX = bestPositionX;
+                                dc.posY = bestPositionY;
+                                debugCursors.add(dc);
+
+                                DebugCursor dc2 = new DebugCursor();
+                                dc2.text = "PROTOTYPE BEST FOUND FOR";
+                                dc2.posX = (int)iSt.posX;
+                                dc2.posY = (int)iSt.posY;
+                                debugCursors.add(dc2);
+                            }
+                        }
+
+
+                        // (*) set the tracklet to the best position
+                        // TODO TODO TODO TODO TODO TODO
+                    }
+                }
+            }
         }
 
 
