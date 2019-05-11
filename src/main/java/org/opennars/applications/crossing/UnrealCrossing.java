@@ -33,6 +33,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 
+import com.sun.jna.platform.win32.WinBase;
 import org.deeplearning4j.nn.api.Layer;
 import org.deeplearning4j.nn.multilayer.MultiLayerNetwork;
 import org.nd4j.linalg.api.ndarray.INDArray;
@@ -120,6 +121,7 @@ public class UnrealCrossing extends PApplet {
         foldImagesPerm = Sdr.createRandomPermutation(sdrAllocator.sdrSize, new Random()); // create permutation for folding of images
 
         convCl = new ConvCl();
+
     }
 
     List<Street> streets = new ArrayList<Street>();
@@ -187,6 +189,10 @@ public class UnrealCrossing extends PApplet {
 
     PImage lastframe2 = null;
 
+    Map2d[] convolutions; // channels of different convolutions applied to the complete (current) image
+
+    List<MotionParticle> motionParticles = new ArrayList<>(); // particles to track motion
+
 
     private float integrateImgGrayscalePixel(int posY, int posX, int size, int stride, PImage img) {
         int numberOfSamples = 0;
@@ -214,6 +220,166 @@ public class UnrealCrossing extends PApplet {
         return integral / numberOfSamples;
     }
 
+    private double calcDistOfParticleAt(MotionParticle mp, double posX, double posY, PImage img) {
+        double sum = 0;
+
+        for(int channelIdx=0;channelIdx<3;channelIdx++) {
+            Map2d segmentChannel = mp.segment[channelIdx];
+
+            double subimagePosX = posX - segmentChannel.retWidth()/2.0;
+            double subimagePosY = posY - segmentChannel.retHeight()/2.0;
+
+            for(int iy=0;iy<segmentChannel.retHeight();iy++) {
+                for(int ix=0;ix<segmentChannel.retWidth();ix++) {
+                    double samplePosX = subimagePosX+ix;
+                    double samplePosY = subimagePosY+iy;
+
+                    // TODO< sample it subpixel accurate >
+                    int samplePosXInt = (int)samplePosX;
+                    int samplePosYInt = (int)samplePosY;
+
+                    int colorcode =  img.pixels[samplePosYInt*img.width+samplePosXInt];
+                    //TODO check if the rgb is extracted correctly
+                    float r = (colorcode & 0xff) / 255.0f;
+                    float g = ((colorcode >> 8) & 0xFF) / 255.0f;
+                    float b = ((colorcode >> 8*2) & 0xFF) / 255.0f;
+
+
+                    float sampleValue = 0;
+                    if (channelIdx == 0) {
+                        sampleValue = r;
+                    }
+                    else if (channelIdx == 1) {
+                        sampleValue = g;
+                    }
+                    else if (channelIdx == 2) {
+                        sampleValue = b;
+                    }
+
+                    float mpChannelValue = segmentChannel.readAtUnsafe(iy, ix);
+
+                    sum += Math.abs(sampleValue - mpChannelValue);
+                }
+            }
+
+        }
+
+        return sum / (mp.segment.length*mp.segment[0].retWidth()*mp.segment[0].retHeight());
+    }
+
+    /**
+     *
+     * @param mp
+     * @param maxDistance
+     * @return false if tracking lost
+     */
+    private boolean traceMotionParticle(MotionParticle mp, double maxDistance, PImage img) {
+        double minMetricDist = Double.POSITIVE_INFINITY;
+        double minMetricX = 0;
+        double minMetricY = 0;
+
+        for(int distance = 0; distance < maxDistance; distance++) {
+
+
+
+            // calc distance in rectangular shape
+            for(int dist:new int[]{-distance,distance}) {
+                for(int dist2=-distance;dist2<distance;dist2++) {
+                    {
+                        double metricDist = calcDistOfParticleAt(mp,  mp.posX + dist, mp.posY+dist2, img);
+                        if (metricDist < minMetricDist) {
+                            minMetricDist = metricDist;
+                            minMetricX = mp.posX + dist;
+                            minMetricY = mp.posY+dist2;
+                        }
+                    }
+
+                    {
+                        double metricDist = calcDistOfParticleAt(mp,  mp.posX + dist2, mp.posY+dist, img);
+                        if (metricDist < minMetricDist) {
+                            minMetricDist = metricDist;
+                            minMetricX = mp.posX + dist2;
+                            minMetricY = mp.posY+dist;
+                        }
+                    }
+                }
+            }
+
+
+        }
+
+        double maxThreshold = 50.0; // parameter
+        if (minMetricDist < maxThreshold) {
+            // retrace
+            mp.posX = minMetricX;
+            mp.posY = minMetricY;
+        }
+
+        return minMetricDist < maxThreshold;
+    }
+
+    private void trackAndRemoveMotionparticles(double maxDistance, int imgWidth, int imgHeight, PImage img) {
+        for(int particleIdx=motionParticles.size()-1;particleIdx>=0;particleIdx--) {
+            boolean isAliveTracking = traceMotionParticle(motionParticles.get(particleIdx), maxDistance, img);
+
+            boolean isOutOfBoundsX = motionParticles.get(particleIdx).posX <= motionParticles.get(particleIdx).segment[0].retWidth()/2 + maxDistance || motionParticles.get(particleIdx).posX >= imgWidth - motionParticles.get(particleIdx).segment[0].retWidth()/2 - maxDistance;
+            boolean isOutOfBoundsY = motionParticles.get(particleIdx).posY <= motionParticles.get(particleIdx).segment[0].retHeight()/2 + maxDistance || motionParticles.get(particleIdx).posY >= imgHeight - motionParticles.get(particleIdx).segment[0].retHeight()/2 - maxDistance;
+            boolean isOutOfBounds = isOutOfBoundsX || isOutOfBoundsY;
+
+            boolean removeParticle = !isAliveTracking || isOutOfBounds;
+            if (removeParticle) {
+                motionParticles.remove(particleIdx);
+            }
+        }
+    }
+
+    private void addMotionParticleAt(double posX, double posY, int size, PImage img) {
+        MotionParticle mp = new MotionParticle(posX, posY);
+        mp.segment = new Map2d[3];
+
+        for(int channelIdx=0;channelIdx<3;channelIdx++) {
+            Map2d segmentChannel = new Map2d(size, size);
+
+            double subimagePosX = posX - segmentChannel.retWidth()/2.0;
+            double subimagePosY = posY - segmentChannel.retHeight()/2.0;
+
+            for(int iy=0;iy<segmentChannel.retHeight();iy++) {
+                for(int ix=0;ix<segmentChannel.retWidth();ix++) {
+                    double samplePosX = subimagePosX+ix;
+                    double samplePosY = subimagePosY+iy;
+
+                    // TODO< sample it subpixel accurate >
+                    int samplePosXInt = (int)samplePosX;
+                    int samplePosYInt = (int)samplePosY;
+
+                    int colorcode =  img.pixels[samplePosYInt*img.width+samplePosXInt];
+                    //TODO check if the rgb is extracted correctly
+                    float r = (colorcode & 0xff) / 255.0f;
+                    float g = ((colorcode >> 8) & 0xFF) / 255.0f;
+                    float b = ((colorcode >> 8*2) & 0xFF) / 255.0f;
+
+
+                    float sampleValue = 0;
+                    if (channelIdx == 0) {
+                        sampleValue = r;
+                    }
+                    else if (channelIdx == 1) {
+                        sampleValue = g;
+                    }
+                    else if (channelIdx == 2) {
+                        sampleValue = b;
+                    }
+
+                    segmentChannel.writeAtSafe(iy, ix, sampleValue);
+                }
+            }
+
+            mp.segment[channelIdx] = segmentChannel;
+        }
+
+        motionParticles.add(mp);
+    }
+
     @Override
     public void draw() {
 
@@ -226,7 +392,7 @@ public class UnrealCrossing extends PApplet {
         }
         String nr = String.format("%05d", i);
         PImage img = loadImage(videopath+nr+".jpg"); //1 2 3 7
-        image(img, 0, 0);
+
 
 
         short[] imgGrayscale = new short[img.height*img.width]; // flattened grayscale image
@@ -249,6 +415,49 @@ public class UnrealCrossing extends PApplet {
 
         ConvCl.CachedImage cachedImage = new ConvCl.CachedImage();
         cachedImage.update(imgGrayscale, convCl.context); // send image to GPU
+
+
+        if (convolutions == null) {
+            // allocate
+            convolutions = new Map2d[Conv.kernels.length];
+            for(int idx=0;idx<convolutions.length;idx++) {
+                convolutions[idx] = new Map2d(img.height, img.width);
+            }
+        }
+
+
+        { // compute convolutions
+            // TODO< optimize and speed it up >
+
+            for(int kernelIdx=0;kernelIdx<Conv.kernels.length;kernelIdx++) {
+                Conv.KernelConf iKernel = Conv.kernels[kernelIdx];
+
+                int[] posXArr = new int[img.height*img.width];
+                int[] posYArr = new int[img.height*img.width];
+
+                // fill positions of the (same) kernel
+                int kernelsize = iKernel.precalculatedKernel.retHeight();
+                for(int iy=kernelsize;iy<img.height-kernelsize;iy++) {
+                    for(int ix=kernelsize;ix<img.width-kernelsize;ix++) {
+                        posXArr[iy*img.width + ix] = ix;
+                        posYArr[iy*img.width + ix] = iy;
+                    }
+                }
+
+                float[] convResultOfThisKernel = convCl.runConv(cachedImage, img.width, iKernel.precaculatedFlattenedKernel, iKernel.precalculatedKernel.retWidth(),  posXArr, posYArr,  posXArr.length);
+
+                // write result of convolution into map
+                for(int idx=0;idx<posXArr.length;idx++) {
+                    float val = convResultOfThisKernel[idx];
+                    convolutions[kernelIdx].writeAtUnsafe(posYArr[idx], posXArr[idx], val);
+                }
+            }
+        }
+
+
+        image(img, 0, 0);
+
+
 
 
 
@@ -298,6 +507,26 @@ public class UnrealCrossing extends PApplet {
             }
              */
 
+        }
+
+
+
+        double motionparticleMaxDistance = 8.0; // configuration - maximal distance a motion particle can travel
+        trackAndRemoveMotionparticles(motionparticleMaxDistance, img.width, img.height, img);
+
+        { // add new motion particles
+            int motionparticleSize = 12; // configuration - size of a motion particle
+
+            // we add the motion particles at positions which changed
+
+            int numberOfSpawnedMotionParticles = 1;
+
+            for(int i=0;i<numberOfSpawnedMotionParticles;i++) {
+                double spawnPosX = 16 + rng.nextDouble() * (img.width-16*2);
+                double spawnposY = 16 + rng.nextDouble() * (img.height-16*2);
+
+                addMotionParticleAt(spawnPosX, spawnposY, motionparticleSize, img);
+            }
         }
 
 
@@ -1155,6 +1384,14 @@ public class UnrealCrossing extends PApplet {
             text(iDebugCursor.text, (float)iDebugCursor.posX, (float)iDebugCursor.posY+20-5);
         }
 
+        boolean showMotionparticles = true;
+        if (showMotionparticles) {
+            fill(255);
+            stroke(0,0,0,0); // transparent
+            for(MotionParticle iMp : motionParticles) {
+                rect((int)iMp.posX, (int)iMp.posY, 3, 3);
+            }
+        }
 
 
 

@@ -107,8 +107,8 @@ public class RealCrossing extends PApplet {
         return s.replace("[", "").replace("]", "");
     }
     
-    public static String videopath="/mnt/sda1/Users/patha/Downloads/Test/Test/Test001/";
-    public static String trackletpath = "/home/tc/Dateien/CROSSING/Test001/";
+    public static String videopath = "S:\\win10host\\files\\nda\\traffic\\Test\\Test011\\";
+    public static String trackletpath = null;
     public static double movementThreshold = 10;
     
     @Override
@@ -124,6 +124,7 @@ public class RealCrossing extends PApplet {
         image(img, 0, 0);
         
         entities.clear(); //refresh
+        /*
         String tracklets = "";
         try {
             ///home/tc/Dateien/CROSSING/Test001/TKL00342.txt
@@ -166,6 +167,7 @@ public class RealCrossing extends PApplet {
             }
             
         }
+        */
         
         i++;
         
