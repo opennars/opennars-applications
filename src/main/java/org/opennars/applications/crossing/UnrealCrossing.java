@@ -25,7 +25,7 @@ package org.opennars.applications.crossing;
  */
 
 
-// TODO< remove NN's which classify all classes of a new added NN when a new NN is added >
+// TODO< classify with the most recent NN and fall back to older ones if it doesn't know >
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -41,10 +41,7 @@ import org.opennars.applications.gui.NarSimpleGUI;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ForkJoinPool;
-import java.util.concurrent.Future;
+import java.util.concurrent.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.opennars.io.events.Events;
@@ -164,8 +161,7 @@ public class UnrealCrossing extends PApplet {
 
 
 
-    ForkJoinPool pool = new ForkJoinPool(1);
-
+    ThreadPoolExecutor pool = (ThreadPoolExecutor)Executors.newFixedThreadPool(1);
 
 
     double spatialTrackletCatchDistance = 70.0; // configuration
@@ -1022,7 +1018,10 @@ public class UnrealCrossing extends PApplet {
             // add negatives to training by sampling random positions in the image
             // TODO< ensure that the image is different by computing the distance of the samples and checking it >
 
-            int nnClassifierNumberOfNegativeSamples = 20;
+            // TODO< store a global collection of negative images >
+
+            int nnClassifierNumberOfNegativeSamples = (int)(1.5*trainingTuples.size());
+            nnClassifierNumberOfNegativeSamples = Math.min(nnClassifierNumberOfNegativeSamples, 100);
 
             for(int iSampleCounter=0;iSampleCounter<nnClassifierNumberOfNegativeSamples;iSampleCounter++) {
                 int samplePosX = rng.nextInt(img.width - 64)+64;
@@ -1038,6 +1037,15 @@ public class UnrealCrossing extends PApplet {
 
             int trainedNumberOfClasses = negativeClassId+1;
 
+
+            enqueuedTrainingRunner.clear(); // flush because all others got outdated now
+
+            // send to pool for async training
+            NnTrainerRunner nnTrainingRunner = new NnTrainerRunner(trainingTuples);
+            nnTrainingRunner.positiveClasses = nnPositiveClasses; // set the classes for which it is training for
+            enqueuedTrainingRunner.add(nnTrainingRunner);
+
+            /*
             System.out.println("[d 2] queue training of NN with #classes=" + Integer.toString(trainedNumberOfClasses));
 
 
@@ -1047,9 +1055,10 @@ public class UnrealCrossing extends PApplet {
             Future<NnTrainerRunner> trainingtaskFuture = pool.submit(nnTrainingRunner);
             nnTrainingFutures.add(trainingtaskFuture);
 
-            System.out.println("[i 1] queue taskCount ="+Long.toString(pool.getQueuedSubmissionCount()));
+            System.out.println("[i 1] queue taskCount ="+Long.toString(pool.getTaskCount()));
 
             int here = 5;
+            */
         }
 
         // look for completed training of NN's and store them
@@ -1089,6 +1098,22 @@ public class UnrealCrossing extends PApplet {
         }
 
 
+        { // logic to fill the pool for training if it is empty
+
+            if (pool.getActiveCount() == 0 && enqueuedTrainingRunner.size() > 0) {
+                // pick first and train it
+                NnTrainerRunner firstEneuqued = enqueuedTrainingRunner.get(0);
+                enqueuedTrainingRunner.remove(0);
+
+                // send to pool for async training
+                Future<NnTrainerRunner> trainingtaskFuture = pool.submit(firstEneuqued);
+                nnTrainingFutures.add(trainingtaskFuture);
+            }
+
+            //System.out.println("[i 1] queue taskCount ="+Long.toString(pool.getTaskCount()));
+
+            int here = 5;
+        }
 
 
 
@@ -1126,6 +1151,8 @@ public class UnrealCrossing extends PApplet {
         //System.out.println("[d 1] Concepts: " + nar.memory.concepts.size());
     }
 
+
+
     // list of all classes we are using for training of the NN
     List<SampleData> nnSampleData = new ArrayList<>();
 
@@ -1146,6 +1173,8 @@ public class UnrealCrossing extends PApplet {
         public MultiLayerNetwork network;
     }
 
+    List<NnTrainerRunner> enqueuedTrainingRunner = new ArrayList<>();
+
     private static class NnTrainerRunner implements Callable<NnTrainerRunner> {
         private final List<NnPrototypeTrainer.TrainingTuple> trainingTuples;
 
@@ -1162,7 +1191,7 @@ public class UnrealCrossing extends PApplet {
         @Override
         public NnTrainerRunner call() throws Exception {
             trainer = new NnPrototypeTrainer();
-            trainer.nEpochs = 15;
+            trainer.nEpochs = 30;
 
             trainer.trainModel(trainingTuples);
 

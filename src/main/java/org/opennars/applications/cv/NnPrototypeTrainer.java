@@ -64,6 +64,8 @@ public class NnPrototypeTrainer {
         int numRows = 64;
         int numColumns = 64;
 
+        int hiddenNeurons = 40;
+
 
 
         Random rng2 = new Random(rngSeed2);
@@ -83,13 +85,13 @@ public class NnPrototypeTrainer {
             .nIn(numRows * numColumns * depthPerPixel)
             .activation(Activation.RELU) // Activation function.
             .weightInit(WeightInit.XAVIER) // Weight initialization.
-            .nOut(100)
+            .nOut(hiddenNeurons)
             .build())
 
 
 
                 .layer(new DenseLayer.Builder()
-                        .nIn(100) // Number of input datapoints.
+                        .nIn(hiddenNeurons) // Number of input datapoints.
                         .nOut(50) // Number of output datapoints.
                         .activation(Activation.RELU) // Activation function.
                         .weightInit(WeightInit.XAVIER) // Weight initialization.
