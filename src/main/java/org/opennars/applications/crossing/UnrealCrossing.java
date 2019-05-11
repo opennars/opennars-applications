@@ -24,8 +24,10 @@ package org.opennars.applications.crossing;
  * THE SOFTWARE.
  */
 
-
-// TODO< classify with the most recent NN and fall back to older ones if it doesn't know >
+// todo< convolution of full image >
+// todo< particles to track movement
+// todo  attention
+// todo  keep track of recent images to notice change
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -873,7 +875,8 @@ public class UnrealCrossing extends PApplet {
 
             float[] convResult = convolutionImg(img, cachedImage, (int)iSt.posX, (int)iSt.posY);
 
-            for(TrainedNn iTrainedNn : trainedNns) {
+            for(int iTrainedNnIdx=trainedNns.size()-1;iTrainedNnIdx>=0;iTrainedNnIdx--) {
+                TrainedNn iTrainedNn = trainedNns.get(iTrainedNnIdx);
 
                 INDArray arr = Nd4j.create(convResult);
                 INDArray result = iTrainedNn.network.activate(arr, Layer.TrainingMode.TEST);
@@ -907,6 +910,9 @@ public class UnrealCrossing extends PApplet {
                     bestClassificationProbability = highestPositiveClasssProbability;
                 }
 
+                if (highestPositiveClassIdx != -1) { // if it classified a positive class
+                    break; // then don't check any other older NN's because they are outdated anyways for this classification
+                }
 
 
                 int here = 5;
