@@ -16,21 +16,11 @@
 
 package org.opennars.applications.cv;
 
-import java.util.ArrayList;
-import java.util.List;
-
 public class SpatialTracklet {
     public double posX;
     public double posY;
     public long id;
-    public long idletime = 0;
-    public long notTrainedSince = Integer.MAX_VALUE;
-
-    // meta data - collected training samples of this class
-    public List<float[]> trainingDataOfThisClass = new ArrayList<>();
-
-    // decoration - classifier used for tracking this
-    public MultichannelProtoClassifier prototypeClassifier = null;
+    public long idletime; // used to despawn
 
     public SpatialTracklet(double posX, double posY, long id) {
         this.posX = posX;

@@ -89,46 +89,78 @@ public class ConvCl {
         }
     }
 
+    /**
+     * allocates the buffers for the positions
+     * (is relativly expensive)
+     * @param maxsize
+     */
+    public void allocateBuffersForPosition(int maxsize) {
+        posXBuf = context.createIntBuffer(CLMem.Usage.Input, maxsize);
+        posYBuf = context.createIntBuffer(CLMem.Usage.Input, maxsize);
+        outBuf = context.createFloatBuffer(CLMem.Usage.Output, maxsize);
+    }
+
+    public boolean areBuffersAllocated() {
+        return posXBuf != null;
+    }
+
+    CLBuffer<Integer> posXBuf, posYBuf;
+    CLBuffer<Float> outBuf;
+
     // method to run the convolution kernel on the GPU
-    public synchronized Pointer<Float> runConvKernel(CachedImage cachedImage, int imgWidth, FloatBuffer kernel, int kernelSize, IntBuffer posX, IntBuffer posY, int length) {
-        CLBuffer<Short> imgGrayscaleBuf = cachedImage.imgGrayscaleBuf;
-        CLBuffer<Float> kernelBuf = context.createFloatBuffer(CLMem.Usage.Input, kernel, true);
-        CLBuffer<Integer> posXBuf = context.createIntBuffer(CLMem.Usage.Input, posX, true);
-        CLBuffer<Integer> posYBuf = context.createIntBuffer(CLMem.Usage.Input, posY, true);
-
-
-        CLBuffer<Float> outBuf = context.createFloatBuffer(CLMem.Usage.Output, length);
-
-
+    // is a special method because it has to be syncronized because it is the only place where a single kernel is used
+    private synchronized CLEvent runConvKernelInner(CLBuffer<Short> imgGrayscaleBuf, int imgWidth, CLBuffer<Float> kernelBuf , int kernelSize, int length) {
         this.kernel.setArgs(
-            imgGrayscaleBuf,
-            imgWidth,
+                imgGrayscaleBuf,
+                imgWidth,
 
-            kernelBuf,
-            kernelSize,
+                kernelBuf,
+                kernelSize,
 
-            outBuf,
+                outBuf,
 
-            posXBuf,
-            posYBuf
+                posXBuf,
+                posYBuf
         );
 
-
-        // Ask for `length` parallel executions of the kernel in 1 dimension :
+        //  parallel executions of the kernel in 1 dimension
         CLEvent convEvent = this.kernel.enqueueNDRange(queue, new int[]{ length });
+        return convEvent;
+    }
 
-        // Return an NIO buffer read from the output CLBuffer :
+    // method to run the convolution kernel on the GPU
+    public Pointer<Float> runConvKernel(CachedImage cachedImage, int imgWidth, FloatBuffer kernel, int kernelSize, IntBuffer posX, IntBuffer posY, int length) {
+        CLBuffer<Short> imgGrayscaleBuf = cachedImage.imgGrayscaleBuf;
+
+        CLBuffer<Float> kernelBuf = context.createFloatBuffer(CLMem.Usage.Input, kernel, true);
+
+        long before = System.nanoTime();
+        CLEvent e0 = posXBuf.write(queue, 0, posX.capacity(), posX, false);
+        CLEvent e1 = posYBuf.write(queue, 0, posY.capacity(), posY, false);
+
+        queue.enqueueWaitForEvents(e0, e1);
+
+
+        CLEvent convEvent = runConvKernelInner(imgGrayscaleBuf, imgWidth, kernelBuf , kernelSize, length);
+
+        // Return an NIO buffer read from the output CLBuffer
         Pointer<Float> ptr = outBuf.read(queue, convEvent);
+        long after = System.nanoTime();
+        System.out.println(Long.toString((after-before)/1000));
+
         return ptr;
     }
 
     // Wrapper method that takes and returns float array
     public float[] runConv(CachedImage cachedImage,  int imgWidth, float[] kernel, int kernelSize, int[] posX, int[] posY, int length) {
         Pointer<Float> outBuffer = runConvKernel(cachedImage, imgWidth, FloatBuffer.wrap(kernel), kernelSize, IntBuffer.wrap(posX), IntBuffer.wrap(posY), length);
+        long before = System.nanoTime();
         float[] out = new float[length];
         for(int idx=0;idx<length;idx++) {
             out[idx]=outBuffer.get(idx);
         }
+        long after = System.nanoTime();
+        //System.out.println("readout time=" + Long.toString((after-before)/1000));
         return out;
     }
 

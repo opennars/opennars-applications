@@ -24,8 +24,12 @@ package org.opennars.applications.crossing;
  * THE SOFTWARE.
  */
 
-// todo< convolution of full image >
-// todo< particles to track movement
+
+// TODO< test if AdvancedSpatialTracklet is displayed fine >
+// TODO< propagate SpatialTracklet to AdvancedSpatialTracklet if a spatial tracklet is inside a bounding box >
+// TODO< removal of spatial advanced spatial tracklet after timeout >
+// TODO< test if AdvancedSpatialTracklet works fine and is used correctly for training data gathering & training >
+
 // todo  attention
 // todo  keep track of recent images to notice change
 
@@ -122,6 +126,7 @@ public class UnrealCrossing extends PApplet {
 
         convCl = new ConvCl();
 
+
     }
 
     List<Street> streets = new ArrayList<Street>();
@@ -185,6 +190,7 @@ public class UnrealCrossing extends PApplet {
 
 
     List<SpatialTracklet> spatialTracklets = new ArrayList<>();
+    List<AdvancedSpatialTracklet> advancedSpatialTracklets = new ArrayList<>();
     long trackletIdCounter = 1;
 
     PImage lastframe2 = null;
@@ -380,6 +386,9 @@ public class UnrealCrossing extends PApplet {
         motionParticles.add(mp);
     }
 
+    // pool used for all general work
+    ThreadPoolExecutor generalPool = (ThreadPoolExecutor)Executors.newFixedThreadPool(8);
+
     @Override
     public void draw() {
 
@@ -413,6 +422,12 @@ public class UnrealCrossing extends PApplet {
             }
         }
 
+
+        if (!convCl.areBuffersAllocated()) {
+            // allocate all buffers of the required size
+            convCl.allocateBuffersForPosition(img.width*img.height);
+        }
+
         ConvCl.CachedImage cachedImage = new ConvCl.CachedImage();
         cachedImage.update(imgGrayscale, convCl.context); // send image to GPU
 
@@ -427,8 +442,13 @@ public class UnrealCrossing extends PApplet {
 
 
         { // compute convolutions
+            long systemTimeBefore = System.nanoTime();
+
+            List<Future<?>> futures = new ArrayList<>();
+
             // TODO< optimize and speed it up >
 
+            /*
             for(int kernelIdx=0;kernelIdx<Conv.kernels.length;kernelIdx++) {
                 Conv.KernelConf iKernel = Conv.kernels[kernelIdx];
 
@@ -444,7 +464,10 @@ public class UnrealCrossing extends PApplet {
                     }
                 }
 
+                long systemTimeBefore2 = System.nanoTime();
                 float[] convResultOfThisKernel = convCl.runConv(cachedImage, img.width, iKernel.precaculatedFlattenedKernel, iKernel.precalculatedKernel.retWidth(),  posXArr, posYArr,  posXArr.length);
+                long systemTimeEnd2 = System.nanoTime();
+                System.out.println("   runConv() us="+Long.toString((systemTimeEnd2-systemTimeBefore2)/1000));
 
                 // write result of convolution into map
                 for(int idx=0;idx<posXArr.length;idx++) {
@@ -452,6 +475,47 @@ public class UnrealCrossing extends PApplet {
                     convolutions[kernelIdx].writeAtUnsafe(posYArr[idx], posXArr[idx], val);
                 }
             }
+            */
+            for(int kernelIdx=0;kernelIdx<Conv.kernels.length;kernelIdx++) {
+                final int kernelIdx2 = kernelIdx;
+                Future<?> f = generalPool.submit(() -> {
+                    Conv.KernelConf iKernel = Conv.kernels[kernelIdx2];
+
+                    int[] posXArr = new int[img.height * img.width];
+                    int[] posYArr = new int[img.height * img.width];
+
+                    // fill positions of the (same) kernel
+                    int kernelsize = iKernel.precalculatedKernel.retHeight();
+                    for (int iy = kernelsize; iy < img.height - kernelsize; iy++) {
+                        for (int ix = kernelsize; ix < img.width - kernelsize; ix++) {
+                            posXArr[iy * img.width + ix] = ix;
+                            posYArr[iy * img.width + ix] = iy;
+                        }
+                    }
+
+                    long systemTimeBefore2 = System.nanoTime();
+                    float[] convResultOfThisKernel = convCl.runConv(cachedImage, img.width, iKernel.precaculatedFlattenedKernel, iKernel.precalculatedKernel.retWidth(), posXArr, posYArr, posXArr.length);
+                    long systemTimeEnd2 = System.nanoTime();
+                    System.out.println("   runConv() us=" + Long.toString((systemTimeEnd2 - systemTimeBefore2) / 1000));
+
+                    // write result of convolution into map
+                    for (int idx = 0; idx < posXArr.length; idx++) {
+                        float val = convResultOfThisKernel[idx];
+                        convolutions[kernelIdx2].writeAtUnsafe(posYArr[idx], posXArr[idx], val);
+                    }
+                });
+                futures.add(f);
+            }
+
+            for(Future<?> iFuture: futures) {
+                while(!iFuture.isDone()){} // spin loop
+            }
+
+            long systemTimeEnd = System.nanoTime();
+
+            long systemTime = systemTimeEnd-systemTimeBefore; // in nanoseconds
+
+            System.out.println("us="+Long.toString(systemTime/1000));
         }
 
 
@@ -596,15 +660,18 @@ public class UnrealCrossing extends PApplet {
 
 
         // increment idletime of tracklets
-        for(SpatialTracklet iSt : spatialTracklets) {
+        for(AdvancedSpatialTracklet iSt : advancedSpatialTracklets) {
             iSt.idletime++;
             iSt.notTrainedSince++;
         }
+        for(SpatialTracklet iSt : spatialTracklets) {
+            iSt.idletime++;
+        }
 
         // remove old tracklets
-        for(int idx=spatialTracklets.size()-1;idx>=0;idx--) {
-            if (spatialTracklets.get(idx).idletime > 40) {
-                SpatialTracklet tracklet = spatialTracklets.get(idx);
+        for(int idx=advancedSpatialTracklets.size()-1;idx>=0;idx--) {
+            if (advancedSpatialTracklets.get(idx).idletime > 40) {
+                AdvancedSpatialTracklet tracklet = advancedSpatialTracklets.get(idx);
 
 
                 if( tracklet.trainingDataOfThisClass.size() > trackletMinimumTrainingSamples) {
@@ -621,6 +688,12 @@ public class UnrealCrossing extends PApplet {
                 }
 
 
+                advancedSpatialTracklets.remove(idx);
+            }
+        }
+
+        for(int idx=spatialTracklets.size()-1;idx>=0;idx--) {
+            if (spatialTracklets.get(idx).idletime > 40) {
                 spatialTracklets.remove(idx);
             }
         }
@@ -837,16 +910,12 @@ public class UnrealCrossing extends PApplet {
             }
 
 
-
-
-
             { // classification with one layer of Prototypes
                 objectPrototypeClassifier.minDistance = 7000.0f; //20.0f; //10.0f;
 
 
-
                 // manage and recatch spatial tracklets
-                for(RegionProposal iRegionProposal : regionProposals) {
+                for (RegionProposal iRegionProposal : regionProposals) {
                     int width = iRegionProposal.maxX - iRegionProposal.minX;
                     int height = iRegionProposal.maxY - iRegionProposal.minY;
 
@@ -855,10 +924,10 @@ public class UnrealCrossing extends PApplet {
 
 
                     boolean wasAnyTrackletRecaptured = false;
-                    for(SpatialTracklet iTracklet : spatialTracklets) {
+                    for (SpatialTracklet iTracklet : spatialTracklets) {
                         double diffX = iTracklet.posX - centerX;
                         double diffY = iTracklet.posY - centerY;
-                        double dist = Math.sqrt(diffX*diffX+diffY*diffY);
+                        double dist = Math.sqrt(diffX * diffX + diffY * diffY);
                         boolean inDist = dist < spatialTrackletCatchDistance;
                         if (inDist) {
                             wasAnyTrackletRecaptured = true;
@@ -876,12 +945,18 @@ public class UnrealCrossing extends PApplet {
                         SpatialTracklet st = new SpatialTracklet(centerX, centerY, trackletIdCounter);
                         trackletIdCounter++;
                         spatialTracklets.add(st);
+
+                        // spawn new advanced tracklet to capture it
+                        AdvancedSpatialTracklet advst = new AdvancedSpatialTracklet(centerX, centerY, trackletIdCounter);
+                        trackletIdCounter++;
+                        advancedSpatialTracklets.add(advst);
                     }
 
                 }
+            }
 
-
-
+            /* COMMENTED BECAUSE OUTDATED
+            {
                 for(RegionProposal iRegionProposal : regionProposals) {
                     int width = iRegionProposal.maxX-iRegionProposal.minX;
                     int height = iRegionProposal.maxY-iRegionProposal.minY;
@@ -897,37 +972,13 @@ public class UnrealCrossing extends PApplet {
 
                     float[] convResult = convolutionImg(img, cachedImage, centerX, centerY);
 
-                    /*{
-
-                        List<NnPrototypeTrainer.TrainingTuple> trainingTuples = new ArrayList<>();
-                        NnPrototypeTrainer.TrainingTuple trainingTuple = new NnPrototypeTrainer.TrainingTuple();
-                        trainingTuple.input = convResult;
-                        trainingTuple.class_ = 0;
-                        trainingTuples.add(trainingTuple);
-
-                        NnPrototypeTrainer.trainModel(trainingTuples);
-                    }*/
-
-
-                    //long classification = objectPrototypeClassifier.classify(convResult);
-
-                    //System.out.println("[d ] obj classification = " + Long.toString(classification));
-
-
-
-                    //DebugCursor dc = new DebugCursor();
-                    //dc.posX = (iRegionProposal.minX+iRegionProposal.maxX)/2;
-                    //dc.posY = (iRegionProposal.minY+iRegionProposal.maxY)/2;
-                    //dc.text = "OBJ class=" + Long.toString(classification);
-
-                    //debugCursors.add(dc);
 
 
                     // search best tracklet - the one which is in the region and has the most training samples to add it
-                    SpatialTracklet bestTracklet = null;
-                    for(SpatialTracklet iSt : spatialTracklets) {
-                        double diffX = iSt.posX - centerX;
-                        double diffY = iSt.posY - centerY;
+                    AdvancedSpatialTracklet bestTracklet = null;
+                    for(AdvancedSpatialTracklet iSt : advancedSpatialTracklets) {
+                        double diffX = iSt.centerX - centerX;
+                        double diffY = iSt.centerY - centerY;
 
                         boolean isInBound = Math.abs(diffX) < width/2 && Math.abs(diffY) < height/2;
                         if(!isInBound) {
@@ -951,6 +1002,7 @@ public class UnrealCrossing extends PApplet {
                 }
 
             }
+            */
 
 
 
@@ -1170,28 +1222,10 @@ public class UnrealCrossing extends PApplet {
 
 
 
-        for(SpatialTracklet ist : spatialTracklets) {
-            int posX = (int)ist.posX;
-            int posY = (int)ist.posY;
-
-            int crossRadius = 30;
-
-            boolean isRecent = ist.idletime < 5;
-
-            stroke(255,0,0, isRecent ? 255 : 80);
-            strokeWeight(2.0f);
-
-
-            line(posX-crossRadius,posY-crossRadius,posX+crossRadius,posY+crossRadius);
-            line(posX+crossRadius,posY-crossRadius,posX-crossRadius,posY+crossRadius);
-
-            fill(255,0,0);
-            text("st id="+Long.toString(ist.id) + " cnt=" +Integer.toString(ist.trainingDataOfThisClass.size()), (float)ist.posX, (float)ist.posY);
-        }
 
 
 
-        for(SpatialTracklet iSt : spatialTracklets) {
+        for(AdvancedSpatialTracklet iSt : advancedSpatialTracklets) {
             if (iSt.trainingDataOfThisClass.size() < 8 || iSt.notTrainedSince < 500) {
                 continue;
             }
@@ -1364,12 +1398,16 @@ public class UnrealCrossing extends PApplet {
 
 
         { // try to track spatial tracklet with prototypes
-            for(SpatialTracklet iSt : spatialTracklets) {
+            for(AdvancedSpatialTracklet iSt : advancedSpatialTracklets) {
+
+                //reset to default values
+                iSt.prototypeCenterX = -1;
+                iSt.prototypeCenterY = -1;
 
                 // look for overlapping region proposals
                 RegionProposal bestOverlappingRegionProposal = null;
                 for (RegionProposal iRegionProposal : regionProposals) {
-                    if (iRegionProposal.minX < iSt.posX && iRegionProposal.maxX > iSt.posX && iRegionProposal.minY < iSt.posY && iRegionProposal.maxY > iSt.posY) {
+                    if (iRegionProposal.minX < iSt.centerX && iRegionProposal.maxX > iSt.centerX && iRegionProposal.minY < iSt.centerY && iRegionProposal.maxY > iSt.centerY) {
                         bestOverlappingRegionProposal = iRegionProposal;// just take any
                     }
                 }
@@ -1384,7 +1422,7 @@ public class UnrealCrossing extends PApplet {
                         iSt.prototypeClassifier = new MultichannelProtoClassifier();
 
                         // (*) add sample
-                        long class_ = iSt.prototypeClassifier.classifyAt((int)iSt.posX, (int)iSt.posY, width, height, true, img);
+                        long class_ = iSt.prototypeClassifier.classifyAt((int)iSt.centerX, (int)iSt.centerY, width, height, true, img);
 
                         int debugHere = 5;
                     }
@@ -1402,16 +1440,27 @@ public class UnrealCrossing extends PApplet {
                         // TODO< optimize by searching with a stepsize of 2 and then searching for the best pixel again >
                         for(int dy=-prototypeSearchDistance;dy<prototypeSearchDistance;dy++) {
                             for(int dx=-prototypeSearchDistance;dx<prototypeSearchDistance;dx++) {
-                                iSt.prototypeClassifier.classifyAt((int)iSt.posX + dx, (int)iSt.posY + dy, width, height, false, img);
+                                iSt.prototypeClassifier.classifyAt((int)iSt.centerX + dx, (int)iSt.centerY + dy, width, height, false, img);
                                 float classificationDistance = iSt.prototypeClassifier.classificationLastDistance;
 
                                 if (classificationDistance < bestClassificationDistance) {
                                     bestClassificationDistance = classificationDistance;
-                                    bestPositionX = (int)iSt.posX + dx;
-                                    bestPositionY = (int)iSt.posY + dy;
+                                    bestPositionX = (int)iSt.centerX + dx;
+                                    bestPositionY = (int)iSt.centerY + dy;
                                 }
                             }
                         }
+
+                        // (*) set information for advanced spatial tracklet
+                        if (bestClassificationDistance < Float.POSITIVE_INFINITY) {
+                            iSt.prototypeCenterX = bestPositionX;
+                            iSt.prototypeCenterY = bestPositionY;
+
+                            // set position to the position where the prototype was found, because the old center may be a first guess or the old position of the old found prototype
+                            iSt.centerX = bestPositionX;
+                            iSt.centerY = bestPositionY;
+                        }
+
 
                         { // add debug cursor
                             if (bestClassificationDistance < Float.POSITIVE_INFINITY) {
@@ -1420,23 +1469,117 @@ public class UnrealCrossing extends PApplet {
                                 dc.posX = bestPositionX;
                                 dc.posY = bestPositionY;
                                 debugCursors.add(dc);
-
-                                DebugCursor dc2 = new DebugCursor();
-                                dc2.text = "PROTOTYPE BEST FOUND FOR";
-                                dc2.posX = (int)iSt.posX;
-                                dc2.posY = (int)iSt.posY;
-                                debugCursors.add(dc2);
                             }
                         }
-
-
-                        // (*) set the tracklet to the best position
-                        // TODO TODO TODO TODO TODO TODO
                     }
                 }
             }
         }
 
+        { // store training sample
+            for(RegionProposal iRegionProposal : regionProposals) {
+                int width = iRegionProposal.maxX-iRegionProposal.minX;
+                int height = iRegionProposal.maxY-iRegionProposal.minY;
+
+                if(false)   System.out.println("[d ] width="+Integer.toString(iRegionProposal.maxX-iRegionProposal.minX) + " height="+Integer.toString(iRegionProposal.maxY-iRegionProposal.minY));
+
+                if (width<80 && height<80) {
+                    continue; // we are just interested in cars
+                }
+
+                int regionCenterX = iRegionProposal.minX + 128/2;
+                int regionCenterY = iRegionProposal.minY + 128/2;
+
+
+
+
+
+                // search best tracklet - the one which is in the region, has an identified prototype, and has the most training samples to add it
+                AdvancedSpatialTracklet bestTracklet = null;
+                for(AdvancedSpatialTracklet iSt : advancedSpatialTracklets) {
+                    if (iSt.prototypeCenterX == -1) {
+                        continue; // ignore because we need one with a identified prototype
+                    }
+
+                    double diffX = iSt.centerX - regionCenterX;
+                    double diffY = iSt.centerY - regionCenterY;
+
+                    boolean isInBound = Math.abs(diffX) < width/2 && Math.abs(diffY) < height/2;
+                    if(!isInBound) {
+                        continue;
+                    }
+
+                    if(bestTracklet == null) {
+                        bestTracklet = iSt;
+                        continue;
+                    }
+
+                    if(iSt.trainingDataOfThisClass.size() > bestTracklet.trainingDataOfThisClass.size()) {
+                        bestTracklet = iSt;
+                    }
+                }
+
+
+
+
+                if (bestTracklet != null) {
+                    float[] convResult = convolutionImg(img, cachedImage, (int)bestTracklet.prototypeCenterX, (int)bestTracklet.prototypeCenterY);
+
+                    bestTracklet.trainingDataOfThisClass.add(convResult);
+                }
+
+            }
+
+        }
+
+
+
+
+
+        for(SpatialTracklet ist : spatialTracklets) {
+            int posX = (int)ist.posX;
+            int posY = (int)ist.posY;
+
+            int crossRadius = 15;
+
+            boolean isRecent = ist.idletime < 5;
+
+            stroke(0,255,0, isRecent ? 255 : 80);
+            strokeWeight(2.0f);
+
+
+            line(posX-crossRadius,posY-crossRadius,posX+crossRadius,posY+crossRadius);
+            line(posX+crossRadius,posY-crossRadius,posX-crossRadius,posY+crossRadius);
+
+        }
+
+        for(AdvancedSpatialTracklet iSt : advancedSpatialTracklets) {
+            int posX = (int)iSt.centerX;
+            int posY = (int)iSt.centerY;
+
+            int crossRadius = 30;
+
+            boolean isRecent = iSt.idletime < 5;
+
+            stroke(255,0,0, isRecent ? 255 : 80);
+            strokeWeight(2.0f);
+
+
+            line(posX-crossRadius,posY-crossRadius,posX+crossRadius,posY+crossRadius);
+            line(posX+crossRadius,posY-crossRadius,posX-crossRadius,posY+crossRadius);
+
+            fill(255,0,0);
+            text("st id="+Long.toString(iSt.id) + " cnt=" +Integer.toString(iSt.trainingDataOfThisClass.size()), (float)iSt.centerX, (float)iSt.centerY);
+
+
+            if (iSt.prototypeCenterX != -1 && iSt.prototypeCenterY != -1) {
+                DebugCursor dc2 = new DebugCursor();
+                dc2.text = "PROTOTYPE BEST FOUND";
+                dc2.posX = (int)iSt.prototypeCenterX;
+                dc2.posY = (int)iSt.prototypeCenterY;
+                debugCursors.add(dc2);
+            }
+        }
 
 
         for (DebugCursor iDebugCursor : debugCursors) {
