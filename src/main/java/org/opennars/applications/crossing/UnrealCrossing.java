@@ -446,40 +446,15 @@ public class UnrealCrossing extends PApplet {
 
             List<Future<?>> futures = new ArrayList<>();
 
-            // TODO< optimize and speed it up >
 
-            /*
-            for(int kernelIdx=0;kernelIdx<Conv.kernels.length;kernelIdx++) {
-                Conv.KernelConf iKernel = Conv.kernels[kernelIdx];
 
-                int[] posXArr = new int[img.height*img.width];
-                int[] posYArr = new int[img.height*img.width];
-
-                // fill positions of the (same) kernel
-                int kernelsize = iKernel.precalculatedKernel.retHeight();
-                for(int iy=kernelsize;iy<img.height-kernelsize;iy++) {
-                    for(int ix=kernelsize;ix<img.width-kernelsize;ix++) {
-                        posXArr[iy*img.width + ix] = ix;
-                        posYArr[iy*img.width + ix] = iy;
-                    }
-                }
-
-                long systemTimeBefore2 = System.nanoTime();
-                float[] convResultOfThisKernel = convCl.runConv(cachedImage, img.width, iKernel.precaculatedFlattenedKernel, iKernel.precalculatedKernel.retWidth(),  posXArr, posYArr,  posXArr.length);
-                long systemTimeEnd2 = System.nanoTime();
-                System.out.println("   runConv() us="+Long.toString((systemTimeEnd2-systemTimeBefore2)/1000));
-
-                // write result of convolution into map
-                for(int idx=0;idx<posXArr.length;idx++) {
-                    float val = convResultOfThisKernel[idx];
-                    convolutions[kernelIdx].writeAtUnsafe(posYArr[idx], posXArr[idx], val);
-                }
-            }
-            */
             for(int kernelIdx=0;kernelIdx<Conv.kernels.length;kernelIdx++) {
                 final int kernelIdx2 = kernelIdx;
                 Future<?> f = generalPool.submit(() -> {
                     Conv.KernelConf iKernel = Conv.kernels[kernelIdx2];
+
+                    // TODO< optimize and speed it up
+                    //       we really don't need to upload all positions because we do the convolution for the complete image >
 
                     int[] posXArr = new int[img.height * img.width];
                     int[] posYArr = new int[img.height * img.width];
@@ -954,63 +929,6 @@ public class UnrealCrossing extends PApplet {
 
                 }
             }
-
-            /* COMMENTED BECAUSE OUTDATED
-            {
-                for(RegionProposal iRegionProposal : regionProposals) {
-                    int width = iRegionProposal.maxX-iRegionProposal.minX;
-                    int height = iRegionProposal.maxY-iRegionProposal.minY;
-
-                    if(false)   System.out.println("[d ] width="+Integer.toString(iRegionProposal.maxX-iRegionProposal.minX) + " height="+Integer.toString(iRegionProposal.maxY-iRegionProposal.minY));
-
-                    if (width<80 && height<80) {
-                        continue; // we are just interested in cars
-                    }
-
-                    int centerX = iRegionProposal.minX + 128/2;
-                    int centerY = iRegionProposal.minY + 128/2;
-
-                    float[] convResult = convolutionImg(img, cachedImage, centerX, centerY);
-
-
-
-                    // search best tracklet - the one which is in the region and has the most training samples to add it
-                    AdvancedSpatialTracklet bestTracklet = null;
-                    for(AdvancedSpatialTracklet iSt : advancedSpatialTracklets) {
-                        double diffX = iSt.centerX - centerX;
-                        double diffY = iSt.centerY - centerY;
-
-                        boolean isInBound = Math.abs(diffX) < width/2 && Math.abs(diffY) < height/2;
-                        if(!isInBound) {
-                            continue;
-                        }
-
-                        if(bestTracklet == null) {
-                            bestTracklet = iSt;
-                            continue;
-                        }
-
-                        if(iSt.trainingDataOfThisClass.size() > bestTracklet.trainingDataOfThisClass.size()) {
-                            bestTracklet = iSt;
-                        }
-                    }
-
-                    if (bestTracklet != null) {
-                        bestTracklet.trainingDataOfThisClass.add(convResult);
-                    }
-
-                }
-
-            }
-            */
-
-
-
-
-
-
-
-
         }
 
         entities.clear(); //refresh
