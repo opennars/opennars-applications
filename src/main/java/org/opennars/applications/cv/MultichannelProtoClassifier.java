@@ -29,8 +29,19 @@ public class MultichannelProtoClassifier {
 
     public float classificationLastDistance = Float.POSITIVE_INFINITY;
 
+    public boolean hasPrototypes() {
+        return prototypes.size() > 0;
+    }
+
+    public int retPrototypeWidth() {
+        return prototypes.get(0).channels[0].retWidth();
+    }
+    public int retPrototypeHeight() {
+        return prototypes.get(0).channels[0].retHeight();
+    }
+
     // position is center of prototype to classify or add
-    public long classifyAt(int posX, int posY, int prototypeWidth, int prototypeHeight, boolean addNewPrototype, PImage img) {
+    public long classifyAt(int posX, int posY, PImage img) {
         classificationLastDistance = Float.POSITIVE_INFINITY;
 
         long class_ = -1;
@@ -43,16 +54,8 @@ public class MultichannelProtoClassifier {
             }
         }
 
-        if(classificationLastDistance > maxDistance && addNewPrototype) {
-            MultichannelPrototype createdPrototype = createNewPrototypeAt(posX, posY, prototypeWidth, prototypeHeight, img);
-            if (createdPrototype == null) {
-                classificationLastDistance = Float.POSITIVE_INFINITY;
-            }
-
-            if (createdPrototype != null) {
-                class_ = createdPrototype.class_;
-                prototypes.add(createdPrototype);
-            }
+        if(classificationLastDistance > maxDistance) {
+            class_ = -1;
         }
 
         return class_;
@@ -97,5 +100,19 @@ public class MultichannelProtoClassifier {
         }
 
         return created;
+    }
+
+    public long forceAddPrototype(int centerX, int centerY, int width, int height, PImage img) {
+        long class_ = -1;
+        classificationLastDistance = Float.POSITIVE_INFINITY;
+
+        MultichannelPrototype createdPrototype = createNewPrototypeAt(centerX, centerY, width, height, img);
+
+        if (createdPrototype != null) {
+            class_ = createdPrototype.class_;
+            prototypes.add(createdPrototype);
+        }
+
+        return class_;
     }
 }

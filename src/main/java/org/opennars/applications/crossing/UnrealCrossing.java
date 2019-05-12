@@ -1314,6 +1314,54 @@ public class UnrealCrossing extends PApplet {
         }
 
 
+        { // try to enlarge prototypes
+            // we do this because the (proto)objects may be very small when they are first detected
+
+            for(AdvancedSpatialTracklet iSt : advancedSpatialTracklets) {
+
+                // look for overlapping region proposals
+                RegionProposal bestOverlappingRegionProposal = null;
+                for (RegionProposal iRegionProposal : regionProposals) {
+                    if (iRegionProposal.minX < iSt.centerX && iRegionProposal.maxX > iSt.centerX && iRegionProposal.minY < iSt.centerY && iRegionProposal.maxY > iSt.centerY) {
+                        bestOverlappingRegionProposal = iRegionProposal;// just take any
+                    }
+                }
+
+                if (bestOverlappingRegionProposal != null) {
+                    int thisRegionProposalWidth = bestOverlappingRegionProposal.maxX - bestOverlappingRegionProposal.minX;
+                    int thisRegionProposalheight = bestOverlappingRegionProposal.maxY - bestOverlappingRegionProposal.minY;
+
+                    if (iSt.prototypeClassifier != null && iSt.prototypeClassifier.hasPrototypes()) {
+
+                        // do we need to enlarge it?
+                        int areaOfThisRegionProposal = thisRegionProposalWidth*thisRegionProposalheight;
+
+                        int areaOfPrototypes = iSt.prototypeClassifier.retPrototypeWidth()*iSt.prototypeClassifier.retPrototypeHeight();
+
+                        boolean needToEnlarge = areaOfThisRegionProposal > areaOfPrototypes * 1.1; // multiply with 1.1 as factor to ensure that we don't enlarge always
+                        if (needToEnlarge) {
+                            // create prototype classifier and add sample
+
+                            iSt.prototypeClassifier = new MultichannelProtoClassifier();
+
+                            // (*) add sample
+                            long class_ = iSt.prototypeClassifier.forceAddPrototype((int)iSt.centerX, (int)iSt.centerY, thisRegionProposalWidth, thisRegionProposalheight, img);
+
+
+                            { // add debug cursor
+                                DebugCursor dc = new DebugCursor();
+                                dc.text = "PROTOTYPE ENLARGED";
+                                dc.posX = iSt.centerX;
+                                dc.posY = iSt.centerY;
+                                debugCursors.add(dc);
+                            }
+                        }
+
+
+                    }
+                }
+            }
+        }
 
         { // try to track spatial tracklet with prototypes
             for(AdvancedSpatialTracklet iSt : advancedSpatialTracklets) {
@@ -1340,7 +1388,7 @@ public class UnrealCrossing extends PApplet {
                         iSt.prototypeClassifier = new MultichannelProtoClassifier();
 
                         // (*) add sample
-                        long class_ = iSt.prototypeClassifier.classifyAt((int)iSt.centerX, (int)iSt.centerY, width, height, true, img);
+                        long class_ = iSt.prototypeClassifier.forceAddPrototype((int)iSt.centerX, (int)iSt.centerY, width, height, img);
 
                         int debugHere = 5;
                     }
@@ -1358,7 +1406,7 @@ public class UnrealCrossing extends PApplet {
                         // TODO< optimize by searching with a stepsize of 2 and then searching for the best pixel again >
                         for(int dy=-prototypeSearchDistance;dy<prototypeSearchDistance;dy++) {
                             for(int dx=-prototypeSearchDistance;dx<prototypeSearchDistance;dx++) {
-                                iSt.prototypeClassifier.classifyAt((int)iSt.centerX + dx, (int)iSt.centerY + dy, width, height, false, img);
+                                iSt.prototypeClassifier.classifyAt((int)iSt.centerX + dx, (int)iSt.centerY + dy, img);
                                 float classificationDistance = iSt.prototypeClassifier.classificationLastDistance;
 
                                 if (classificationDistance < bestClassificationDistance) {
