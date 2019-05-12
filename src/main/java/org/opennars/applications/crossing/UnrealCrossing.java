@@ -1387,11 +1387,6 @@ public class UnrealCrossing extends PApplet {
 
         { // try to track spatial tracklet with prototypes
             for(AdvancedSpatialTracklet iSt : advancedSpatialTracklets) {
-
-                if (iSt.centerY > 550.0) {
-                    continue; // ignore for debugging
-                }
-
                 //reset to default values
                 iSt.prototypeCenterX = -1;
                 iSt.prototypeCenterY = -1;
@@ -1446,7 +1441,7 @@ public class UnrealCrossing extends PApplet {
 
                         // for this we search for the prototype and pick the best position
 
-                        int prototypeSearchDistance = 80;//;40;//20; // distance in pixels for the search of the same prototype
+                        int prototypeSearchDistance = 20;//;40;//20; // distance in pixels for the search of the same prototype
 
                         int bestPositionX = 0;
                         int bestPositionY = 0;
@@ -1454,7 +1449,7 @@ public class UnrealCrossing extends PApplet {
 
                         // TODO< fearch for a pixel distance of 2 inside >
                         // search around old center
-                        /* commented for testing
+                        //* commented for testing
                         for(int dy=-prototypeSearchDistance;dy<prototypeSearchDistance;dy+=2) {
                             for(int dx=-prototypeSearchDistance;dx<prototypeSearchDistance;dx+=2) {
                                 iSt.prototypeClassifier.classifyAt((int)iSt.centerX + dx, (int)iSt.centerY + dy, img);
@@ -1467,12 +1462,12 @@ public class UnrealCrossing extends PApplet {
                                 }
                             }
                         }
-                        */
+                        //*/
 
                         // TODO< fearch for a pixel distance of 2 inside >
                         // search in region proposal
-                        for(int dy=-prototypeSearchDistance;dy<prototypeSearchDistance;dy+=2) {
-                            for(int dx=-prototypeSearchDistance;dx<prototypeSearchDistance;dx+=2) {
+                        for(int dy=-prototypeSearchDistance;dy<prototypeSearchDistance;dy+=3) {
+                            for(int dx=-prototypeSearchDistance;dx<prototypeSearchDistance;dx+=3) {
                                 iSt.prototypeClassifier.classifyAt((int)regionProposalCenterX + dx, (int)regionProposalCenterY + dy, img);
                                 float classificationDistance = iSt.prototypeClassifier.classificationLastDistance;
 
