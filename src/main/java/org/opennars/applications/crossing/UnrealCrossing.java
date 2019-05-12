@@ -1385,6 +1385,9 @@ public class UnrealCrossing extends PApplet {
             }
         }
 
+        // overall time of the search for prototypes in this frame
+        long overalltimePrototypeSearchInNs = 0;
+
         { // try to track spatial tracklet with prototypes
             for(AdvancedSpatialTracklet iSt : advancedSpatialTracklets) {
                 //reset to default values
@@ -1447,11 +1450,14 @@ public class UnrealCrossing extends PApplet {
                         int bestPositionY = 0;
                         float bestClassificationDistance = Float.POSITIVE_INFINITY;
 
+                        long timeStartInNs = System.nanoTime();
+
                         // TODO< fearch for a pixel distance of 2 inside >
                         // search around old center
-                        //* commented for testing
-                        for(int dy=-prototypeSearchDistance;dy<prototypeSearchDistance;dy+=2) {
-                            for(int dx=-prototypeSearchDistance;dx<prototypeSearchDistance;dx+=2) {
+                        /* commented because not necessary
+                        for(int dy=-prototypeSearchDistance;dy<prototypeSearchDistance;dy+=3) {
+
+                            for(int dx=-prototypeSearchDistance;dx<prototypeSearchDistance;dx+=3) {
                                 iSt.prototypeClassifier.classifyAt((int)iSt.centerX + dx, (int)iSt.centerY + dy, img);
                                 float classificationDistance = iSt.prototypeClassifier.classificationLastDistance;
 
@@ -1467,7 +1473,10 @@ public class UnrealCrossing extends PApplet {
                         // TODO< fearch for a pixel distance of 2 inside >
                         // search in region proposal
                         for(int dy=-prototypeSearchDistance;dy<prototypeSearchDistance;dy+=3) {
-                            for(int dx=-prototypeSearchDistance;dx<prototypeSearchDistance;dx+=3) {
+                            boolean offsetXCoordinate = (dy % 2) == 0; // do we offset the x coordinate? to reduce the overall distance
+                            int startX = -prototypeSearchDistance + (offsetXCoordinate?3/2:0);
+
+                            for(int dx=startX;dx<prototypeSearchDistance;dx+=3) {
                                 iSt.prototypeClassifier.classifyAt((int)regionProposalCenterX + dx, (int)regionProposalCenterY + dy, img);
                                 float classificationDistance = iSt.prototypeClassifier.classificationLastDistance;
 
@@ -1478,6 +1487,9 @@ public class UnrealCrossing extends PApplet {
                                 }
                             }
                         }
+
+                        long timeEndInNs = System.nanoTime();
+                        overalltimePrototypeSearchInNs += (timeEndInNs-timeStartInNs); // add up time
 
 
 
@@ -1661,6 +1673,12 @@ public class UnrealCrossing extends PApplet {
             for(MotionParticle iMp : motionParticles) {
                 rect((int)iMp.posX, (int)iMp.posY, 3, 3);
             }
+        }
+
+        boolean showStats = true; // show system statistics
+        if (showStats) {
+            fill(0);
+            text("prototype search us="+(overalltimePrototypeSearchInNs/1000), 0, 0*15+15);
         }
 
 
