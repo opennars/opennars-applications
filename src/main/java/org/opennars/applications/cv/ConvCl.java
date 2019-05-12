@@ -146,7 +146,7 @@ public class ConvCl {
         // Return an NIO buffer read from the output CLBuffer
         Pointer<Float> ptr = outBuf.read(queue, convEvent);
         long after = System.nanoTime();
-        System.out.println(Long.toString((after-before)/1000));
+        //System.out.println(Long.toString((after-before)/1000));
 
         return ptr;
     }

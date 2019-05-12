@@ -25,7 +25,7 @@ public class MultichannelProtoClassifier {
 
     public long classCounter = 1;
 
-    public float maxDistance = 0;
+    public float maxDistance = Float.POSITIVE_INFINITY;//100000000000.0f;
 
     public float classificationLastDistance = Float.POSITIVE_INFINITY;
 

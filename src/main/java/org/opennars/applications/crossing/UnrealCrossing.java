@@ -37,7 +37,6 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 
-import com.sun.jna.platform.win32.WinBase;
 import org.deeplearning4j.nn.api.Layer;
 import org.deeplearning4j.nn.multilayer.MultiLayerNetwork;
 import org.nd4j.linalg.api.ndarray.INDArray;
@@ -126,6 +125,11 @@ public class UnrealCrossing extends PApplet {
 
         convCl = new ConvCl();
 
+        // setup view
+        viewport.difx = -480.0f;
+        viewport.dify = -400.0f;
+
+
 
     }
 
@@ -141,7 +145,7 @@ public class UnrealCrossing extends PApplet {
 
     String questions = "<trafficLight --> [?whatColor]>? :|:";
     int perception_update = 1;
-    int i = 2;
+    int frameIdx = 2;
 
     public String unwrap(String s) {
         return s.replace("[", "").replace("]", "");
@@ -391,7 +395,28 @@ public class UnrealCrossing extends PApplet {
 
     @Override
     public void draw() {
+        if (false) {
+            try {
+                Thread.sleep(2000);
+            } catch (InterruptedException e) {
+            }
+        }
 
+
+        if (frameIdx > Integer.MAX_VALUE) {
+            // soft reset
+
+            System.out.println("SOFT RESET");
+            System.out.println("");
+
+
+            frameIdx = 1;
+            motionParticles.clear();
+            attentionField = null;
+            advancedSpatialTracklets.clear();
+            spatialTracklets.clear();
+            lastframe2 = null;
+        }
 
         viewport.Transform();
         background(64,128,64);
@@ -399,7 +424,7 @@ public class UnrealCrossing extends PApplet {
         for (Street s : streets) {
             s.draw(this);
         }
-        String nr = String.format("%05d", i);
+        String nr = String.format("%05d", frameIdx);
         PImage img = loadImage(videopath+nr+".jpg"); //1 2 3 7
 
 
@@ -471,7 +496,7 @@ public class UnrealCrossing extends PApplet {
                     long systemTimeBefore2 = System.nanoTime();
                     float[] convResultOfThisKernel = convCl.runConv(cachedImage, img.width, iKernel.precaculatedFlattenedKernel, iKernel.precalculatedKernel.retWidth(), posXArr, posYArr, posXArr.length);
                     long systemTimeEnd2 = System.nanoTime();
-                    System.out.println("   runConv() us=" + Long.toString((systemTimeEnd2 - systemTimeBefore2) / 1000));
+                    //System.out.println("   runConv() us=" + Long.toString((systemTimeEnd2 - systemTimeBefore2) / 1000));
 
                     // write result of convolution into map
                     for (int idx = 0; idx < posXArr.length; idx++) {
@@ -490,7 +515,7 @@ public class UnrealCrossing extends PApplet {
 
             long systemTime = systemTimeEnd-systemTimeBefore; // in nanoseconds
 
-            System.out.println("us="+Long.toString(systemTime/1000));
+            //System.out.println("us="+Long.toString(systemTime/1000));
         }
 
 
@@ -805,8 +830,8 @@ public class UnrealCrossing extends PApplet {
 
                     Sdr[][] sdrImg = new Sdr[sdrImageHeight][sdrImageWidth];
                     for(int j=0;j<sdrImg.length;j++) {
-                        for(int i=0;i<sdrImageWidth;i++) {
-                            sdrImg[j][i] = Sdr.makeNull(sdrAllocator.sdrSize);
+                        for(int frameIdx=0;frameIdx<sdrImageWidth;frameIdx++) {
+                            sdrImg[j][frameIdx] = Sdr.makeNull(sdrAllocator.sdrSize);
                         }
                     }
 
@@ -822,8 +847,8 @@ public class UnrealCrossing extends PApplet {
                     Sdr foldedSdr = Sdr.makeNull(sizeOfSdr);
                     {
                         for(int j=0;j<sdrImg.length;j++) {
-                            for(int i=0;i<sdrImg[j].length;i++) {
-                                Sdr pixelSdr = sdrImg[j][i];
+                            for(int frameIdx=0;frameIdx<sdrImg[j].length;frameIdx++) {
+                                Sdr pixelSdr = sdrImg[j][frameIdx];
 
                                 Sdr permutedFoldedSdr = foldedSdr.permutate(foldImagesPerm);
                                 foldedSdr = Sdr.union(permutedFoldedSdr, pixelSdr);
@@ -868,9 +893,6 @@ public class UnrealCrossing extends PApplet {
                     //entities.add(new Car(id, iRegionProposal.minX + width/2, iRegionProposal.minY + height/2, 0, 0));
                 }
 
-
-
-                i++;
 
                 if (t % perception_update == 0) {
                     boolean hadInput = false;
@@ -980,7 +1002,7 @@ public class UnrealCrossing extends PApplet {
         }
 
 
-        i++;
+        frameIdx++;
 
         if (t % perception_update == 0) {
             boolean hadInput = false;
@@ -1253,7 +1275,7 @@ public class UnrealCrossing extends PApplet {
             Future<NnTrainerRunner> trainingtaskFuture = pool.submit(nnTrainingRunner);
             nnTrainingFutures.add(trainingtaskFuture);
 
-            System.out.println("[i 1] queue taskCount ="+Long.toString(pool.getTaskCount()));
+            System.out.println("[frameIdx 1] queue taskCount ="+Long.toString(pool.getTaskCount()));
 
             int here = 5;
             */
@@ -1308,7 +1330,7 @@ public class UnrealCrossing extends PApplet {
                 nnTrainingFutures.add(trainingtaskFuture);
             }
 
-            //System.out.println("[i 1] queue taskCount ="+Long.toString(pool.getTaskCount()));
+            //System.out.println("[frameIdx 1] queue taskCount ="+Long.toString(pool.getTaskCount()));
 
             int here = 5;
         }
@@ -1366,6 +1388,10 @@ public class UnrealCrossing extends PApplet {
         { // try to track spatial tracklet with prototypes
             for(AdvancedSpatialTracklet iSt : advancedSpatialTracklets) {
 
+                if (iSt.centerY > 550.0) {
+                    continue; // ignore for debugging
+                }
+
                 //reset to default values
                 iSt.prototypeCenterX = -1;
                 iSt.prototypeCenterY = -1;
@@ -1378,9 +1404,22 @@ public class UnrealCrossing extends PApplet {
                     }
                 }
 
+                if (bestOverlappingRegionProposal == null) {
+                    { // debug
+                        fill(0,0,0);
+                        text("NULL   x="+(int) iSt.centerX + " y="+(int) iSt.centerY, (float)iSt.centerX, (float)iSt.centerY);
+                    }
+                }
+
                 if (bestOverlappingRegionProposal != null) {
                     int width = bestOverlappingRegionProposal.maxX - bestOverlappingRegionProposal.minX;
                     int height = bestOverlappingRegionProposal.maxY - bestOverlappingRegionProposal.minY;
+
+                    double regionProposalCenterX = bestOverlappingRegionProposal.minX + width/2.0;
+                    double regionProposalCenterY = bestOverlappingRegionProposal.minY + height/2.0;
+
+                    fill(0,0,0);
+                    text("C", (float)regionProposalCenterX, (float)regionProposalCenterY);
 
                     if (iSt.prototypeClassifier == null) {
                         // create prototype classifier and add sample
@@ -1391,21 +1430,33 @@ public class UnrealCrossing extends PApplet {
                         long class_ = iSt.prototypeClassifier.forceAddPrototype((int)iSt.centerX, (int)iSt.centerY, width, height, img);
 
                         int debugHere = 5;
+
+                        { // debug
+                            fill(0,0,0);
+                            text("RESET  x="+(int) iSt.centerX + " y="+(int) iSt.centerY, (float)iSt.centerX, (float)iSt.centerY);
+                        }
                     }
                     else {
                         // track with classifier
 
+                        { // debug
+                            fill(0,0,0);
+                            text("PROTO  x="+(int) iSt.centerX + " y="+(int) iSt.centerY, (float)iSt.centerX, (float)iSt.centerY);
+                        }
+
                         // for this we search for the prototype and pick the best position
 
-                        int prototypeSearchDistance = 20; // distance in pixels for the search of the same prototype
+                        int prototypeSearchDistance = 80;//;40;//20; // distance in pixels for the search of the same prototype
 
                         int bestPositionX = 0;
                         int bestPositionY = 0;
                         float bestClassificationDistance = Float.POSITIVE_INFINITY;
 
-                        // TODO< optimize by searching with a stepsize of 2 and then searching for the best pixel again >
-                        for(int dy=-prototypeSearchDistance;dy<prototypeSearchDistance;dy++) {
-                            for(int dx=-prototypeSearchDistance;dx<prototypeSearchDistance;dx++) {
+                        // TODO< fearch for a pixel distance of 2 inside >
+                        // search around old center
+                        /* commented for testing
+                        for(int dy=-prototypeSearchDistance;dy<prototypeSearchDistance;dy+=2) {
+                            for(int dx=-prototypeSearchDistance;dx<prototypeSearchDistance;dx+=2) {
                                 iSt.prototypeClassifier.classifyAt((int)iSt.centerX + dx, (int)iSt.centerY + dy, img);
                                 float classificationDistance = iSt.prototypeClassifier.classificationLastDistance;
 
@@ -1416,15 +1467,38 @@ public class UnrealCrossing extends PApplet {
                                 }
                             }
                         }
+                        */
+
+                        // TODO< fearch for a pixel distance of 2 inside >
+                        // search in region proposal
+                        for(int dy=-prototypeSearchDistance;dy<prototypeSearchDistance;dy+=2) {
+                            for(int dx=-prototypeSearchDistance;dx<prototypeSearchDistance;dx+=2) {
+                                iSt.prototypeClassifier.classifyAt((int)regionProposalCenterX + dx, (int)regionProposalCenterY + dy, img);
+                                float classificationDistance = iSt.prototypeClassifier.classificationLastDistance;
+
+                                if (classificationDistance < bestClassificationDistance) {
+                                    bestClassificationDistance = classificationDistance;
+                                    bestPositionX = (int)regionProposalCenterX + dx;
+                                    bestPositionY = (int)regionProposalCenterY + dy;
+                                }
+                            }
+                        }
+
+
 
                         // (*) set information for advanced spatial tracklet
                         if (bestClassificationDistance < Float.POSITIVE_INFINITY) {
+                            System.out.println("retrace " + bestPositionX + "," + bestPositionY);
+
                             iSt.prototypeCenterX = bestPositionX;
                             iSt.prototypeCenterY = bestPositionY;
 
                             // set position to the position where the prototype was found, because the old center may be a first guess or the old position of the old found prototype
                             iSt.centerX = bestPositionX;
                             iSt.centerY = bestPositionY;
+
+                            fill(0,0,0);
+                            text("RETR  x="+(int) iSt.centerX + " y="+(int) iSt.centerY, (float)iSt.centerX, (float)iSt.centerY+20);
                         }
 
 
@@ -1499,84 +1573,93 @@ public class UnrealCrossing extends PApplet {
         }
 
 
-
-
-
-        for(SpatialTracklet ist : spatialTracklets) {
-            int posX = (int)ist.posX;
-            int posY = (int)ist.posY;
-
-            int crossRadius = 15;
-
-            boolean isRecent = ist.idletime < 5;
-
-            stroke(0,255,0, isRecent ? 255 : 80);
-            strokeWeight(2.0f);
-
-
-            line(posX-crossRadius,posY-crossRadius,posX+crossRadius,posY+crossRadius);
-            line(posX+crossRadius,posY-crossRadius,posX-crossRadius,posY+crossRadius);
-
-        }
-
-        for(AdvancedSpatialTracklet iSt : advancedSpatialTracklets) {
-            int posX = (int)iSt.centerX;
-            int posY = (int)iSt.centerY;
-
-            int crossRadius = 30;
-
-            boolean isRecent = iSt.idletime < 5;
-
-            stroke(255,0,0, isRecent ? 255 : 80);
-            strokeWeight(2.0f);
-
-
-            line(posX-crossRadius,posY-crossRadius,posX+crossRadius,posY+crossRadius);
-            line(posX+crossRadius,posY-crossRadius,posX-crossRadius,posY+crossRadius);
-
-            fill(255,0,0);
-            text("st id="+Long.toString(iSt.id) + " cnt=" +Integer.toString(iSt.trainingDataOfThisClass.size()), (float)iSt.centerX, (float)iSt.centerY);
-
-
-            if (iSt.prototypeCenterX != -1 && iSt.prototypeCenterY != -1) {
-                DebugCursor dc2 = new DebugCursor();
-                dc2.text = "PROTOTYPE BEST FOUND";
-                dc2.posX = (int)iSt.prototypeCenterX;
-                dc2.posY = (int)iSt.prototypeCenterY;
-                debugCursors.add(dc2);
-            }
-        }
-
-
-        for (DebugCursor iDebugCursor : debugCursors) {
-            boolean hasExtend = iDebugCursor.extendX != 0 || iDebugCursor.extendY != 0;
-
-            if (hasExtend) {
-                // set back to patrick standard
-                stroke(128);
-                strokeWeight(1.0f);
-
-                fill(0, 0, 255, 50);
-                rect((int)iDebugCursor.posX, (int)iDebugCursor.posY, (int)(iDebugCursor.extendX), (int)(iDebugCursor.extendY));
-            }
-            else
-            {
-                line((int)(iDebugCursor.posX - 5), (int)iDebugCursor.posY, (int)(iDebugCursor.posX + 5), (int)iDebugCursor.posY);
-                line((int)iDebugCursor.posX, (int)(iDebugCursor.posY - 5), (int)iDebugCursor.posX, (int)(iDebugCursor.posY + 5));
-            }
-
-            if (iDebugCursor.hasTextBackground) {
-                // draw black background for text
-                fill(0,0,0);
-                stroke(0,0,0,0); // transparent
-                rect((int)iDebugCursor.posX, (int)iDebugCursor.posY, (int)(iDebugCursor.extendX), (int)(20));
-            }
-
-            fill(255);
-            text(iDebugCursor.text, (float)iDebugCursor.posX, (float)iDebugCursor.posY+20-5);
-        }
-
+        boolean showSpatialTracklets = true; // true
+        boolean showDebugCursor = true; // true
         boolean showMotionparticles = true;
+
+
+        if (showSpatialTracklets) {
+            for(SpatialTracklet ist : spatialTracklets) {
+                int posX = (int)ist.posX;
+                int posY = (int)ist.posY;
+
+                int crossRadius = 10;
+
+                boolean isRecent = ist.idletime < 5;
+
+                stroke(0,255,0, isRecent ? 255 : 80);
+                strokeWeight(2.0f);
+
+
+                line(posX-crossRadius,posY-crossRadius,posX+crossRadius,posY+crossRadius);
+                line(posX+crossRadius,posY-crossRadius,posX-crossRadius,posY+crossRadius);
+
+            }
+        }
+
+        if (showSpatialTracklets) {
+            for(AdvancedSpatialTracklet iSt : advancedSpatialTracklets) {
+                int posX = (int)iSt.centerX;
+                int posY = (int)iSt.centerY;
+
+                int crossRadius = 30;
+
+                boolean isRecent = iSt.idletime < 5;
+
+                stroke(255,0,0, isRecent ? 255 : 80);
+                strokeWeight(4.0f);
+
+
+                line(posX-crossRadius,posY-crossRadius,posX+crossRadius,posY+crossRadius);
+                line(posX+crossRadius,posY-crossRadius,posX-crossRadius,posY+crossRadius);
+
+                fill(255,0,0);
+                text("st id="+Long.toString(iSt.id) + " cnt=" +Integer.toString(iSt.trainingDataOfThisClass.size()), (float)iSt.centerX, (float)iSt.centerY);
+
+
+                if (iSt.prototypeCenterX != -1 && iSt.prototypeCenterY != -1) {
+                    DebugCursor dc2 = new DebugCursor();
+                    dc2.text = "PROTOTYPE BEST FOUND";
+                    dc2.posX = (int)iSt.prototypeCenterX;
+                    dc2.posY = (int)iSt.prototypeCenterY;
+                    debugCursors.add(dc2);
+                }
+            }
+        }
+
+
+        if (showDebugCursor) {
+            for (DebugCursor iDebugCursor : debugCursors) {
+                boolean hasExtend = iDebugCursor.extendX != 0 || iDebugCursor.extendY != 0;
+
+                if (hasExtend) {
+                    // set back to patrick standard
+                    stroke(128);
+                    strokeWeight(1.0f);
+
+                    fill(0, 0, 255, 50);
+                    rect((int)iDebugCursor.posX, (int)iDebugCursor.posY, (int)(iDebugCursor.extendX), (int)(iDebugCursor.extendY));
+                }
+                else
+                {
+                    line((int)(iDebugCursor.posX - 5), (int)iDebugCursor.posY, (int)(iDebugCursor.posX + 5), (int)iDebugCursor.posY);
+                    line((int)iDebugCursor.posX, (int)(iDebugCursor.posY - 5), (int)iDebugCursor.posX, (int)(iDebugCursor.posY + 5));
+                }
+
+                if (iDebugCursor.hasTextBackground) {
+                    // draw black background for text
+                    fill(0,0,0);
+                    stroke(0,0,0,0); // transparent
+                    rect((int)iDebugCursor.posX, (int)iDebugCursor.posY, (int)(iDebugCursor.extendX), (int)(20));
+                }
+
+                fill(255);
+                text(iDebugCursor.text, (float)iDebugCursor.posX, (float)iDebugCursor.posY+20-5);
+            }
+        }
+
+
+
         if (showMotionparticles) {
             fill(255);
             stroke(0,0,0,0); // transparent
