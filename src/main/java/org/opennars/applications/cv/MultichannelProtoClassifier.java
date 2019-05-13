@@ -41,13 +41,13 @@ public class MultichannelProtoClassifier {
     }
 
     // position is center of prototype to classify or add
-    public long classifyAt(int posX, int posY, PImage img) {
+    public long classifyAt(int posX, int posY, int stepsize, PImage img) {
         classificationLastDistance = Float.POSITIVE_INFINITY;
 
         long class_ = -1;
 
         for(MultichannelPrototype iPrototype : prototypes) {
-            float currentDistance = iPrototype.calcDist(posX, posY, img);
+            float currentDistance = iPrototype.calcDist(posX, posY, stepsize, img);
             if (currentDistance < classificationLastDistance) {
                 classificationLastDistance = currentDistance;
                 class_ = iPrototype.class_;

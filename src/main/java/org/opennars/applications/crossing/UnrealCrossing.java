@@ -25,8 +25,8 @@ package org.opennars.applications.crossing;
  */
 
 
-// TODO< test if AdvancedSpatialTracklet is displayed fine >
-// TODO< propagate SpatialTracklet to AdvancedSpatialTracklet if a spatial tracklet is inside a bounding box >
+// TODO< flood fill CA'ed attention map to get different colors for tighter region proposals >
+
 // TODO< removal of spatial advanced spatial tracklet after timeout >
 // TODO< test if AdvancedSpatialTracklet works fine and is used correctly for training data gathering & training >
 
@@ -1552,7 +1552,9 @@ public class UnrealCrossing extends PApplet {
                             int startX = -prototypeSearchDistance + (offsetXCoordinate?3/2:0);
 
                             for(int dx=startX;dx<prototypeSearchDistance;dx+=3) {
-                                iSt.prototypeClassifier.classifyAt((int)regionProposalCenterX + dx, (int)regionProposalCenterY + dy, img);
+                                int prototypeClassificationStepsize = 2; // ship every 2nd pixel of the compared prototype
+
+                                iSt.prototypeClassifier.classifyAt((int)regionProposalCenterX + dx, (int)regionProposalCenterY + dy, prototypeClassificationStepsize, img);
                                 float classificationDistance = iSt.prototypeClassifier.classificationLastDistance;
 
                                 if (classificationDistance < bestClassificationDistance) {
@@ -1767,7 +1769,6 @@ public class UnrealCrossing extends PApplet {
 
         //System.out.println("[d 1] Concepts: " + nar.memory.concepts.size());
     }
-
 
 
     // list of all classes we are using for training of the NN

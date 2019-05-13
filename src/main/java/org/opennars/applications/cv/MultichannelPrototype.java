@@ -35,7 +35,7 @@ public class MultichannelPrototype {
      * @param img
      * @return
      */
-    public float calcDist(int posX, int posY, PImage img) {
+    public float calcDist(int posX, int posY, int stepsize, PImage img) {
         int prototypeWidth = channels[0].retWidth();
         int prototypeHeight = channels[0].retHeight();
 
@@ -49,8 +49,8 @@ public class MultichannelPrototype {
 
         float dist = 0;
 
-        for(int iy=0;iy<prototypeHeight;iy++) {
-            for(int ix=0;ix<prototypeWidth;ix++){
+        for(int iy=0;iy<prototypeHeight;iy+=stepsize) {
+            for(int ix=0;ix<prototypeWidth;ix+=stepsize){
                 int dx = ix-prototypeWidth/2;
                 int dy = iy-prototypeHeight/2;
 
@@ -63,9 +63,12 @@ public class MultichannelPrototype {
                 float g = ((colorcode >> 8) & 0xFF) / 255.0f;
                 float b = ((colorcode >> 8*2) & 0xFF) / 255.0f;
 
-                dist += Math.abs(r - channels[0].readAtUnsafe(iy, ix));
-                dist += Math.abs(g - channels[1].readAtUnsafe(iy, ix));
-                dist += Math.abs(b - channels[2].readAtUnsafe(iy, ix));
+                float diff =
+                    Math.abs(r - channels[0].readAtUnsafe(iy, ix)) +
+                    Math.abs(g - channels[1].readAtUnsafe(iy, ix)) +
+                    Math.abs(b - channels[2].readAtUnsafe(iy, ix));
+
+                dist+=(diff * stepsize*stepsize); // we need to compute the error based on the covered area to get roughtly the same result with different stepsizes
             }
         }
 
