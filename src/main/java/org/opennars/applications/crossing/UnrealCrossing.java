@@ -426,8 +426,16 @@ public class UnrealCrossing extends PApplet {
         for (Street s : streets) {
             s.draw(this);
         }
-        String nr = String.format("%05d", frameIdx);
-        PImage img = loadImage(videopath+nr+".jpg"); //1 2 3 7
+
+        long overallTimeImgLoadWaitInNs = 0; // wait time for image load in nanoseconds
+
+        PImage img;
+        {
+            long startTime = System.nanoTime();
+            String nr = String.format("%05d", frameIdx);
+            img =loadImage(videopath+nr+".jpg");
+            overallTimeImgLoadWaitInNs += (System.nanoTime() - startTime);
+        }
 
 
 
@@ -1015,7 +1023,7 @@ public class UnrealCrossing extends PApplet {
         String tracklets = "";
         if (trackletpath != null) { // use tracklets with file based provider?
             try {
-                ///home/tc/Dateien/CROSSING/Test001/TKL00342.txt
+                String nr = String.format("%05d", frameIdx);
                 tracklets = new String(Files.readAllBytes(Paths.get(trackletpath+"TKL"+nr+".txt")));
             } catch (IOException ex) {
                 Logger.getLogger(RealCrossing.class.getName()).log(Level.SEVERE, null, ex);
@@ -1098,7 +1106,14 @@ public class UnrealCrossing extends PApplet {
 
 
         t++;
-        nar.cycles(10);
+
+        long overallTimeNarWaitInNs = 0; // wait time for NAR in nanoseconds
+        {
+            long startTimeWait = System.nanoTime();
+            nar.cycles(10);
+            overallTimeNarWaitInNs += (System.nanoTime() - startTimeWait);
+        }
+
         removeOutdatedPredictions(predictions);
         removeOutdatedPredictions(disappointments);
         for (Prediction pred : predictions) {
@@ -1756,6 +1771,8 @@ public class UnrealCrossing extends PApplet {
         if (showStats) {
             fill(0);
             text("prototype search us="+(overalltimePrototypeSearchInNs/1000), 0, 0*15+15);
+            text("NAR wait         us="+(overallTimeNarWaitInNs/1000), 0, 1*15+15);
+            text("img load wait    us="+(overallTimeImgLoadWaitInNs/1000), 0, 2*15+15);
         }
 
 
