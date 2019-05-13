@@ -69,6 +69,8 @@ public class UnrealCrossing extends PApplet {
     public PrototypeBasedImageSampler imageSampler = null;
     public AttentionField attentionField = null;
 
+    CaFill caFill = new CaFill(); // used to fill with an CA
+
 
     @Override
     public void setup() {
@@ -570,6 +572,62 @@ public class UnrealCrossing extends PApplet {
                 }
             }
              */
+
+        }
+
+
+        Map2dGeneric<Boolean> regionField = new Map2dGeneric<>(attentionField.retHeight(), attentionField.retWidth());
+        {
+            float attentionfieldToRegionFieldThreshold = 0.02f; // parameter
+
+            // initialize region field by thresholding - we want only the most active pixels
+            for(int iy=0;iy<regionField.retHeight();iy++) {
+                for(int ix=0;ix<regionField.retWidth();ix++) {
+                    float val = attentionField.readAtUnbound(iy, ix);
+                    boolean bval = val > attentionfieldToRegionFieldThreshold;
+                    regionField.writeAtSafe(iy, ix, bval);
+                }
+            }
+
+
+            for(int loopI=0;loopI<30;loopI++) { // loop to prevent it from infinite hanging
+                Map2dGeneric<Boolean> destRegionField = new Map2dGeneric<>(attentionField.retHeight(), attentionField.retWidth());
+                for(int iy=0;iy<regionField.retHeight();iy++) {
+                    for(int ix=0;ix<regionField.retWidth();ix++) {
+                        destRegionField.writeAtSafe(iy,ix,false);
+                    }
+                }
+
+                for(int iy=1;iy<regionField.retHeight()-1;iy++) {
+                    for(int ix=1;ix<regionField.retWidth()-1;ix++) {
+                        boolean[][] subField = new boolean[][]{
+                                {regionField.readAtSafe(iy-1, ix-1), regionField.readAtSafe(iy-1, ix), regionField.readAtSafe(iy-1, ix+1), },
+                                {regionField.readAtSafe(iy, ix-1), regionField.readAtSafe(iy, ix), regionField.readAtSafe(iy, ix+1), },
+                                {regionField.readAtSafe(iy+1, ix-1), regionField.readAtSafe(iy+1, ix), regionField.readAtSafe(iy+1, ix+1), }
+                        };
+
+                        boolean destRegionFieldValue = caFill.queryFill(subField); // apply CA to fill the gaps
+
+                        destRegionField.writeAtSafe(iy, ix, destRegionFieldValue);
+                    }
+                }
+
+                boolean wasChanged = false;
+                for(int iy=1;iy<regionField.retHeight()-1;iy++) {
+                    for(int ix=1;ix<regionField.retWidth()-1;ix++) {
+                        if (destRegionField.readAtSafe(iy, ix) != regionField.readAtSafe(iy, ix)) {
+                            wasChanged = true;
+                        }
+                    }
+                }
+
+                regionField = destRegionField; // we want to continue with the changed region field
+
+                // check to break out of loop when nothing changes anymore
+                if (!wasChanged) {
+                    break;
+                }
+            }
 
         }
 
@@ -1082,6 +1140,23 @@ public class UnrealCrossing extends PApplet {
             stroke(127); // set back to standard
 
 
+        }
+
+
+        if (regionField != null) { // we want to draw the attention field
+
+            for(int iy=0;iy<regionField.retHeight();iy++) {
+                for(int ix=0;ix<regionField.retWidth();ix++) {
+                    boolean fieldValue = regionField.readAtSafe(iy, ix);
+                    if (fieldValue) {
+                        stroke(255,0,0,200); // transparent frame
+                        fill(255, 0, 0, 0);
+                        rect(ix * heatmapCellsize, iy * heatmapCellsize, heatmapCellsize, heatmapCellsize);
+                    }
+                }
+            }
+
+            stroke(127); // set back to standard
         }
 
         boolean debug_enableClassification = false; // used for debugging - best to be kept enabled in "production"
