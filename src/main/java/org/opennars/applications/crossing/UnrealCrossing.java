@@ -399,6 +399,8 @@ public class UnrealCrossing extends PApplet {
 
     int imagePreloadCount = 4; // number of images which are preloaded
 
+    boolean debug_enableClassification = true; // used for debugging - best to be kept enabled in "production"
+
     @Override
     public void draw() {
         if (false) {
@@ -526,8 +528,14 @@ public class UnrealCrossing extends PApplet {
             convCl.allocateBuffersForPosition(img.width*img.height);
         }
 
+
+        long overalltimeWaitUploadImage = 0;
         ConvCl.CachedImage cachedImage = new ConvCl.CachedImage();
-        cachedImage.update(imgGrayscale, convCl.context); // send image to GPU
+        {
+            long timeBefore = System.nanoTime();
+            cachedImage.update(imgGrayscale, convCl.context); // send image to GPU
+            overalltimeWaitUploadImage += (System.nanoTime()-timeBefore);
+        }
 
 
         if (convolutions == null) {
@@ -538,7 +546,7 @@ public class UnrealCrossing extends PApplet {
             }
         }
 
-
+        long overalltimeWaitConvl = 0;
         { // compute convolutions
             long systemTimeBefore = System.nanoTime();
 
@@ -585,11 +593,7 @@ public class UnrealCrossing extends PApplet {
                 while(!iFuture.isDone()){} // spin loop
             }
 
-            long systemTimeEnd = System.nanoTime();
-
-            long systemTime = systemTimeEnd-systemTimeBefore; // in nanoseconds
-
-            //System.out.println("us="+Long.toString(systemTime/1000));
+            overalltimeWaitConvl = System.nanoTime()-systemTimeBefore; // in nanoseconds
         }
 
 
@@ -1226,80 +1230,88 @@ public class UnrealCrossing extends PApplet {
             stroke(127); // set back to standard
         }
 
-        boolean debug_enableClassification = false; // used for debugging - best to be kept enabled in "production"
-
-
+        long overallTimeWaitClassifyInNs = 0;
         // classify
-        if (debug_enableClassification) {
-            for(SpatialTracklet iSt : spatialTracklets) {
-                if (iSt.idletime > 5) {
-                    continue; // we don't care about things which didn't move
-                }
+        {
+            long timeBefore = System.nanoTime();
 
-                //System.out.println("---");
+            if (debug_enableClassification) {
+                for (SpatialTracklet iSt : spatialTracklets) {
+                    if (iSt.idletime > 5) {
+                        continue; // we don't care about things which didn't move
+                    }
 
-                long bestClassificationClass = -1;
-                double bestClassificationProbability = 0;
+                    //System.out.println("---");
 
-                float[] convResult = convolutionImg(img, cachedImage, (int)iSt.posX, (int)iSt.posY);
+                    long bestClassificationClass = -1;
+                    double bestClassificationProbability = 0;
 
-                for(int iTrainedNnIdx=trainedNns.size()-1;iTrainedNnIdx>=0;iTrainedNnIdx--) {
-                    TrainedNn iTrainedNn = trainedNns.get(iTrainedNnIdx);
+                    float[] convResult = null;
+                    if (trainedNns.size() > 0) { // we just need convolution when a NN was trained
+                        convResult = convolutionImg(img, cachedImage, (int) iSt.posX, (int) iSt.posY);
+                    }
 
-                    INDArray arr = Nd4j.create(convResult);
-                    INDArray result = iTrainedNn.network.activate(arr, Layer.TrainingMode.TEST);
+                    for (int iTrainedNnIdx = trainedNns.size() - 1; iTrainedNnIdx >= 0; iTrainedNnIdx--) {
+                        TrainedNn iTrainedNn = trainedNns.get(iTrainedNnIdx);
 
-                    int highestPositiveClassIdx = -1;
-                    double highestPositiveClasssProbability = 0;
+                        INDArray arr = Nd4j.create(convResult);
+                        INDArray result = iTrainedNn.network.activate(arr, Layer.TrainingMode.TEST);
 
-                    for(int idx=0;idx<iTrainedNn.positiveClasses.size();idx++) { // iterate over classes
-                        double positiveClassificationProbability = result.getDouble(idx);
+                        int highestPositiveClassIdx = -1;
+                        double highestPositiveClasssProbability = 0;
 
-                        if (positiveClassificationProbability > highestPositiveClasssProbability) {
-                            highestPositiveClassIdx = idx;
-                            highestPositiveClasssProbability = positiveClassificationProbability;
+                        for (int idx = 0; idx < iTrainedNn.positiveClasses.size(); idx++) { // iterate over classes
+                            double positiveClassificationProbability = result.getDouble(idx);
+
+                            if (positiveClassificationProbability > highestPositiveClasssProbability) {
+                                highestPositiveClassIdx = idx;
+                                highestPositiveClasssProbability = positiveClassificationProbability;
+                            }
                         }
+
+                        double negativeClassProbability = result.getDouble(iTrainedNn.positiveClasses.size());
+
+                        if (negativeClassProbability > highestPositiveClasssProbability) {
+                            // negative class was stronger
+                            highestPositiveClassIdx = -1;
+                            highestPositiveClasssProbability = 0;
+                        }
+
+                        if (highestPositiveClassIdx != -1) {
+                            if (false)
+                                System.out.println("[d 5] cls=" + iTrainedNn.positiveClasses.get(highestPositiveClassIdx) + "   classification{" + highestPositiveClassIdx + "}=" + Double.toString(highestPositiveClasssProbability));
+                        }
+
+                        if (highestPositiveClassIdx != -1 && highestPositiveClasssProbability > bestClassificationProbability) {
+                            bestClassificationClass = iTrainedNn.positiveClasses.get(highestPositiveClassIdx); // retrieve class by index. Indirection is necessary for NN reasons
+                            bestClassificationProbability = highestPositiveClasssProbability;
+                        }
+
+                        if (highestPositiveClassIdx != -1) { // if it classified a positive class
+                            break; // then don't check any other older NN's because they are outdated anyways for this classification
+                        }
+
+
+                        int here = 5;
                     }
 
-                    double negativeClassProbability = result.getDouble(iTrainedNn.positiveClasses.size());
-
-                    if (negativeClassProbability > highestPositiveClasssProbability) {
-                        // negative class was stronger
-                        highestPositiveClassIdx = -1;
-                        highestPositiveClasssProbability = 0;
-                    }
-
-                    if (highestPositiveClassIdx != -1) {
-                        if(false)  System.out.println("[d 5] cls=" +iTrainedNn.positiveClasses.get(highestPositiveClassIdx)+ "   classification{"+highestPositiveClassIdx+"}=" + Double.toString(highestPositiveClasssProbability));
-                    }
-
-                    if (highestPositiveClassIdx != -1 && highestPositiveClasssProbability > bestClassificationProbability) {
-                        bestClassificationClass = iTrainedNn.positiveClasses.get(highestPositiveClassIdx); // retrieve class by index. Indirection is necessary for NN reasons
-                        bestClassificationProbability = highestPositiveClasssProbability;
-                    }
-
-                    if (highestPositiveClassIdx != -1) { // if it classified a positive class
-                        break; // then don't check any other older NN's because they are outdated anyways for this classification
-                    }
-
-
-                    int here = 5;
-                }
-
-                { // add debug cursor
-                    if (bestClassificationClass != -1) {
-                        DebugCursor dc = new DebugCursor();
-                        // TODO< fetch size from applied NN >
-                        dc.posX = iSt.posX - 60;
-                        dc.posY = iSt.posY - 60;
-                        dc.extendX = 120;
-                        dc.extendY = 120;
-                        dc.hasTextBackground = true; // because we want to see the text clearly
-                        dc.text  = "CLASS "+Long.toString(bestClassificationClass) + " prop=" +  String.format("%.2f", (bestClassificationProbability));
-                        debugCursors.add(dc);
+                    { // add debug cursor
+                        if (bestClassificationClass != -1) {
+                            DebugCursor dc = new DebugCursor();
+                            // TODO< fetch size from applied NN >
+                            dc.posX = iSt.posX - 60;
+                            dc.posY = iSt.posY - 60;
+                            dc.extendX = 120;
+                            dc.extendY = 120;
+                            dc.hasTextBackground = true; // because we want to see the text clearly
+                            dc.text = "CLASS " + Long.toString(bestClassificationClass) + " prop=" + String.format("%.2f", (bestClassificationProbability));
+                            debugCursors.add(dc);
+                        }
                     }
                 }
             }
+
+            overallTimeWaitClassifyInNs += (System.nanoTime()-timeBefore);
         }
 
 
@@ -1823,10 +1835,17 @@ public class UnrealCrossing extends PApplet {
         if (showStats) {
             fill(0);
             text("prototype search us="+(overalltimePrototypeSearchInNs/1000), 0, 0*15+15);
-            text("NAR wait         us="+(overallTimeNarWaitInNs/1000), 0, 1*15+15);
-            text("img load wait    us="+(overallTimeImgLoadWaitInNs/1000), 0, 2*15+15);
-            text("conv to gray     us="+(timeConvertImageToGrayscaleWaitInNs/1000),0,3*15+15);
-            text("frametime        us="+((System.nanoTime()-systemTimeStart)/1000),0,4*15+15);
+
+            text("img load wait    us="+(overallTimeImgLoadWaitInNs/1000), 0, 1*15+15);
+            text("gpu upload:img  wait us="+(overalltimeWaitUploadImage/1000), 0, (2+1)*15); // wait time for finishing GPU upload of image
+            text("gpu convl  wait us="+(overalltimeWaitConvl/1000),0,(3+1)*15); // wait time for finishing of GPU convolution
+            text("conv to gray     us="+(timeConvertImageToGrayscaleWaitInNs/1000),0,4*15+15);
+
+            text("classify NN      us"+(overallTimeWaitClassifyInNs/1000), 0, (5+1)*15);
+
+            text("NAR wait         us="+(overallTimeNarWaitInNs/1000), 0, (6+1)*15);
+
+            text("frametime        us="+((System.nanoTime()-systemTimeStart)/1000),0,(7+1)*15);
         }
 
 
