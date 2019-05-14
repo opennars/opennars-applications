@@ -408,6 +408,8 @@ public class UnrealCrossing extends PApplet {
             }
         }
 
+        long systemTimeStart = System.nanoTime();
+
 
         if (frameIdx > Integer.MAX_VALUE) {
             // soft reset
@@ -477,22 +479,46 @@ public class UnrealCrossing extends PApplet {
 
 
         short[] imgGrayscale = new short[img.height*img.width]; // flattened grayscale image
-        for(int iy=0;iy<img.height;iy++) {
-            for(int ix=0;ix<img.width;ix++) {
 
-                int colorcode =  img.pixels[iy*img.width+ix];
-                //TODO check if the rgb is extracted correctly
-                float r = (colorcode & 0xff) / 255.0f;
-                float g = ((colorcode >> 8) & 0xFF) / 255.0f;
-                float b = ((colorcode >> 8*2) & 0xFF) / 255.0f;
+        long timeConvertImageToGrayscaleWaitInNs = 0;
+        { // convert image to grayscale
+            long timeBefore = System.nanoTime();
 
-                float grayscale = (r+g+b)/3.0f;
+            int parallelYStepsize = 8;
+            Future<?>[] processingFutures = new Future<?>[parallelYStepsize];
+            {
+                for(int iParallelYStepsize=0;iParallelYStepsize<parallelYStepsize;iParallelYStepsize++) {
+                    final int iParallelYStepsize_final = iParallelYStepsize;
+                    final PImage img_final = img;
+                    Future<?> f = generalPool.submit(() -> {
+                        for(int iy=iParallelYStepsize_final;iy<img_final.height;iy+=parallelYStepsize) {
+                            for(int ix=0;ix<img_final.width;ix++) {
 
-                //grayscaleImage.writeAtUnsafe(iy, ix, grayscale);
+                                int colorcode =  img_final.pixels[iy*img_final.width+ix];
+                                //TODO check if the rgb is extracted correctly
+                                float r = (colorcode & 0xff) / 255.0f;
+                                float g = ((colorcode >> 8) & 0xFF) / 255.0f;
+                                float b = ((colorcode >> 8*2) & 0xFF) / 255.0f;
 
-                imgGrayscale[iy*img.width + ix] = (short)(grayscale*255.0f);
+                                float grayscale = (r+g+b)/3.0f;
+
+                                //grayscaleImage.writeAtUnsafe(iy, ix, grayscale);
+
+                                imgGrayscale[iy*img_final.width + ix] = (short)(grayscale*255.0f);
+                            }
+                        }
+                    });
+                    processingFutures[iParallelYStepsize] = f;
+                }
             }
+
+            for(int iParallelYStepsize=0;iParallelYStepsize<processingFutures.length;iParallelYStepsize++) {
+                while(!processingFutures[iParallelYStepsize].isDone()){};
+            }
+            timeConvertImageToGrayscaleWaitInNs += (System.nanoTime()-timeBefore);
         }
+
+
 
 
         if (!convCl.areBuffersAllocated()) {
@@ -1799,6 +1825,8 @@ public class UnrealCrossing extends PApplet {
             text("prototype search us="+(overalltimePrototypeSearchInNs/1000), 0, 0*15+15);
             text("NAR wait         us="+(overallTimeNarWaitInNs/1000), 0, 1*15+15);
             text("img load wait    us="+(overallTimeImgLoadWaitInNs/1000), 0, 2*15+15);
+            text("conv to gray     us="+(timeConvertImageToGrayscaleWaitInNs/1000),0,3*15+15);
+            text("frametime        us="+((System.nanoTime()-systemTimeStart)/1000),0,4*15+15);
         }
 
 
