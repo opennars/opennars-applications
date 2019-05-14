@@ -44,9 +44,8 @@ import org.nd4j.linalg.factory.Nd4j;
 import org.opennars.applications.crossing.NarListener.Prediction;
 import org.opennars.applications.cv.*;
 import org.opennars.applications.gui.NarSimpleGUI;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Random;
+
+import java.util.*;
 import java.util.concurrent.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -624,7 +623,7 @@ public class UnrealCrossing extends PApplet {
 
 
         Map2dGeneric<Boolean> regionField = new Map2dGeneric<>(attentionField.retHeight(), attentionField.retWidth());
-        {
+        { // fill and build regionField
             float attentionfieldToRegionFieldThreshold = 0.02f; // parameter
 
             // initialize region field by thresholding - we want only the most active pixels
@@ -678,6 +677,34 @@ public class UnrealCrossing extends PApplet {
 
         }
 
+        Map<Integer, Region> regionsByColor = new HashMap<>();
+        { // extract regions from regionField
+
+            Map2dGeneric<Integer> colorMap = FloodFill.fill(regionField);
+
+            // extract regions by color
+
+            for(int iy=0;iy<colorMap.retHeight();iy++) {
+                for(int ix=0;ix<colorMap.retWidth();ix++) {
+                    int color = colorMap.readAtSafe(iy,ix);
+
+                    if (color == -1) { // is color not set?
+                        continue;
+                    }
+
+                    if (regionsByColor.containsKey(color)) {
+                        Region region = regionsByColor.get(color);
+                        region.merge(ix, iy);
+                    }
+                    else {
+                        Region createdRegion = new Region();
+                        createdRegion.merge(ix, iy);
+                        regionsByColor.put(color, createdRegion);
+                    }
+                }
+            }
+        }
+
 
 
         double motionparticleMaxDistance = 8.0; // configuration - maximal distance a motion particle can travel
@@ -697,68 +724,28 @@ public class UnrealCrossing extends PApplet {
         }
 
 
-        int regionProposalWidth = 20;
-
-        // region proposals for classification of potentially new objects from the last layer
         List<RegionProposal> regionProposals = new ArrayList<>();
-        { // compute region proposals
-            for(int iy=0;iy<attentionField.retHeight();iy++) {
-                for(int ix=0;ix<attentionField.retWidth();ix++) {
-                    if (attentionField.readAtUnbound(iy, ix) < regionProposalAttentionThreshold) {
-                        continue;
-                    }
+        { // translate regions to region proposals
+            for(Map.Entry<Integer, Region> iRegion : regionsByColor.entrySet()){
+                RegionProposal rp = new RegionProposal(); // build region proposal
+                rp.minX = iRegion.getValue().minX * heatmapCellsize;
+                rp.minY = iRegion.getValue().minY * heatmapCellsize;
 
-                    int absX = ix*heatmapCellsize;
-                    int absY = iy*heatmapCellsize;
+                // add one to take the last cell into account
+                rp.maxX = (iRegion.getValue().maxX + 1)* heatmapCellsize;
+                rp.maxY = (iRegion.getValue().maxY + 1)* heatmapCellsize;
 
-                    RegionProposal rp = new RegionProposal(); // build region proposal
-                    rp.minX = absX - regionProposalWidth;
-                    rp.minY = absY - regionProposalWidth;
+                int width = rp.maxX-rp.minX;
+                int height = rp.maxY-rp.minY;
 
-                    rp.maxX = absX + regionProposalWidth;
-                    rp.maxY = absY + regionProposalWidth;
-
-                    regionProposals.add(rp);
+                if (width <= 1*heatmapCellsize || height <= 1*heatmapCellsize ) {
+                    continue; // disallow regions of size one
                 }
+
+                regionProposals.add(rp);
             }
         }
 
-        { // merge region proposals
-            List<RegionProposal> bigRegions = new ArrayList<>();
-            for(RegionProposal irp : regionProposals) {
-                boolean merged = false;
-
-                for(RegionProposal iBigRegion : bigRegions) {
-                    if (RegionProposal.checkOverlap(iBigRegion, irp)) {
-                        iBigRegion.merge(irp);
-                        merged = true;
-                    }
-                }
-
-                if (!merged) {
-                    bigRegions.add(irp.clone());
-                }
-            }
-
-            regionProposals = bigRegions;
-        }
-
-
-        // narrow region proposals again because we want to have tight bounds
-        for(RegionProposal irp : regionProposals) {
-            int width = irp.maxX-irp.minX;
-            int height = irp.maxY-irp.minY;
-
-            if (width > regionProposalWidth) {
-                irp.maxX -= regionProposalWidth;
-                irp.minX += regionProposalWidth;
-            }
-
-            if (height > regionProposalWidth) {
-                irp.maxY -= regionProposalWidth;
-                irp.minY += regionProposalWidth;
-            }
-        }
 
 
         debugCursors.clear();
@@ -1824,6 +1811,21 @@ public class UnrealCrossing extends PApplet {
 
 
         //System.out.println("[d 1] Concepts: " + nar.memory.concepts.size());
+    }
+
+    // used to collect regions from the image
+    private static class Region {
+        public int minX = Integer.MAX_VALUE;
+        public int minY = Integer.MAX_VALUE;
+        public int maxX = Integer.MIN_VALUE;
+        public int maxY = Integer.MIN_VALUE;
+
+        public void merge(int x, int y) {
+            minX = Math.min(minX, x);
+            minY = Math.min(minY, y);
+            maxX = Math.max(maxX, x);
+            maxY = Math.max(maxY, y);
+        }
     }
 
 
