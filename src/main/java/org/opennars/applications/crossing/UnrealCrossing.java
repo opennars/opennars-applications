@@ -395,6 +395,11 @@ public class UnrealCrossing extends PApplet {
     // pool used for all general work
     ThreadPoolExecutor generalPool = (ThreadPoolExecutor)Executors.newFixedThreadPool(8);
 
+    long nrLoader = 1; // iterator of image number for loader
+    List<Future<PImage>> imageLoaderFutures = new ArrayList<>(); // futures for the loading of the images
+
+    int imagePreloadCount = 4; // number of images which are preloaded
+
     @Override
     public void draw() {
         if (false) {
@@ -429,6 +434,38 @@ public class UnrealCrossing extends PApplet {
 
         long overallTimeImgLoadWaitInNs = 0; // wait time for image load in nanoseconds
 
+        PImage img = null;
+        {
+            while (imageLoaderFutures.size() < imagePreloadCount) {
+                Future<PImage> f = generalPool.submit(() -> {
+                    String nr = String.format("%05d", nrLoader);
+                    PImage img2 =loadImage(videopath+nr+".jpg");
+                    nrLoader++;
+                    return img2;
+                });
+                imageLoaderFutures.add(f);
+            }
+
+            // wait for loading of latest enqueed image
+            long startTime = System.nanoTime();
+            while(!imageLoaderFutures.get(0).isDone()){}
+            overallTimeImgLoadWaitInNs += (System.nanoTime() - startTime);
+
+            try {
+                img = imageLoaderFutures.get(0).get();
+            } catch (InterruptedException e) {
+                //e.printStackTrace();
+                int here = 5;
+            } catch (ExecutionException e) {
+                //e.printStackTrace();
+                int here = 5;
+            }
+            imageLoaderFutures.remove(0);
+        }
+
+
+
+        /* commented because it is the old syncronous loading
         PImage img;
         {
             long startTime = System.nanoTime();
@@ -436,6 +473,7 @@ public class UnrealCrossing extends PApplet {
             img =loadImage(videopath+nr+".jpg");
             overallTimeImgLoadWaitInNs += (System.nanoTime() - startTime);
         }
+        */
 
 
 
@@ -485,26 +523,27 @@ public class UnrealCrossing extends PApplet {
 
             for(int kernelIdx=0;kernelIdx<Conv.kernels.length;kernelIdx++) {
                 final int kernelIdx2 = kernelIdx;
+                final PImage img2 = img;
                 Future<?> f = generalPool.submit(() -> {
                     Conv.KernelConf iKernel = Conv.kernels[kernelIdx2];
 
                     // TODO< optimize and speed it up
                     //       we really don't need to upload all positions because we do the convolution for the complete image >
 
-                    int[] posXArr = new int[img.height * img.width];
-                    int[] posYArr = new int[img.height * img.width];
+                    int[] posXArr = new int[img2.height * img2.width];
+                    int[] posYArr = new int[img2.height * img2.width];
 
                     // fill positions of the (same) kernel
                     int kernelsize = iKernel.precalculatedKernel.retHeight();
-                    for (int iy = kernelsize; iy < img.height - kernelsize; iy++) {
-                        for (int ix = kernelsize; ix < img.width - kernelsize; ix++) {
-                            posXArr[iy * img.width + ix] = ix;
-                            posYArr[iy * img.width + ix] = iy;
+                    for (int iy = kernelsize; iy < img2.height - kernelsize; iy++) {
+                        for (int ix = kernelsize; ix < img2.width - kernelsize; ix++) {
+                            posXArr[iy * img2.width + ix] = ix;
+                            posYArr[iy * img2.width + ix] = iy;
                         }
                     }
 
                     long systemTimeBefore2 = System.nanoTime();
-                    float[] convResultOfThisKernel = convCl.runConv(cachedImage, img.width, iKernel.precaculatedFlattenedKernel, iKernel.precalculatedKernel.retWidth(), posXArr, posYArr, posXArr.length);
+                    float[] convResultOfThisKernel = convCl.runConv(cachedImage, img2.width, iKernel.precaculatedFlattenedKernel, iKernel.precalculatedKernel.retWidth(), posXArr, posYArr, posXArr.length);
                     long systemTimeEnd2 = System.nanoTime();
                     //System.out.println("   runConv() us=" + Long.toString((systemTimeEnd2 - systemTimeBefore2) / 1000));
 
