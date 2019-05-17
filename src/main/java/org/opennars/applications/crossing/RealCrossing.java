@@ -245,6 +245,13 @@ public class RealCrossing extends PApplet {
         for(Camera c : cameras) {
             //c.draw(this);
         }
+        for(int i=0; i<relatedLeft.size(); i++) {
+            Entity left = relatedLeft.get(i);
+            Entity right = relatedRight.get(i);
+            stroke(255,0,0);
+            line((float)left.posX, (float)left.posY, (float)right.posX, (float)right.posY);
+        }
+        stroke(128);
         System.out.println("Concepts: " + nar.memory.concepts.size());
     }
     
@@ -271,15 +278,19 @@ public class RealCrossing extends PApplet {
 
     public double closenessThreshold = 399; //2 times the discretization + 1 tolerance for the cell width
     public boolean near(Entity a, Entity b) {
-        if(Math.abs(a.posX - b.posX) < closenessThreshold && Math.abs(a.posY - b.posY) < closenessThreshold) {
+        if(Math.sqrt(Math.pow(a.posX - b.posX, 2)+Math.pow(a.posY - b.posY, 2)) < closenessThreshold) {
             return true;
         }
         return false;
     }
     
+    List<Entity> relatedLeft = new ArrayList<Entity>(); //just to visualize the entities that have been spatially related
+    List<Entity> relatedRight = new ArrayList<Entity>(); //just to visualize the entities that have been spatially related
     Random rnd = new Random(1337);
     private void informNARSForQA() {
         information.clear();
+        relatedLeft.clear();
+        relatedRight.clear();
         qanar.reset();
         //inform NARS about the spatial relationships between objects and which categories they belong to according to the Tracker
         List<Entity> sortedEntX = entities.stream().sorted(Comparator.comparing(Entity::getPosX)).collect(Collectors.toList());
@@ -289,10 +300,14 @@ public class RealCrossing extends PApplet {
                     if(ent.posX < entity.posX) {
                         information.add("<(*," + name(ent) + "," + name(entity) + ") --> leftOf>. :|:");
                         information.add("(&|," + informType(ent) + "," + informType(entity)+"). :|:");
+                        relatedLeft.add(ent);
+                        relatedRight.add(entity);
                     }
                     if(ent.posY < entity.posY) {
                         information.add("<(*," + name(ent) + "," + name(entity) + ") --> aboveOf>. :|:");
                         information.add("(&|," + informType(ent) + "," + informType(entity)+"). :|:");
+                        relatedLeft.add(ent);
+                        relatedRight.add(entity);
                     }
                 }
             }
