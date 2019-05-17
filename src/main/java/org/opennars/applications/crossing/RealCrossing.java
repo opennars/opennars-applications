@@ -29,9 +29,11 @@ import java.nio.file.Paths;
 import org.opennars.applications.crossing.NarListener.Prediction;
 import org.opennars.applications.gui.NarSimpleGUI;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 import org.opennars.io.events.Events;
 import org.opennars.io.events.OutputHandler.DISAPPOINT;
 import org.opennars.main.Nar;
@@ -40,7 +42,7 @@ import processing.core.PImage;
 import processing.event.MouseEvent;
 
 public class RealCrossing extends PApplet {
-    Nar nar;
+    static Nar nar;
     int entityID = 1;
     
     List<Prediction> predictions = new ArrayList<Prediction>();
@@ -63,6 +65,7 @@ public class RealCrossing extends PApplet {
             System.out.println(ex);
             System.exit(1);
         }
+        new OperatorPanel(nar).show();
         //int trafficLightRadius = 25;
         streets.add(new Street(false, 0, 500, 1000, 500 + streetWidth));
         streets.add(new Street(true, 500, 0, 500 + streetWidth, 1000));
@@ -99,7 +102,7 @@ public class RealCrossing extends PApplet {
     int t = 0;
     public static boolean showAnomalies = false;
 
-    String questions = "<trafficLight --> [?whatColor]>? :|:";
+    public static String questions = "(&|,<?1 --> car>,<?2 --> pedestrian>,<(*,?1,?2) --> leftOf>)? :|:";
     int perception_update = 1;
     int i = 2;
     
@@ -135,8 +138,8 @@ public class RealCrossing extends PApplet {
         for(String s : lines) {
             //ClassID TrackID : [X5c Y5c W5 H5] 
             String[] props = s.split(" ");
-            Integer id = Integer.valueOf(props[1]);
-            id = 0; //treat them as same for now, but distinguished by type!
+            String label = props[1];
+            int id = 0; //treat them as same for now, but distinguished by type!
             if(unwrap(props[3]).equals("")) {
                 System.out.println(s);
             }
@@ -160,16 +163,21 @@ public class RealCrossing extends PApplet {
             }
             
             if(props[0].equals("0")) { //person or vehicle for now, TODO make car motorcycle distinction
-                entities.add(new Car(id, X, Y, 0, 0));
+                entities.add(new Car(id, X, Y, 0, 0, label));
             } else {
-                entities.add(new Pedestrian(id, X, Y, 0, 0));
+                entities.add(new Pedestrian(id, X, Y, 0, 0, label));
             }
-            
         }
         
         i++;
         
+        if(t % (5*perception_update) == 0) {
+            System.out.println("TICK spatial");
+            informNARSForQA();
+        }
+        
         if (t % perception_update == 0) {
+            
             boolean hadInput = false;
             for(Camera c : cameras) {
                 final boolean force = false; // not required HACK
@@ -226,6 +234,57 @@ public class RealCrossing extends PApplet {
             //c.draw(this);
         }
         System.out.println("Concepts: " + nar.memory.concepts.size());
+    }
+    
+    public void informType(Entity entity) {
+        if(entity instanceof Car) {
+            nar.addInput("<" + name(entity) + " --> car>. :|:");
+        }
+        if(entity instanceof Pedestrian) {
+            nar.addInput("<" +name(entity) + " --> pedestrian>. :|:");
+        }
+    }
+    
+    public String name(Entity entity) { //TODO put in class
+        if(entity instanceof Car) {
+            return "car" + entity.label;
+        }
+        if(entity instanceof Pedestrian) {
+            return "pedestrian" + entity.label;
+        }
+        return "entity";
+    }
+
+    public double closenessThreshold = 2000;
+    public boolean near(Entity a, Entity b) {
+        //if(Math.abs(a.posX - b.posX) < closenessThreshold && Math.abs(a.posY - b.posY) < closenessThreshold) {
+            return true;
+        //}
+        //return false;
+    }
+    
+    private void informNARSForQA() {
+        //create spatial relations:
+        List<Entity> sortedEntX = entities.stream().sorted(Comparator.comparing(Entity::getPosX)).collect(Collectors.toList());
+        List<Entity> sortedEntY = entities.stream().sorted(Comparator.comparing(Entity::getPosY)).collect(Collectors.toList());
+        if(sortedEntX.size() > 0) {
+            informType(sortedEntX.get(0));
+            for(int i=1; i<sortedEntX.size(); i++) {
+                if(near(sortedEntX.get(i), sortedEntX.get(i-1))) {
+                    nar.addInput("<(*," + name(sortedEntX.get(i)) + "," + name(sortedEntX.get(i-1)) + ") --> leftOf>. :|:");
+                    informType(sortedEntX.get(i));
+                }
+            }
+        }
+        if(sortedEntY.size() > 0) {
+            informType(sortedEntY.get(0));
+            for(int i=1; i<sortedEntY.size(); i++) {
+                if(near(sortedEntX.get(i), sortedEntX.get(i-1))) {
+                    nar.addInput("<(*," + name(sortedEntY.get(i)) + "," + name(sortedEntY.get(i-1)) + ") --> aboveOf>. :|:");
+                    informType(sortedEntY.get(i));
+                }
+            }
+        }
     }
 
     public void removeOutdatedPredictions(List<Prediction> predictions) {
@@ -295,7 +354,6 @@ public class RealCrossing extends PApplet {
         }
         String[] args2 = {"Crossing"};
         RealCrossing mp = new RealCrossing();
-        new IncidentSimulator().show();
         PApplet.runSketch(args2, mp);
     }
 }
