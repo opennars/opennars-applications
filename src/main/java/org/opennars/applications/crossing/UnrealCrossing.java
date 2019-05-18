@@ -56,6 +56,8 @@ import processing.core.PApplet;
 import processing.core.PImage;
 import processing.event.MouseEvent;
 
+import static org.opennars.applications.cv.Util.calcDistBetweenImageAndPrototype;
+
 public class UnrealCrossing extends PApplet {
     Nar nar;
     int entityID = 1;
@@ -1636,7 +1638,7 @@ public class UnrealCrossing extends PApplet {
                                 int prototypeClassificationStepsize = 2; // ship every 2nd pixel of the compared prototype
 
                                 iSt.prototypeClassifier.classifyAt((int)regionProposalCenterX + dx, (int)regionProposalCenterY + dy, prototypeClassificationStepsize, img);
-                                float classificationDistance = iSt.prototypeClassifier.classificationLastDistance;
+                                float classificationDistance = iSt.prototypeClassifier.classificationLastDistanceMse;
 
                                 if (classificationDistance < bestClassificationDistance) {
                                     bestClassificationDistance = classificationDistance;
@@ -1747,12 +1749,34 @@ public class UnrealCrossing extends PApplet {
 
                 // subsection of image
                 Map2d[] subImg = org.opennars.applications.cv.Util.subimage((int)iSt.prototypeCenterX, (int)iSt.prototypeCenterY, 128, 128, img);
-
+                if (subImg == null) {
+                    continue;
+                }
 
                 boolean hasAssociatedClass = iSt.associatedClass != Long.MIN_VALUE;
+
                 if (!hasAssociatedClass) {
-                    ClassDatabase.Class createdClass = classDatabase.createNewClass(128,128);
-                    iSt.associatedClass = createdClass.class_; // link tracklet class to class in database
+                    float maxDifferenceToCreateNewClass = 0.03f; // maximal distance between existing class and this categorization to create a new class
+
+                    float bestDist = Float.POSITIVE_INFINITY;
+                    long bestGlobalClassId = 0;
+
+                    for(Map.Entry<Long, ClassDatabase.Class> iEntry : classDatabase.classesByClassId.entrySet()) {
+                        float dist = calcDistBetweenImageAndPrototype(subImg, iEntry.getValue().prototype);
+                        if (dist < bestDist) {
+                            bestDist = dist;
+                            bestGlobalClassId = iEntry.getValue().class_;
+                        }
+                    }
+
+                    boolean wasFoundBestClass = bestDist < maxDifferenceToCreateNewClass;
+                    if (wasFoundBestClass) {
+                        iSt.associatedClass = bestGlobalClassId;
+                    }
+                    else {
+                        ClassDatabase.Class createdClass = classDatabase.createNewClass(128,128);
+                        iSt.associatedClass = createdClass.class_; // link tracklet class to class in database
+                    }
                 }
 
                 ClassDatabase.Class createdClass = classDatabase.retrieveById(iSt.associatedClass);
@@ -1816,6 +1840,36 @@ public class UnrealCrossing extends PApplet {
                     dc2.posX = (int)iSt.prototypeCenterX;
                     dc2.posY = (int)iSt.prototypeCenterY;
                     debugCursors.add(dc2);
+                }
+            }
+        }
+
+        // debug distances between subimages and prototypes
+        if (showSpatialTracklets) {
+            for (AdvancedSpatialTracklet iSt : advancedSpatialTracklets) {
+                int posX = (int) iSt.centerX;
+                int posY = (int) iSt.centerY;
+
+
+                Map2d[] subimage = org.opennars.applications.cv.Util.subimage(posX, posY, 128, 128, img);
+                boolean isSubimageValid = subimage != null;
+                if (isSubimageValid) {
+                    int idx = 0;
+
+                    for(Map.Entry<Long, ClassDatabase.Class> iEntry : classDatabase.classesByClassId.entrySet()) {
+                        MultichannelCentralDistPrototype prototype = iEntry.getValue().prototype;
+
+                        // compute difference between actual (sub)image and the iterated prototype
+
+                        calcDistBetweenImageAndPrototype(subimage, prototype);
+
+                        fill(255,255,255);
+                        //text("proto diff ["+idx+"]="+dist, posX, posY + idx * 20);
+                        //System.out.println("proto diff ["+idx+"]="+dist);
+
+                        idx++;
+                    }
+
                 }
             }
         }

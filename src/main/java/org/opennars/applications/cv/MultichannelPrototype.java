@@ -35,19 +35,20 @@ public class MultichannelPrototype {
      * @param img
      * @return
      */
-    public float calcDist(int posX, int posY, int stepsize, PImage img) {
+    public Dists calcDist(int posX, int posY, int stepsize, PImage img) {
         int prototypeWidth = channels[0].retWidth();
         int prototypeHeight = channels[0].retHeight();
 
         if (posX <= prototypeWidth/2 || posX >= img.width-prototypeWidth/2) {
-            return Float.POSITIVE_INFINITY;
+            return new Dists();
         }
 
         if (posY <= prototypeHeight/2 || posY >= img.height-prototypeHeight/2) {
-            return Float.POSITIVE_INFINITY;
+            return new Dists();
         }
 
         float dist = 0;
+        float mse = 0;
 
         for(int iy=0;iy<prototypeHeight;iy+=stepsize) {
             for(int ix=0;ix<prototypeWidth;ix+=stepsize){
@@ -69,10 +70,27 @@ public class MultichannelPrototype {
                     Math.abs(b - channels[2].readAtUnsafe(iy, ix));
 
                 dist+=(diff * stepsize*stepsize); // we need to compute the error based on the covered area to get roughtly the same result with different stepsizes
+
+                float diff2 =
+                        Math.abs(r - channels[0].readAtUnsafe(iy, ix))*Math.abs(r - channels[0].readAtUnsafe(iy, ix)) +
+                                Math.abs(g - channels[1].readAtUnsafe(iy, ix))*Math.abs(g - channels[1].readAtUnsafe(iy, ix)) +
+                                Math.abs(b - channels[2].readAtUnsafe(iy, ix))*Math.abs(b - channels[2].readAtUnsafe(iy, ix));
+
+                dist+=(diff * stepsize*stepsize); // we need to compute the error based on the covered area to get roughtly the same result with different stepsizes
+                mse += diff2;
             }
         }
 
         dist /= (img.width*img.height); // normalize
-        return dist;
+
+        Dists dists = new Dists();
+        dists.dist = dist;
+        dists.mse = mse;
+        return dists;
+    }
+
+    public static class Dists {
+        float dist = Float.POSITIVE_INFINITY;
+        float mse = Float.POSITIVE_INFINITY;
     }
 }

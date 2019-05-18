@@ -39,4 +39,28 @@ public class Util {
 
         return maps;
     }
+
+    public static float calcDistBetweenImageAndPrototype(Map2d[] subimage, MultichannelCentralDistPrototype prototype) {
+        float dist = 0;
+
+        for(int iy=0;iy<prototype.channels[0].retHeight();iy++) {
+            for(int ix=0;ix<prototype.channels[0].retWidth();ix++) {
+                float subimgR = subimage[0].readAtUnsafe(iy, ix);
+                float subimgG = subimage[1].readAtUnsafe(iy, ix);
+                float subimgB = subimage[2].readAtUnsafe(iy, ix);
+
+                float protoR = (float)prototype.channels[0].readAtUnsafe(iy, ix).mean;
+                float protoG = (float)prototype.channels[1].readAtUnsafe(iy, ix).mean;
+                float protoB = (float)prototype.channels[2].readAtUnsafe(iy, ix).mean;
+
+                dist += Math.abs(subimgR - protoR)*Math.abs(subimgR - protoR);
+                dist += Math.abs(subimgG - protoG)*Math.abs(subimgR - protoR);
+                dist += Math.abs(subimgB - protoB)*Math.abs(subimgR - protoR);
+            }
+        }
+
+        dist /= (prototype.channels[0].retHeight()*prototype.channels[0].retWidth()*3);
+
+        return dist;
+    }
 }

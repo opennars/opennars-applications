@@ -28,6 +28,7 @@ public class MultichannelProtoClassifier {
     public float maxDistance = Float.POSITIVE_INFINITY;//100000000000.0f;
 
     public float classificationLastDistance = Float.POSITIVE_INFINITY;
+    public float classificationLastDistanceMse = Float.POSITIVE_INFINITY;
 
     public boolean hasPrototypes() {
         return prototypes.size() > 0;
@@ -43,13 +44,16 @@ public class MultichannelProtoClassifier {
     // position is center of prototype to classify or add
     public long classifyAt(int posX, int posY, int stepsize, PImage img) {
         classificationLastDistance = Float.POSITIVE_INFINITY;
+        classificationLastDistanceMse = Float.POSITIVE_INFINITY;
 
         long class_ = -1;
 
         for(MultichannelPrototype iPrototype : prototypes) {
-            float currentDistance = iPrototype.calcDist(posX, posY, stepsize, img);
+            MultichannelPrototype.Dists dists = iPrototype.calcDist(posX, posY, stepsize, img);
+            float currentDistance = dists.mse;
             if (currentDistance < classificationLastDistance) {
                 classificationLastDistance = currentDistance;
+                classificationLastDistanceMse = currentDistance;
                 class_ = iPrototype.class_;
             }
         }
