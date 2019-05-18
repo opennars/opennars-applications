@@ -43,6 +43,8 @@ public class AdvancedSpatialTracklet {
     public double prototypeCenterX = -1;
     public double prototypeCenterY = -1;
 
+    public long associatedClass = Long.MIN_VALUE; // associated class to which the tracklet corresponds to, Long.MIN_VALUE if it is not coresponding to a global class(ification)
+
 
     public AdvancedSpatialTracklet(double centerX, double centerY, long id) {
         this.centerX = centerX;

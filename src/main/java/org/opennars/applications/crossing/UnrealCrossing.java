@@ -399,7 +399,9 @@ public class UnrealCrossing extends PApplet {
 
     int imagePreloadCount = 4; // number of images which are preloaded
 
-    boolean debug_enableClassification = true; // used for debugging - best to be kept enabled in "production"
+    boolean debug_enableClassification = false; // used for debugging - best to be kept enabled in "production"
+
+    ClassDatabase classDatabase = new ClassDatabase(); // database for all classifications
 
     @Override
     public void draw() {
@@ -1736,6 +1738,34 @@ public class UnrealCrossing extends PApplet {
         }
 
 
+
+        { // maintain classes from Advanced tracklets
+            for(AdvancedSpatialTracklet iSt : advancedSpatialTracklets) {
+                if (iSt.prototypeCenterX == -1) {
+                    continue; // ignore because we need one with a identified prototype
+                }
+
+                // subsection of image
+                Map2d[] subImg = org.opennars.applications.cv.Util.subimage((int)iSt.prototypeCenterX, (int)iSt.prototypeCenterY, 128, 128, img);
+
+
+                boolean hasAssociatedClass = iSt.associatedClass != Long.MIN_VALUE;
+                if (!hasAssociatedClass) {
+                    ClassDatabase.Class createdClass = classDatabase.createNewClass(128,128);
+                    iSt.associatedClass = createdClass.class_; // link tracklet class to class in database
+                }
+
+                ClassDatabase.Class createdClass = classDatabase.retrieveById(iSt.associatedClass);
+
+                // revise
+                boolean isSubImageValid = subImg != null;
+                if (isSubImageValid) {
+                    createdClass.revise(subImg, this);
+                }
+            }
+        }
+
+
         boolean showSpatialTracklets = true; // true
         boolean showDebugCursor = true; // true
         boolean showMotionparticles = true;
@@ -1831,6 +1861,44 @@ public class UnrealCrossing extends PApplet {
             }
         }
 
+        boolean showDbPrototypes = true; // show the prototypes of all classes in the db
+
+        if (showDbPrototypes) {
+            int idx = 0;
+
+            for( Map.Entry<Long, ClassDatabase.Class> iDbEntry : classDatabase.classesByClassId.entrySet()) {
+                ClassDatabase.Class class_ = iDbEntry.getValue();
+
+                int displayX = (idx % 8) * (128/2 + 30); // coordinate of the display of the class
+                int displayY = 800 + (128/2 + 30)*(idx / 8);
+
+                /*
+                PImage protoImg = createImage(128,128, RGB); // image of prototype
+
+                noStroke();
+
+                for(int y=0;y<class_.prototype.channels[0].retHeight();y++) {
+                    for(int x=0;x<class_.prototype.channels[0].retWidth();x++) {
+                        double r = class_.prototype.channels[0].readAtSafe(y,x).mean;
+                        double g = class_.prototype.channels[1].readAtSafe(y,x).mean;
+                        double b = class_.prototype.channels[2].readAtSafe(y,x).mean;
+
+                        protoImg.pixels[y*protoImg.width + x] = color((int)(r*255),(int)(g*255),(int)(b*255));
+
+
+                    }
+                }
+                */
+
+                boolean isProtoMeanImgValid = class_.protoMeanImg != null;
+                if (isProtoMeanImgValid) {
+                    image(class_.protoMeanImg, displayX, displayY, 128/2, 128/2);
+                }
+
+                idx++;
+            }
+        }
+
         boolean showStats = true; // show system statistics
         if (showStats) {
             fill(0);
@@ -1859,6 +1927,7 @@ public class UnrealCrossing extends PApplet {
 
         //System.out.println("[d 1] Concepts: " + nar.memory.concepts.size());
     }
+
 
     // used to collect regions from the image
     private static class Region {
