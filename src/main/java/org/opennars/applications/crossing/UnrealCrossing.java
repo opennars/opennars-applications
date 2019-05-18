@@ -57,6 +57,7 @@ import processing.core.PImage;
 import processing.event.MouseEvent;
 
 import static org.opennars.applications.cv.Util.calcDistBetweenImageAndPrototype;
+import static org.opennars.applications.cv.Util.subimageField;
 
 public class UnrealCrossing extends PApplet {
     Nar nar;
@@ -1767,6 +1768,7 @@ public class UnrealCrossing extends PApplet {
 
                 // subsection of image
                 Map2d[] subImg = org.opennars.applications.cv.Util.subimage((int)iSt.prototypeCenterX, (int)iSt.prototypeCenterY, 128, 128, img);
+                Map2dGeneric<Boolean> subImgMask = subimageField((int)iSt.prototypeCenterX, (int)iSt.prototypeCenterY, 128, 128, regionField, heatmapCellsize); // read mask from regionField
                 if (subImg == null) {
                     continue;
                 }
@@ -1802,7 +1804,7 @@ public class UnrealCrossing extends PApplet {
                 // revise
                 boolean isSubImageValid = subImg != null;
                 if (isSubImageValid) {
-                    createdClass.revise(subImg, this);
+                    createdClass.reviseByMask(subImg, subImgMask, this);
                 }
             }
         }
@@ -1999,6 +2001,7 @@ public class UnrealCrossing extends PApplet {
 
         //System.out.println("[d 1] Concepts: " + nar.memory.concepts.size());
     }
+
 
 
     // used to collect regions from the image

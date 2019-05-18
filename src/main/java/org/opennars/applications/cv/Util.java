@@ -40,6 +40,46 @@ public class Util {
         return maps;
     }
 
+    public static Map2dGeneric<Boolean> subimageField(int posX, int posY, int width, int height, Map2dGeneric<Boolean> field, int cellsize) {
+        Map2dGeneric<Boolean> map = new Map2dGeneric<>(height, width);
+        for(int iy=0;iy<height;iy++) {
+            for(int ix=0;ix<width;ix++) {
+                map.writeAtUnsafe(iy,ix,false); // we need to init it
+            }
+        }
+
+        if (posX <= width/2 || posX >= field.retWidth()*cellsize-width/2) {
+            return null; // not valid
+        }
+
+        if (posY <= height/2 || posY >= field.retHeight()*cellsize-height/2) {
+            return null; // not valid
+        }
+
+        for(int iy=0;iy<height;iy++) {
+            for(int ix=0;ix<width;ix++){
+                int dx = ix-width/2;
+                int dy = iy-height/2;
+
+                int x = posX + dx;
+                int y = posY + dy;
+
+                boolean fieldValue = readField(x, y, field, cellsize);
+
+                map.writeAtSafe(iy,ix,fieldValue);
+            }
+        }
+
+        return map;
+    }
+
+
+
+    // reads a field which is composed out of cells
+    public static boolean readField(int absoluteX, int absoluteY, Map2dGeneric<Boolean> field, int cellsize) {
+        return field.readAtSafe(absoluteY / cellsize, absoluteX / cellsize);
+    }
+
     public static float calcDistBetweenImageAndPrototype(Map2d[] subimage, MultichannelCentralDistPrototype prototype) {
         float dist = 0;
 
@@ -63,4 +103,6 @@ public class Util {
 
         return dist;
     }
+
+
 }

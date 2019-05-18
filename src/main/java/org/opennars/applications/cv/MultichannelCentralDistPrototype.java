@@ -30,10 +30,7 @@ public class MultichannelCentralDistPrototype {
         this.channels = channels;
     }
 
-    /**
-     * revises all distributions with the new evidence
-     * @param inputChannels
-     */
+    /* commented because not used
     public void revise(Map2d[] inputChannels) {
         for(int iChannelIdx=0;iChannelIdx<channels.length;iChannelIdx++) {
             Map2dGeneric<IncrementalCentralDistribution> channelOfPrototype = this.channels[iChannelIdx];
@@ -46,6 +43,30 @@ public class MultichannelCentralDistPrototype {
                 }
             }
         }
+    }
+     */
+
+    /**
+     * revises all distributions with the new evidence for the enabled pixels by mask
+     * @param inputChannels
+     */
+    public void reviseByMask(Map2d[] inputChannels, Map2dGeneric<Boolean> mask) {
+        for(int iChannelIdx=0;iChannelIdx<channels.length;iChannelIdx++) {
+            Map2dGeneric<IncrementalCentralDistribution> channelOfPrototype = this.channels[iChannelIdx];
+            Map2d channelOfInput = inputChannels[iChannelIdx];
+
+            for(int iy=0;iy<channelOfPrototype.retHeight();iy++) {
+                for(int ix=0;ix<channelOfPrototype.retWidth();ix++) {
+                    boolean maskEnabled = mask.readAtSafe(iy,ix);
+
+                    if (maskEnabled) {
+                        float val = channelOfInput.readAtSafe(iy,ix);
+                        channelOfPrototype.readAtSafe(iy,ix).next(val);
+                    }
+                }
+            }
+        }
+
     }
 
     /**
@@ -96,4 +117,5 @@ public class MultichannelCentralDistPrototype {
         dist /= (img.width*img.height); // normalize
         return dist;
     }
+
 }

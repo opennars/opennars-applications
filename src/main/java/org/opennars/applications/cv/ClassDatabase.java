@@ -1,5 +1,6 @@
 package org.opennars.applications.cv;
 
+import org.opennars.applications.crossing.UnrealCrossing;
 import processing.core.PApplet;
 import processing.core.PImage;
 
@@ -57,8 +58,28 @@ public class ClassDatabase {
             prototype = new MultichannelCentralDistPrototype(class_, channels);
         }
 
+        /* commented because not used
         public void revise(Map2d[] imageColors, PApplet applet) {
             prototype.revise(imageColors);
+
+            // update image for debugging purposes
+            protoMeanImg = applet.createImage(128,128, RGB); // image of prototype
+
+
+            for(int y=0;y<prototype.channels[0].retHeight();y++) {
+                for(int x=0;x<prototype.channels[0].retWidth();x++) {
+                    double r = prototype.channels[0].readAtSafe(y,x).mean;
+                    double g = prototype.channels[1].readAtSafe(y,x).mean;
+                    double b = prototype.channels[2].readAtSafe(y,x).mean;
+
+                    protoMeanImg.pixels[y*protoMeanImg.width + x] = applet.color((int)(r*255),(int)(g*255),(int)(b*255));
+                }
+            }
+        }
+         */
+
+        public void reviseByMask(Map2d[] imageColors, Map2dGeneric<Boolean> mask, UnrealCrossing applet) {
+            prototype.reviseByMask(imageColors, mask);
 
             // update image for debugging purposes
             protoMeanImg = applet.createImage(128,128, RGB); // image of prototype
