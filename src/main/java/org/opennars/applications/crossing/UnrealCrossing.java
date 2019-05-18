@@ -1666,6 +1666,11 @@ public class UnrealCrossing extends PApplet {
 
                             fill(0,0,0);
                             text("RETR  x="+(int) iSt.centerX + " y="+(int) iSt.centerY, (float)iSt.centerX, (float)iSt.centerY+20);
+
+
+                            // update so it tracks the new image
+                            iSt.prototypeClassifier = new MultichannelProtoClassifier();
+                            iSt.prototypeClassifier.forceAddPrototype((int)iSt.centerX, (int)iSt.centerY, width, height, img);
                         }
 
 
