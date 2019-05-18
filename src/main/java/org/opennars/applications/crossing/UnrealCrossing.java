@@ -543,61 +543,71 @@ public class UnrealCrossing extends PApplet {
 
 
         if (convolutions == null) {
+            // commented because we don't use convolutions
+
             // allocate
-            convolutions = new Map2d[Conv.kernels.length];
-            for(int idx=0;idx<convolutions.length;idx++) {
-                convolutions[idx] = new Map2d(img.height, img.width);
-            }
+            //convolutions = new Map2d[Conv.kernels.length];
+            //for(int idx=0;idx<convolutions.length;idx++) {
+            //    convolutions[idx] = new Map2d(img.height, img.width);
+            //}
         }
 
         long overalltimeWaitConvl = 0;
         { // compute convolutions
-            long systemTimeBefore = System.nanoTime();
+            if (convolutions != null) { // if convolutions are enabled and required
+                long systemTimeBefore = System.nanoTime();
 
-            List<Future<?>> futures = new ArrayList<>();
+                List<Future<?>> futures = new ArrayList<>();
 
 
 
-            for(int kernelIdx=0;kernelIdx<Conv.kernels.length;kernelIdx++) {
-                final int kernelIdx2 = kernelIdx;
-                final PImage img2 = img;
-                Future<?> f = generalPool.submit(() -> {
-                    Conv.KernelConf iKernel = Conv.kernels[kernelIdx2];
+                for(int kernelIdx=0;kernelIdx<Conv.kernels.length;kernelIdx++) {
+                    final int kernelIdx2 = kernelIdx;
+                    final PImage img2 = img;
+                    Future<?> f = generalPool.submit(() -> {
+                        Conv.KernelConf iKernel = Conv.kernels[kernelIdx2];
 
-                    // TODO< optimize and speed it up
-                    //       we really don't need to upload all positions because we do the convolution for the complete image >
+                        // TODO< optimize and speed it up
+                        //       we really don't need to upload all positions because we do the convolution for the complete image >
 
-                    int[] posXArr = new int[img2.height * img2.width];
-                    int[] posYArr = new int[img2.height * img2.width];
+                        int[] posXArr = new int[img2.height * img2.width];
+                        int[] posYArr = new int[img2.height * img2.width];
 
-                    // fill positions of the (same) kernel
-                    int kernelsize = iKernel.precalculatedKernel.retHeight();
-                    for (int iy = kernelsize; iy < img2.height - kernelsize; iy++) {
-                        for (int ix = kernelsize; ix < img2.width - kernelsize; ix++) {
-                            posXArr[iy * img2.width + ix] = ix;
-                            posYArr[iy * img2.width + ix] = iy;
+                        // fill positions of the (same) kernel
+                        int kernelsize = iKernel.precalculatedKernel.retHeight();
+                        for (int iy = kernelsize; iy < img2.height - kernelsize; iy++) {
+                            for (int ix = kernelsize; ix < img2.width - kernelsize; ix++) {
+                                posXArr[iy * img2.width + ix] = ix;
+                                posYArr[iy * img2.width + ix] = iy;
+                            }
                         }
+
+                        long systemTimeBefore2 = System.nanoTime();
+                        float[] convResultOfThisKernel = convCl.runConv(cachedImage, img2.width, iKernel.precaculatedFlattenedKernel, iKernel.precalculatedKernel.retWidth(), posXArr, posYArr, posXArr.length);
+                        long systemTimeEnd2 = System.nanoTime();
+                        //System.out.println("   runConv() us=" + Long.toString((systemTimeEnd2 - systemTimeBefore2) / 1000));
+
+                        // write result of convolution into map
+                        for (int idx = 0; idx < posXArr.length; idx++) {
+                            float val = convResultOfThisKernel[idx];
+                            convolutions[kernelIdx2].writeAtUnsafe(posYArr[idx], posXArr[idx], val);
+                        }
+                    });
+                    futures.add(f);
+                }
+
+                for(Future<?> iFuture: futures) {
+                    try {
+                        iFuture.get(); // wait on completion
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    } catch (ExecutionException e) {
+                        e.printStackTrace();
                     }
+                }
 
-                    long systemTimeBefore2 = System.nanoTime();
-                    float[] convResultOfThisKernel = convCl.runConv(cachedImage, img2.width, iKernel.precaculatedFlattenedKernel, iKernel.precalculatedKernel.retWidth(), posXArr, posYArr, posXArr.length);
-                    long systemTimeEnd2 = System.nanoTime();
-                    //System.out.println("   runConv() us=" + Long.toString((systemTimeEnd2 - systemTimeBefore2) / 1000));
-
-                    // write result of convolution into map
-                    for (int idx = 0; idx < posXArr.length; idx++) {
-                        float val = convResultOfThisKernel[idx];
-                        convolutions[kernelIdx2].writeAtUnsafe(posYArr[idx], posXArr[idx], val);
-                    }
-                });
-                futures.add(f);
+                overalltimeWaitConvl = System.nanoTime()-systemTimeBefore; // in nanoseconds
             }
-
-            for(Future<?> iFuture: futures) {
-                while(!iFuture.isDone()){} // spin loop
-            }
-
-            overalltimeWaitConvl = System.nanoTime()-systemTimeBefore; // in nanoseconds
         }
 
 
@@ -1321,107 +1331,108 @@ public class UnrealCrossing extends PApplet {
 
 
 
+        boolean enableTrainNn = false; // disable it because we don't use the NN anyways
+
+        if (enableTrainNn) {
+            for(AdvancedSpatialTracklet iSt : advancedSpatialTracklets) {
+                if (iSt.trainingDataOfThisClass.size() < 8 || iSt.notTrainedSince < 500) {
+                    continue;
+                }
+
+                iSt.notTrainedSince = 0;
 
 
-        for(AdvancedSpatialTracklet iSt : advancedSpatialTracklets) {
-            if (iSt.trainingDataOfThisClass.size() < 8 || iSt.notTrainedSince < 500) {
-                continue;
-            }
+                List<NnPrototypeTrainer.TrainingTuple> trainingTuples = new ArrayList<>();
 
-            iSt.notTrainedSince = 0;
+                int iPositiveClassId = 0;
 
+                List<Long> nnPositiveClasses = new ArrayList<>(); // real classes of the positive classes
+                nnPositiveClasses.add(iSt.id); // add the id as the positive class
 
-            List<NnPrototypeTrainer.TrainingTuple> trainingTuples = new ArrayList<>();
+                // add positives to training
+                for(float[] iPositiveSample : iSt.trainingDataOfThisClass) {
+                    NnPrototypeTrainer.TrainingTuple createdTrainingTuple = new NnPrototypeTrainer.TrainingTuple();
+                    createdTrainingTuple.input = iPositiveSample;
+                    createdTrainingTuple.class_ = iPositiveClassId; // positive sample class
+                    trainingTuples.add(createdTrainingTuple);
+                }
 
-            int iPositiveClassId = 0;
+                int maxCountOfOtherClasses = 15; // configuration - how many other classes should be used for training
 
-            List<Long> nnPositiveClasses = new ArrayList<>(); // real classes of the positive classes
-            nnPositiveClasses.add(iSt.id); // add the id as the positive class
-
-            // add positives to training
-            for(float[] iPositiveSample : iSt.trainingDataOfThisClass) {
-                NnPrototypeTrainer.TrainingTuple createdTrainingTuple = new NnPrototypeTrainer.TrainingTuple();
-                createdTrainingTuple.input = iPositiveSample;
-                createdTrainingTuple.class_ = iPositiveClassId; // positive sample class
-                trainingTuples.add(createdTrainingTuple);
-            }
-
-            int maxCountOfOtherClasses = 15; // configuration - how many other classes should be used for training
-
-            if (nnSampleData.size() > 0) {
+                if (nnSampleData.size() > 0) {
 
 
-                List<Integer> candidateIndices = new ArrayList<>();
-                for(int idx=0;idx<nnSampleData.size();idx++) { // loop to add candidate indices
-                    if (nnSampleData.get(idx).class_ != iSt.id) { // class must be different - this may be always true
-                        candidateIndices.add(idx);
+                    List<Integer> candidateIndices = new ArrayList<>();
+                    for(int idx=0;idx<nnSampleData.size();idx++) { // loop to add candidate indices
+                        if (nnSampleData.get(idx).class_ != iSt.id) { // class must be different - this may be always true
+                            candidateIndices.add(idx);
+                        }
+                    }
+
+                    System.out.println("DBG "+Integer.toString(candidateIndices.size()));
+
+                    List<Integer> chosenIndices = new ArrayList<>();
+                    for(int i=0;i<maxCountOfOtherClasses;i++) { // loop to chose indices
+                        if (candidateIndices.size() == 0) {
+                            break;
+                        }
+
+                        int idxidx = rng.nextInt(candidateIndices.size());
+                        int idx = candidateIndices.get(idxidx);
+
+                        candidateIndices.remove(idxidx);
+
+                        chosenIndices.add(idx);
+                    }
+
+                    for(int iChosenIdx : chosenIndices) {
+                        SampleData chosenSampleData = nnSampleData.get(iChosenIdx);
+
+                        nnPositiveClasses.add(chosenSampleData.class_); // add the class as the positive class
+
+                        for(float[] iPositiveSample : chosenSampleData.samples) {
+                            NnPrototypeTrainer.TrainingTuple createdTrainingTuple = new NnPrototypeTrainer.TrainingTuple();
+                            createdTrainingTuple.input = iPositiveSample;
+                            createdTrainingTuple.class_ = iPositiveClassId; // positive sample class
+                            trainingTuples.add(createdTrainingTuple);
+                        }
+
+                        iPositiveClassId++;
                     }
                 }
 
-                System.out.println("DBG "+Integer.toString(candidateIndices.size()));
 
-                List<Integer> chosenIndices = new ArrayList<>();
-                for(int i=0;i<maxCountOfOtherClasses;i++) { // loop to chose indices
-                    if (candidateIndices.size() == 0) {
-                        break;
-                    }
+                int negativeClassId = iPositiveClassId+1;// allocate a class for the negative class
 
-                    int idxidx = rng.nextInt(candidateIndices.size());
-                    int idx = candidateIndices.get(idxidx);
+                // add negatives to training by sampling random positions in the image
+                // TODO< ensure that the image is different by computing the distance of the samples and checking it >
 
-                    candidateIndices.remove(idxidx);
+                // TODO< store a global collection of negative images >
 
-                    chosenIndices.add(idx);
+                int nnClassifierNumberOfNegativeSamples = (int)(1.5*trainingTuples.size());
+                nnClassifierNumberOfNegativeSamples = Math.min(nnClassifierNumberOfNegativeSamples, 100);
+
+                for(int iSampleCounter=0;iSampleCounter<nnClassifierNumberOfNegativeSamples;iSampleCounter++) {
+                    int samplePosX = rng.nextInt(img.width - 64)+64;
+                    int samplePosY = rng.nextInt(img.height - 64)+64;
+
+                    float[] negativeSampleVector = convolutionImg(img, cachedImage, samplePosX, samplePosY);
+
+                    NnPrototypeTrainer.TrainingTuple createdTrainingTuple = new NnPrototypeTrainer.TrainingTuple();
+                    createdTrainingTuple.input = negativeSampleVector;
+                    createdTrainingTuple.class_ = negativeClassId; // negative sample class
+                    trainingTuples.add(createdTrainingTuple);
                 }
 
-                for(int iChosenIdx : chosenIndices) {
-                    SampleData chosenSampleData = nnSampleData.get(iChosenIdx);
-
-                    nnPositiveClasses.add(chosenSampleData.class_); // add the class as the positive class
-
-                    for(float[] iPositiveSample : chosenSampleData.samples) {
-                        NnPrototypeTrainer.TrainingTuple createdTrainingTuple = new NnPrototypeTrainer.TrainingTuple();
-                        createdTrainingTuple.input = iPositiveSample;
-                        createdTrainingTuple.class_ = iPositiveClassId; // positive sample class
-                        trainingTuples.add(createdTrainingTuple);
-                    }
-
-                    iPositiveClassId++;
-                }
-            }
+                int trainedNumberOfClasses = negativeClassId+1;
 
 
-            int negativeClassId = iPositiveClassId+1;// allocate a class for the negative class
+                enqueuedTrainingRunner.clear(); // flush because all others got outdated now
 
-            // add negatives to training by sampling random positions in the image
-            // TODO< ensure that the image is different by computing the distance of the samples and checking it >
-
-            // TODO< store a global collection of negative images >
-
-            int nnClassifierNumberOfNegativeSamples = (int)(1.5*trainingTuples.size());
-            nnClassifierNumberOfNegativeSamples = Math.min(nnClassifierNumberOfNegativeSamples, 100);
-
-            for(int iSampleCounter=0;iSampleCounter<nnClassifierNumberOfNegativeSamples;iSampleCounter++) {
-                int samplePosX = rng.nextInt(img.width - 64)+64;
-                int samplePosY = rng.nextInt(img.height - 64)+64;
-
-                float[] negativeSampleVector = convolutionImg(img, cachedImage, samplePosX, samplePosY);
-
-                NnPrototypeTrainer.TrainingTuple createdTrainingTuple = new NnPrototypeTrainer.TrainingTuple();
-                createdTrainingTuple.input = negativeSampleVector;
-                createdTrainingTuple.class_ = negativeClassId; // negative sample class
-                trainingTuples.add(createdTrainingTuple);
-            }
-
-            int trainedNumberOfClasses = negativeClassId+1;
-
-
-            enqueuedTrainingRunner.clear(); // flush because all others got outdated now
-
-            // send to pool for async training
-            NnTrainerRunner nnTrainingRunner = new NnTrainerRunner(trainingTuples);
-            nnTrainingRunner.positiveClasses = nnPositiveClasses; // set the classes for which it is training for
-            enqueuedTrainingRunner.add(nnTrainingRunner);
+                // send to pool for async training
+                NnTrainerRunner nnTrainingRunner = new NnTrainerRunner(trainingTuples);
+                nnTrainingRunner.positiveClasses = nnPositiveClasses; // set the classes for which it is training for
+                enqueuedTrainingRunner.add(nnTrainingRunner);
 
             /*
             System.out.println("[d 2] queue training of NN with #classes=" + Integer.toString(trainedNumberOfClasses));
@@ -1437,7 +1448,9 @@ public class UnrealCrossing extends PApplet {
 
             int here = 5;
             */
+            }
         }
+
 
         // look for completed training of NN's and store them
         for(int idx=nnTrainingFutures.size()-1;idx>=0;idx--) {
