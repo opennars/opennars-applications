@@ -225,13 +225,17 @@ public class RealCrossing extends PApplet {
             if(props[0].equals("0")) { //person or vehicle for now, TODO make car motorcycle distinction
                 entities.add(new Pedestrian(id, X, Y, 0, 0, label));
             } else {
-                entities.add(new Car(id, X, Y, 0, 0, label));
+                if(!props[0].equals("1")) {
+                    entities.add(new Car(id, X, Y, 0, 0, label));
+                } else {
+                    entities.add(new Bike(id, X, Y, 0, 0, label));
+                }
             }
         }
         
         i++;
         
-        if(t % (5*perception_update) == 0) {
+        if(t > 0 && t % (5*perception_update) == 0) {
             System.out.println("TICK spatial");
             informNARSForQA();
             if(!"".equals(questionsAndKnowledge)) {
@@ -314,6 +318,9 @@ public class RealCrossing extends PApplet {
     
     List<String> information = new ArrayList<String>();
     public String informType(Entity entity) {
+        if(entity instanceof Bike) {
+            return "<" + name(entity) + " --> bike>";
+        }
         if(entity instanceof Car) {
             return "<" + name(entity) + " --> car>";
         }
@@ -324,6 +331,9 @@ public class RealCrossing extends PApplet {
     }
     
     public String name(Entity entity) { //TODO put in class
+        if(entity instanceof Bike) {
+            return "bike" + entity.label;
+        }
         if(entity instanceof Car) {
             return "car" + entity.label;
         }

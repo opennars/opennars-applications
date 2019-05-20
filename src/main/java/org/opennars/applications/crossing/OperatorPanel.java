@@ -136,7 +136,7 @@ public class OperatorPanel extends javax.swing.JFrame {
 
         jTextArea1.setColumns(20);
         jTextArea1.setRows(5);
-        jTextArea1.setText("(&|,<?1 --> car>,<?2 --> pedestrian>,<(*,?1,?2) --> leftOf>)? :|:\n(&|,<?1 --> pedestrian>,<(*,?1,sidewalk2) --> at>)? :|:");
+        jTextArea1.setText("(&|,<?1 --> pedestrian>,<(*,?1,lane1) --> at>)? :|:\n(&|,<?1 --> pedestrian>,<(*,?1,lane2) --> at>)? :|:");
         jTextArea1.setToolTipText("");
         jScrollPane1.setViewportView(jTextArea1);
 
@@ -159,7 +159,7 @@ public class OperatorPanel extends javax.swing.JFrame {
 
         jTextArea3.setColumns(20);
         jTextArea3.setRows(5);
-        jTextArea3.setText("<(&/,(&|,<#1 --> pedestrian>,<#2 --> car>,<(*,#1,#2) --> closeTo>),+1,<(*,{SELF},#1,in,danger) --> ^say>,+1) =/> <{SELF} --> [informative]>>.");
+        jTextArea3.setText("<(&/,(&|,<#1 --> pedestrian>,<#2 --> car>,<(*,#1,#2) --> closeTo>),+1,<(*,{SELF},#1,in,danger) --> ^say>,+1) =/> <{SELF} --> [informative]>>.\n<(&/,(&|,<#1 --> car>,<#2 --> bike>,<(*,#2,#1) --> closeTo>),+1,<(*,{SELF},#2,in,danger) --> ^say>,+1) =/> <{SELF} --> [informative]>>.");
         jTextArea3.setToolTipText("");
         jScrollPane3.setViewportView(jTextArea3);
 
@@ -195,7 +195,7 @@ public class OperatorPanel extends javax.swing.JFrame {
                             .addComponent(jScrollPane3, javax.swing.GroupLayout.Alignment.TRAILING)
                             .addGroup(layout.createSequentialGroup()
                                 .addComponent(jLabel1)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 561, Short.MAX_VALUE)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 582, Short.MAX_VALUE)
                                 .addComponent(jCheckBox1))
                             .addGroup(layout.createSequentialGroup()
                                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
