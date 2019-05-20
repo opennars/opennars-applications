@@ -57,6 +57,7 @@ import processing.core.PImage;
 import processing.event.MouseEvent;
 
 import static org.opennars.applications.cv.Util.calcDistBetweenImageAndPrototype;
+import static org.opennars.applications.cv.Util.calcMaskedDiff;
 import static org.opennars.applications.cv.Util.subimageField;
 
 public class UnrealCrossing extends PApplet {
@@ -1562,7 +1563,15 @@ public class UnrealCrossing extends PApplet {
 
         { // try to track spatial tracklet with prototypes
             for(AdvancedSpatialTracklet iSt : advancedSpatialTracklets) {
-                //reset to default values
+
+                boolean hasAssociatedPrototype = false; // commented because it doesn't lead to better classifications     iSt.associatedClass != Long.MIN_VALUE;
+                MultichannelCentralDistPrototype multichannelCentralDistPrototype = null;
+                if (hasAssociatedPrototype) {
+                    multichannelCentralDistPrototype = classDatabase.retrieveById(iSt.associatedClass).prototype;
+                }
+
+
+                    //reset to default values
                 iSt.prototypeCenterX = -1;
                 iSt.prototypeCenterY = -1;
 
@@ -1651,8 +1660,17 @@ public class UnrealCrossing extends PApplet {
                             for(int dx=startX;dx<prototypeSearchDistance;dx+=3) {
                                 int prototypeClassificationStepsize = 2; // ship every 2nd pixel of the compared prototype
 
-                                iSt.prototypeClassifier.classifyAt((int)regionProposalCenterX + dx, (int)regionProposalCenterY + dy, prototypeClassificationStepsize, img);
-                                float classificationDistance = iSt.prototypeClassifier.classificationLastDistanceMse;
+                                float classificationDistance;
+
+                                if (hasAssociatedPrototype) {
+                                    // use the associated prototype to find it in the image
+                                    classificationDistance = calcMaskedDiff((int)regionProposalCenterX + dx, (int)regionProposalCenterY + dy, multichannelCentralDistPrototype, img);
+                                }
+                                else {
+                                    iSt.prototypeClassifier.classifyAt((int)regionProposalCenterX + dx, (int)regionProposalCenterY + dy, prototypeClassificationStepsize, img);
+                                    classificationDistance = iSt.prototypeClassifier.classificationLastDistanceMse;
+
+                                }
 
                                 if (classificationDistance < bestClassificationDistance) {
                                     bestClassificationDistance = classificationDistance;

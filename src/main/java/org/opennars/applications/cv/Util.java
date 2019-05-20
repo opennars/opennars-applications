@@ -104,5 +104,53 @@ public class Util {
         return dist;
     }
 
+    // calculated difference between ectual image and prototype
+    public static float calcMaskedDiff(int posX, int posY, MultichannelCentralDistPrototype prototype, PImage img) {
+        int prototypeWidth = prototype.channels[0].retWidth();
+        int prototypeHeight = prototype.channels[0].retHeight();
 
+        if (posX <= prototypeWidth/2 || posX >= img.width-prototypeWidth/2) {
+            return Float.POSITIVE_INFINITY;
+        }
+
+        if (posY <= prototypeHeight/2 || posY >= img.height-prototypeHeight/2) {
+            return Float.POSITIVE_INFINITY;
+        }
+
+        float dist = 0;
+
+        int stepsize = 1;
+
+        for(int iy=0;iy<prototypeHeight;iy+=stepsize) {
+            for(int ix=0;ix<prototypeWidth;ix+=stepsize){
+                int dx = ix-prototypeWidth/2;
+                int dy = iy-prototypeHeight/2;
+
+                int x = posX + dx;
+                int y = posY + dy;
+
+                int colorcode =  img.pixels[y*img.width+x];
+                //TODO check if the rgb is extracted correctly
+                float r = (colorcode & 0xff) / 255.0f;
+                float g = ((colorcode >> 8) & 0xFF) / 255.0f;
+                float b = ((colorcode >> 8*2) & 0xFF) / 255.0f;
+
+                if (prototype.channels[0].readAtUnsafe(iy, ix).n == 0) {
+                    continue; // optimization
+                }
+
+                float diff =
+                    Math.abs(r - (float)prototype.channels[0].readAtUnsafe(iy, ix).mean) +
+                    Math.abs(g - (float)prototype.channels[1].readAtUnsafe(iy, ix).mean) +
+                    Math.abs(b - (float)prototype.channels[2].readAtUnsafe(iy, ix).mean);
+
+                dist+=(diff * (float)prototype.channels[0].readAtUnsafe(iy, ix).n * stepsize*stepsize); // we need to compute the error based on the covered area to get roughtly the same result with different stepsizes
+
+
+            }
+        }
+
+        dist /= (img.width*img.height); // normalize
+        return dist;
+    }
 }
