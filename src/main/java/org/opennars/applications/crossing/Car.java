@@ -43,6 +43,9 @@ public class Car extends Entity {
         float mul = Util.truthToValue(truth) * Util.timeToValue(time);
         applet.fill(255, 0, 255, mul*255.0f);
 
+        if(isPredicted && !RealCrossing.showPredictions) {
+            return;
+        }
         if (!isPredicted && isAnomaly()) {
             applet.stroke(255,0,0);
         }

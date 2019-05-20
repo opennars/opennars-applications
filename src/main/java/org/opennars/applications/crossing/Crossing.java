@@ -43,6 +43,7 @@ public class Crossing extends PApplet {
     final int fps = 50;
     @Override
     public void setup() {
+        new IncidentSimulator().show();
         cameras.add(new Camera(500+streetWidth/2, 500+streetWidth/2));
         try {
             nar = new Nar();
@@ -210,7 +211,6 @@ public class Crossing extends PApplet {
         //</editor-fold>
         String[] args2 = {"Crossing"};
         Crossing mp = new Crossing();
-        new IncidentSimulator().show();
         PApplet.runSketch(args2, mp);
     }
 }

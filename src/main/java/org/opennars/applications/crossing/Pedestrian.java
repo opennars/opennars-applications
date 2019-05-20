@@ -49,6 +49,9 @@ public class Pedestrian extends Entity {
     public void draw(PApplet applet, List<Street> streets, List<TrafficLight> trafficLights, List<Entity> entities, TruthValue truth, long time) {
         prevX = posX;
         prevY = posY;
+        if(isPredicted && !RealCrossing.showPredictions) {
+            return;
+        }
         float mul = Util.truthToValue(truth) * Util.timeToValue(time);
         applet.fill(0, 255, 255, mul*255.0f);
         super.draw(applet, streets, trafficLights, entities, truth, time);
