@@ -68,10 +68,12 @@ public class ProtoCl {
                 "\tint prototypePosX = prototypesPosX[myIdx];\n" +
                 "\tint prototypePosY = prototypesPosY[myIdx];\n" +
                 "\n" +
+                "\tfloat nMass = 0; // overall mass of the samples\n" +
+                "\n" +
                 "\tfor(int iy=0;iy<prototypeSizeY;iy++) {\n" +
                 "\t\tfor(int ix=0;ix<prototypeSizeX;ix++) {\n" +
                 "\t\t\tint imgPosX = ix-prototypeSizeX/2 + prototypePosX;\n" +
-                "\t\t\tint imgPosY = ix-prototypeSizeY/2 + prototypePosY;\n" +
+                "\t\t\tint imgPosY = iy-prototypeSizeY/2 + prototypePosY;\n" +
                 "\n" +
                 "\t\t\tint nR = prototypesRgbDistN[prototypeRgbIdx + (iy*prototypeSizeX + ix)*3 + 0];\n" +
                 "\t\t\tint nG = prototypesRgbDistN[prototypeRgbIdx + (iy*prototypeSizeX + ix)*3 + 1];\n" +
@@ -91,13 +93,18 @@ public class ProtoCl {
                 "\t\t\tfloat diffG = fabs(pG - imgG);\n" +
                 "\t\t\tfloat diffB = fabs(pB - imgB);\n" +
                 "\n" +
-                "\t\t\tif (nR + nG + nB > 0) {\n" +
-                "\t\t\t\tsum += (diffR*(float)nR + diffG*(float)nG + diffB*(float)nB)/((float)(nR + nG + nB));\n" +
-                "\t\t\t}\n" +
+                "\t\t\tnMass += (nR + nG + nB);\n" +
+                "\n" +
+                "\t\t\tsum += (diffR*(float)nR + diffG*(float)nG + diffB*(float)nB);\n" +
+                "\t\t\t//sum += (diffR + diffG + diffB);\n" +
                 "\t\t}\n" +
                 "\t}\n" +
                 "\n" +
                 "\tsum /= (prototypeSizeX*prototypeSizeY);\n" +
+                "\n" +
+                "\tif (nMass > 0) {\n" +
+                "\t\tsum /= (float)nMass;\n" +
+                "\t}\n" +
                 "\n" +
                 "\toutRes[myIdx] = sum;\n" +
                 "}\n";

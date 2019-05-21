@@ -409,7 +409,7 @@ public class UnrealCrossing extends PApplet {
     public void draw() {
         if (false) {
             try {
-                Thread.sleep(2000);
+                Thread.sleep(1500);
             } catch (InterruptedException e) {
             }
         }
@@ -1797,7 +1797,7 @@ public class UnrealCrossing extends PApplet {
 
 
 
-            int numberOfAttentionSamples = 150;
+            int numberOfAttentionSamples = 15;
 
             List<PrototypeSample> prototypeSamples = new ArrayList<>(); // all samples which were don eto match against the prototypes
 
@@ -1930,12 +1930,12 @@ public class UnrealCrossing extends PApplet {
 
                 // compute confidence with
                 // conf = 1.0/(1.0 + dist * distToConfFactor)
-                double distToConfFactor = 70.0f; // 3000.0f // config - factor used to compute the confidence by the distance when matching the image against a prototype
+                double distToConfFactor = 5*90000.0f; // 3000.0f // config - factor used to compute the confidence by the distance when matching the image against a prototype
                 double conf = (float)(1.0/(1.0 + bestClassificationDist * distToConfFactor));
 
-                double debug_recognition_confThreshold = 0.1; // threshold for the recognition confidence
+                double debug_recognition_confThreshold = 0.09; // threshold for the recognition confidence
 
-                if (conf > debug_recognition_confThreshold ) { //&& && bestSample.class_.retHumanReadableClass() != 3) {
+                if (conf > debug_recognition_confThreshold) {//&& bestSample.class_.retHumanReadableClass() != 3) {
                     DebugCursor dc = new DebugCursor();
                     dc.posX = bestSample.prototypesPosX;
                     dc.posY = bestSample.prototypesPosY;
