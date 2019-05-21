@@ -65,7 +65,7 @@ public class NarSimpleGUI extends javax.swing.JFrame {
         DefaultCaret caret = (DefaultCaret) jTextPane2.getCaret();
         caret.setUpdatePolicy(ALWAYS_UPDATE);
         jSlider1.setValue(nar.narParameters.VOLUME);
-        this.setTitle("OpenNARS v3.0.1 Simple GUI");
+        this.setTitle("OpenNARS "+Nar.VERSION +" Simple GUI");
         NarListener handler = new NarListener();
         nar.on(Events.TaskAdd.class, handler);
         nar.on(Events.Answer.class, handler);

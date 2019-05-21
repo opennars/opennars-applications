@@ -23,38 +23,8 @@
  */
 package org.opennars.applications.crossing;
 
-import java.util.List;
-import org.opennars.entity.TruthValue;
-import processing.core.PApplet;
-
-public class Car extends Entity {
-
-    public Car(int id, double posX, double posY, double velocity, double angle, String label) {
-        this(id, posX, posY, velocity, angle);
-        this.label = label;
-    }
-    
-    public Car(int id, double posX, double posY, double velocity, double angle) {
-        super(id, posX, posY, velocity, angle);
-        maxSpeed = 2;
-    }
-
-    public void draw(PApplet applet, List<Street> streets, List<TrafficLight> trafficLights, List<Entity> entities, TruthValue truth, long time) {
-        float mul = Util.truthToValue(truth) * Util.timeToValue(time);
-        applet.fill(255, 0, 255, mul*255.0f);
-
-        if(isPredicted && !RealCrossing.showPredictions) {
-            return;
-        }
-        if (!isPredicted && isAnomaly()) {
-            applet.stroke(255,0,0);
-        }
-        else {
-            applet.stroke(127);
-        }
-
-        super.draw(applet, streets, trafficLights, entities, truth, time);
-
-        applet.stroke(127);
+public class Bike extends Car {
+    public Bike(int id, double posX, double posY, double velocity, double angle, String label) {
+        super(id, posX, posY, velocity, angle, label);
     }
 }

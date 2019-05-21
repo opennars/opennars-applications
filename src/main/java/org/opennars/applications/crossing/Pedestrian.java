@@ -33,6 +33,12 @@ public class Pedestrian extends Entity {
     double prevX = 0;
     double prevY = 0;
     public final static float pedestrianScale = 0.75f;
+    
+    public Pedestrian(int id, double posX, double posY, double velocity, double angle, String label) {
+        this(id, posX, posY, velocity, angle);
+        this.label = label;
+    }
+    
     public Pedestrian(int id, double posX, double posY, double velocity, double angle) {
         super(id, posX, posY, velocity, angle);
         initialAngle = angle;
@@ -43,6 +49,9 @@ public class Pedestrian extends Entity {
     public void draw(PApplet applet, List<Street> streets, List<TrafficLight> trafficLights, List<Entity> entities, TruthValue truth, long time) {
         prevX = posX;
         prevY = posY;
+        if(isPredicted && !RealCrossing.showPredictions) {
+            return;
+        }
         float mul = Util.truthToValue(truth) * Util.timeToValue(time);
         applet.fill(0, 255, 255, mul*255.0f);
         super.draw(applet, streets, trafficLights, entities, truth, time);

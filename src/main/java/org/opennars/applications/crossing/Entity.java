@@ -30,7 +30,14 @@ import processing.core.PApplet;
 public class Entity {
 
     public static int entityID = 0;
+    public String label = "";
     public double posX, posY;
+    public double getPosX() {
+        return posX;
+    }
+    public double getPosY() {
+        return posY;
+    }
     public double velocity;
     public double angle;
     public int id;
@@ -90,7 +97,11 @@ public class Entity {
         applet.popMatrix();
         applet.fill(0);
         if(DrawID) {
-            applet.text(String.valueOf(id), (float)posX, (float)posY);
+            if(label.isEmpty()) {
+                applet.text(String.valueOf(id), (float)posX, (float)posY);
+            } else {
+                applet.text(String.valueOf(id) + " ("+label+")", (float)posX, (float)posY);
+            }
         }
         if(truth != null) {
             return;

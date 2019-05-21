@@ -34,7 +34,7 @@ import processing.core.PApplet;
 import processing.event.MouseEvent;
 
 public class Crossing extends PApplet {
-    Nar nar;
+    static Nar nar;
     int entityID = 1;
     
     List<Prediction> predictions = new ArrayList<Prediction>();
@@ -43,6 +43,7 @@ public class Crossing extends PApplet {
     final int fps = 50;
     @Override
     public void setup() {
+        new IncidentSimulator().show();
         cameras.add(new Camera(500+streetWidth/2, 500+streetWidth/2));
         try {
             nar = new Nar();
@@ -91,7 +92,7 @@ public class Crossing extends PApplet {
     int t = 0;
     public static boolean showAnomalies = false;
 
-    String questions = "<trafficLight --> [?whatColor]>? :|:";
+    public static String questions = "<trafficLight --> [?whatColor]>? :|:";
     int perception_update = 1;
     @Override
     public void draw() {
@@ -210,7 +211,6 @@ public class Crossing extends PApplet {
         //</editor-fold>
         String[] args2 = {"Crossing"};
         Crossing mp = new Crossing();
-        new IncidentSimulator().show();
         PApplet.runSketch(args2, mp);
     }
 }
