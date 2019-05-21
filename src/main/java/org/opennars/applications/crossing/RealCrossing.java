@@ -73,8 +73,8 @@ public class RealCrossing extends PApplet {
             String s = "";
             for(int i=0;i<args.length;i++) {
                 s+=args[i].toString() + " ";
-                JOptionPane.showMessageDialog(null, "Operator information: "+s);
             }
+            JOptionPane.showMessageDialog(null, "Operator information: "+s);
             return null;
         }
     }
