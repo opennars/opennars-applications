@@ -24,14 +24,10 @@ package org.opennars.applications.crossing;
  * THE SOFTWARE.
  */
 
-
-// TODO< flood fill CA'ed attention map to get different colors for tighter region proposals >
-
 // TODO< removal of spatial advanced spatial tracklet after timeout >
 // TODO< test if AdvancedSpatialTracklet works fine and is used correctly for training data gathering & training >
 
 // todo  attention
-// todo  keep track of recent images to notice change
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -870,13 +866,15 @@ public class UnrealCrossing extends PApplet {
             }
         }
 
+        Map2d remappedHeatmap = null;
+
         if (imageSampler != null) {
 
 
 
 
             // we need to map the heatmap with an "utility" function to prefer to sample moving regions over nonmoving ones
-            Map2d remappedHeatmap = new Map2d(attentionField.map.retHeight(), attentionField.map.retWidth());
+            remappedHeatmap = new Map2d(attentionField.map.retHeight(), attentionField.map.retWidth());
             for(int iy=0;iy<attentionField.map.retHeight();iy++) {
                 for(int ix=0;ix<attentionField.map.retWidth();ix++) {
                     float v = attentionField.map.readAtSafe(iy, ix);
@@ -1739,18 +1737,37 @@ public class UnrealCrossing extends PApplet {
             }
         }
 
+        long overalltime_recognitionPrototype_copy1 = 0;
+        long overalltime_recognitionPrototype_run = 0;
         { // try to recognize known classes with the prototypes of those classes
-
-
-            List<Float> prototypeRgbList = new ArrayList<>(); // rgb buffer for the rgb values of the prototypes (which were allocated for this run with OpenCL)
-            List<Integer> prototypeRgbDistNList = new ArrayList<>(); // counter buffer for the n values of the distributions of the pixels of the prototypes (which were allocated for this run with OpenCL)
-
+            long timeStart = System.nanoTime();
 
 
             List<ClassDatabase.Class> classes = new ArrayList<>();
             for (Map.Entry<Long, ClassDatabase.Class> iClassEntry : classDatabase.classesByClassId.entrySet()) {
                 classes.add(iClassEntry.getValue());
             }
+
+            //List<Float> prototypeRgbList = new ArrayList<>(); // rgb buffer for the rgb values of the prototypes (which were allocated for this run with OpenCL)
+            //List<Integer> prototypeRgbDistNList = new ArrayList<>(); // counter buffer for the n values of the distributions of the pixels of the prototypes (which were allocated for this run with OpenCL)
+
+            int sizeOfPrototypeArrToAllocate = 0;
+
+            for (ClassDatabase.Class iClass : classes) {
+                int prototypeWidth = iClass.prototype.channels[0].retWidth();
+                int prototypeHeight = iClass.prototype.channels[0].retHeight();
+
+                sizeOfPrototypeArrToAllocate += (prototypeWidth*prototypeHeight)*3;
+            }
+
+
+
+
+            float[] prototypeRgbArr = new float[sizeOfPrototypeArrToAllocate];
+            int[] prototypeRgbDistNArr = new int[sizeOfPrototypeArrToAllocate];
+
+            int prototypeRgbArrIdx = 0; // index in prototypeRgbArr and prototypeRgbDistNArr
+
 
             for (ClassDatabase.Class iClass : classes) {
                 Map2dGeneric<IncrementalCentralDistribution> channelR = iClass.prototype.channels[0];
@@ -1760,50 +1777,75 @@ public class UnrealCrossing extends PApplet {
                 int prototypeWidth = iClass.prototype.channels[0].retWidth();
                 int prototypeHeight = iClass.prototype.channels[0].retHeight();
 
-                // read color
+
                 for(int y=0;y<prototypeHeight;y++) {
                     for(int x=0;x<prototypeWidth;x++) {
-                        prototypeRgbList.add((float)channelR.readAtSafe(y,x).mean);
-                        prototypeRgbList.add((float)channelG.readAtSafe(y,x).mean);
-                        prototypeRgbList.add((float)channelB.readAtSafe(y,x).mean);
+                        // read color
+                        prototypeRgbArr[prototypeRgbArrIdx + 0] = (float)channelR.readAtSafe(y,x).mean;
+                        prototypeRgbArr[prototypeRgbArrIdx + 1] = (float)channelG.readAtSafe(y,x).mean;
+                        prototypeRgbArr[prototypeRgbArrIdx + 2] = (float)channelB.readAtSafe(y,x).mean;
+
+                        // read count of distribution
+                        prototypeRgbDistNArr[prototypeRgbArrIdx + 0] = (int)channelR.readAtSafe(y,x).n;
+                        prototypeRgbDistNArr[prototypeRgbArrIdx + 1] = (int)channelG.readAtSafe(y,x).n;
+                        prototypeRgbDistNArr[prototypeRgbArrIdx + 2] = (int)channelB.readAtSafe(y,x).n;
+
+                        prototypeRgbArrIdx+=3; // inc by 3 because of RGB
                     }
                 }
-
-                // read count of distribution
-                for(int y=0;y<prototypeHeight;y++) {
-                    for(int x=0;x<prototypeWidth;x++) {
-                        prototypeRgbDistNList.add((int)channelR.readAtSafe(y,x).n);
-                        prototypeRgbDistNList.add((int)channelG.readAtSafe(y,x).n);
-                        prototypeRgbDistNList.add((int)channelB.readAtSafe(y,x).n);
-                    }
-                }
-            }
-
-            float[] prototypeRgbArr = new float[prototypeRgbList.size()];
-            int[] prototypeRgbDistNArr = new int[prototypeRgbDistNList.size()];
-
-            // convert to arr
-            for(int i=0;i<prototypeRgbList.size();i++) {
-                prototypeRgbArr[i] = prototypeRgbList.get(i);
-            }
-
-            // convert to arr
-            for(int i=0;i<prototypeRgbDistNList.size();i++) {
-                prototypeRgbDistNArr[i] = prototypeRgbDistNList.get(i);
             }
 
 
 
-
-            int numberOfAttentionSamples = 10;
+            int numberOfAttentionSamples = 150;
 
             List<PrototypeSample> prototypeSamples = new ArrayList<>(); // all samples which were don eto match against the prototypes
 
-            for(int iSample=0;iSample<numberOfAttentionSamples;iSample++) {
-                // TODO< sample by attention >
+            float integralOfHeatmap = 0;
+            { // integrate
+                for(int iy=0;iy<remappedHeatmap.retHeight();iy++) {
+                    for(int ix=0;ix<remappedHeatmap.retWidth();ix++) {
+                        integralOfHeatmap += remappedHeatmap.readAtSafe(iy, ix);
+                    }
+                }
+            }
 
-                int samplePosX = rng.nextInt(128/2 + img.width - 128);
-                int samplePosY = rng.nextInt(128/2 + img.height - 128);
+
+            for(int iSample=0;iSample<numberOfAttentionSamples;iSample++) {
+
+                // sample by attention
+                int posX = 0, posY = 0;
+                {
+
+                    if (remappedHeatmap != null) { // sample by heatmap
+                        float chosenIntgrlVal = rng.nextFloat() * integralOfHeatmap;
+
+                        float currentIntrl = 0;
+                        boolean intrlDone = false;
+                        for(int iy=0;iy<remappedHeatmap.retHeight();iy++) {
+                            for(int ix=0;ix<remappedHeatmap.retWidth();ix++) {
+                                currentIntrl += remappedHeatmap.readAtSafe(iy,ix);
+
+                                if(currentIntrl >= chosenIntgrlVal) { // integration finished, we found the position of this sample
+                                    posX = ix * heatmapCellsize;
+                                    posY = iy * heatmapCellsize;
+
+                                    posX += (rng.nextFloat() * heatmapCellsize); // to distribute sample inside the cell
+                                    posY += (rng.nextFloat() * heatmapCellsize); // to distribute sample inside the cell
+
+                                    intrlDone = true;
+                                    break;
+                                }
+                            }
+                            if(intrlDone) {
+                                break;
+                            }
+                        }
+                    }
+                }
+
+                int samplePosX = posX; //rng.nextInt(128/2 + img.width - 128);
+                int samplePosY = posY; //rng.nextInt(128/2 + img.height - 128);
 
                 int prototypeRgbIdx = 0;
                 for(ClassDatabase.Class iClass : classes) {
@@ -1837,6 +1879,10 @@ public class UnrealCrossing extends PApplet {
                     prototypesPosY[idx] = prototypeSamples.get(idx).prototypesPosY;
                 }
 
+                overalltime_recognitionPrototype_copy1 = System.nanoTime() - timeStart;
+
+                timeStart = System.nanoTime();
+
                 // run kernel
                 float[] prototypeMatchingResultArr = protoCl.runKrnl(
                         cachedImageProto,
@@ -1852,6 +1898,8 @@ public class UnrealCrossing extends PApplet {
                 for(int idx=0;idx<prototypeSamples.size();idx++) {
                     prototypeSamples.get(idx).classificationDist = prototypeMatchingResultArr[idx];
                 }
+
+                overalltime_recognitionPrototype_run = System.nanoTime() - timeStart;
             }
 
             // aggregate result
@@ -1882,15 +1930,23 @@ public class UnrealCrossing extends PApplet {
 
                 // compute confidence with
                 // conf = 1.0/(1.0 + dist * distToConfFactor)
-                double distToConfFactor = 10000.0f; // config - factor used to compute the confidence by the distance when matching the image against a prototype
+                double distToConfFactor = 3000.0f; // config - factor used to compute the confidence by the distance when matching the image against a prototype
                 double conf = (float)(1.0/(1.0 + bestClassificationDist * distToConfFactor));
 
-                DebugCursor dc = new DebugCursor();
-                dc.posX = bestSample.prototypesPosX;
-                dc.posY = bestSample.prototypesPosY;
-                dc.text = "S CLS="+bestSample.class_.class_+"   "+"dist="+bestClassificationDist + "    conf="+conf;
-                debugCursors.add(dc);
+                double debug_recognition_confThreshold = 0.01; // threshold for the recognition confidence
+
+                if (conf > debug_recognition_confThreshold ) { //&& && bestSample.class_.retHumanReadableClass() != 3) {
+                    DebugCursor dc = new DebugCursor();
+                    dc.posX = bestSample.prototypesPosX;
+                    dc.posY = bestSample.prototypesPosY;
+                    dc.text = "S HCLS="+bestSample.class_.retHumanReadableClass()+"   "+"dist="+bestClassificationDist + "    conf="+conf;
+                    debugCursors.add(dc);
+                }
+
+
             }
+
+            //overalltime_recognitionPrototype = System.nanoTime() - timeStart;
 
             for (AdvancedSpatialTracklet iSt : advancedSpatialTracklets) {
 
@@ -2178,11 +2234,13 @@ public class UnrealCrossing extends PApplet {
             text("gpu convl  wait us="+(overalltimeWaitConvl/1000),0,(3+1)*15); // wait time for finishing of GPU convolution
             text("conv to gray     us="+(timeConvertImageToGrayscaleWaitInNs/1000),0,4*15+15);
 
-            text("classify NN      us"+(overallTimeWaitClassifyInNs/1000), 0, (5+1)*15);
+            //text("classify NN      us"+(overallTimeWaitClassifyInNs/1000), 0, (5+1)*15);
+            text("recongition.proto.copy1  us="+(overalltime_recognitionPrototype_copy1/1000), 0, (5+1)*15);
+            text("recongition.proto.run  us="+(overalltime_recognitionPrototype_run/1000), 0, (6+1)*15);
 
-            text("NAR wait         us="+(overallTimeNarWaitInNs/1000), 0, (6+1)*15);
+            text("NAR wait         us="+(overallTimeNarWaitInNs/1000), 0, (7+1)*15);
 
-            text("frametime        us="+((System.nanoTime()-systemTimeStart)/1000),0,(7+1)*15);
+            text("frametime        us="+((System.nanoTime()-systemTimeStart)/1000),0,(8+1)*15);
         }
 
 

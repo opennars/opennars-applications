@@ -95,5 +95,12 @@ public class ClassDatabase {
                 }
             }
         }
+
+        /**
+         * @return human readable class id, is NOT the real class id!
+         */
+        public long retHumanReadableClass() {
+            return class_ - Integer.MAX_VALUE; // because we start counting classes with Integer.MAX_VALUE
+        }
     }
 }
