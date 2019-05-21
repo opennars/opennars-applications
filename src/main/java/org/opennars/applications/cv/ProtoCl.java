@@ -45,7 +45,10 @@ public class ProtoCl {
                 "\tint imgWidth,\n" +
                 "\n" +
                 "\t__global const float *prototypesRgb, // rgb color array of all prototypes\n" +
+                "\t__global const int *prototypesRgbDistN, // sample count array of all prototypes\n" +
+                "\t\n" +
                 "\t__global const int *prototypesRgbIdx, // index into array prototypesRgb\n" +
+                "\n" +
                 "\t__global const int *prototypesSizeX, // size of single prototypes\n" +
                 "\t__global const int *prototypesSizeY, // size of single prototypes\n" +
                 "\n" +
@@ -70,6 +73,10 @@ public class ProtoCl {
                 "\t\t\tint imgPosX = ix-prototypeSizeX/2 + prototypePosX;\n" +
                 "\t\t\tint imgPosY = ix-prototypeSizeY/2 + prototypePosY;\n" +
                 "\n" +
+                "\t\t\tint nR = prototypesRgbDistN[prototypeRgbIdx + (iy*prototypeSizeX + ix)*3 + 0];\n" +
+                "\t\t\tint nG = prototypesRgbDistN[prototypeRgbIdx + (iy*prototypeSizeX + ix)*3 + 1];\n" +
+                "\t\t\tint nB = prototypesRgbDistN[prototypeRgbIdx + (iy*prototypeSizeX + ix)*3 + 2];\n" +
+                "\n" +
                 "\t\t\tfloat pR = prototypesRgb[prototypeRgbIdx + (iy*prototypeSizeX + ix)*3 + 0];\n" +
                 "\t\t\tfloat pG = prototypesRgb[prototypeRgbIdx + (iy*prototypeSizeX + ix)*3 + 1];\n" +
                 "\t\t\tfloat pB = prototypesRgb[prototypeRgbIdx + (iy*prototypeSizeX + ix)*3 + 2];\n" +
@@ -84,7 +91,7 @@ public class ProtoCl {
                 "\t\t\tfloat diffG = abs(pG - imgG);\n" +
                 "\t\t\tfloat diffB = abs(pB - imgB);\n" +
                 "\n" +
-                "\t\t\tsum += (diffR + diffG + diffB);\n" +
+                "\t\t\tsum += (diffR*(float)nR + diffG*(float)nG + diffB*(float)nB)/((float)(nR + nG + nB));\n" +
                 "\t\t}\n" +
                 "\t}\n" +
                 "\n" +
@@ -116,6 +123,7 @@ public class ProtoCl {
      */
     public void allocateBuffersForPosition(int maxsize, int maxsizePrototypesRgbBuffer) {
         prototypesRgbBuf = context.createFloatBuffer(CLMem.Usage.Input, maxsizePrototypesRgbBuffer);
+        prototypesRgbDistNBuf = context.createIntBuffer(CLMem.Usage.Input, maxsizePrototypesRgbBuffer);
 
         prototypesRgbIdxBuf = context.createIntBuffer(CLMem.Usage.Input, maxsize);
         prototypesSizeXBuf = context.createIntBuffer(CLMem.Usage.Input, maxsize);
@@ -134,6 +142,7 @@ public class ProtoCl {
     CLBuffer<Integer> prototypesRgbIdxBuf;
     CLBuffer<Integer> prototypesSizeXBuf, prototypesSizeYBuf;
     CLBuffer<Integer> prototypesPosXBuf, prototypesPosYBuf;
+    CLBuffer<Integer> prototypesRgbDistNBuf;
 
     CLBuffer<Float> outBuf;
 
@@ -145,6 +154,8 @@ public class ProtoCl {
                 imgWidth,
 
                 prototypesRgbBuf,
+                prototypesRgbDistNBuf,
+
                 prototypesRgbIdxBuf,
                 prototypesSizeXBuf,
                 prototypesSizeYBuf,
@@ -160,20 +171,21 @@ public class ProtoCl {
     }
 
     // method to run the convolution kernel on the GPU
-    public Pointer<Float> runKrnlMatchProto(CachedImage cachedImage, int imgWidth, FloatBuffer prototypesRgb, IntBuffer prototypesRgbIdx, IntBuffer prototypesSizeX, IntBuffer prototypesSizeY, IntBuffer prototypesPosX, IntBuffer prototypesPosY, int length) {
+    public Pointer<Float> runKrnlMatchProto(CachedImage cachedImage, int imgWidth, FloatBuffer prototypesRgb, IntBuffer prototypesRgbDistN, IntBuffer prototypesRgbIdx, IntBuffer prototypesSizeX, IntBuffer prototypesSizeY, IntBuffer prototypesPosX, IntBuffer prototypesPosY, int length) {
         CLBuffer<Integer> imgColorBuf = cachedImage.imgColorBuf;
 
         long before = System.nanoTime();
         CLEvent e0 = prototypesRgbBuf.write(queue, 0, prototypesRgb.capacity(), prototypesRgb, false);
-        CLEvent e1 = prototypesRgbIdxBuf.write(queue, 0, prototypesRgbIdx.capacity(), prototypesRgbIdx, false);
+        CLEvent e1 = prototypesRgbDistNBuf.write(queue, 0, prototypesRgbDistN.capacity(), prototypesRgbDistN, false);
+        CLEvent e2 = prototypesRgbIdxBuf.write(queue, 0, prototypesRgbIdx.capacity(), prototypesRgbIdx, false);
 
-        CLEvent e2 = prototypesSizeXBuf.write(queue, 0, prototypesSizeX.capacity(), prototypesSizeX, false);
-        CLEvent e3 = prototypesSizeYBuf.write(queue, 0, prototypesSizeY.capacity(), prototypesSizeY, false);
+        CLEvent e3 = prototypesSizeXBuf.write(queue, 0, prototypesSizeX.capacity(), prototypesSizeX, false);
+        CLEvent e4 = prototypesSizeYBuf.write(queue, 0, prototypesSizeY.capacity(), prototypesSizeY, false);
 
-        CLEvent e4 = prototypesPosXBuf.write(queue, 0, prototypesPosX.capacity(), prototypesPosX, false);
-        CLEvent e5 = prototypesPosYBuf.write(queue, 0, prototypesPosY.capacity(), prototypesPosY, false);
+        CLEvent e5 = prototypesPosXBuf.write(queue, 0, prototypesPosX.capacity(), prototypesPosX, false);
+        CLEvent e6 = prototypesPosYBuf.write(queue, 0, prototypesPosY.capacity(), prototypesPosY, false);
 
-        queue.enqueueWaitForEvents(e0, e1, e2, e3, e4, e5);
+        queue.enqueueWaitForEvents(e0, e1, e2, e3, e4, e5, e6);
 
 
         CLEvent convEvent = runConvKernelInner(imgColorBuf, imgWidth, length);
@@ -187,8 +199,8 @@ public class ProtoCl {
     }
 
     // Wrapper method that takes and returns float array
-    public float[] runKrnl(CachedImage cachedImage,  int imgWidth, float[] prototypesRgb, int[] prototypesRgbIdx, int[] prototypesSizeX, int[] prototypesSizeY, int[] prototypesPosX, int[] prototypesPosY, int length) {
-        Pointer<Float> outBuffer = runKrnlMatchProto(cachedImage, imgWidth, FloatBuffer.wrap(prototypesRgb), IntBuffer.wrap(prototypesRgbIdx), IntBuffer.wrap(prototypesSizeX), IntBuffer.wrap(prototypesSizeY), IntBuffer.wrap(prototypesPosX), IntBuffer.wrap(prototypesPosY), length);
+    public float[] runKrnl(CachedImage cachedImage,  int imgWidth, float[] prototypesRgb, int[] prototypesRgbDistN, int[] prototypesRgbIdx, int[] prototypesSizeX, int[] prototypesSizeY, int[] prototypesPosX, int[] prototypesPosY, int length) {
+        Pointer<Float> outBuffer = runKrnlMatchProto(cachedImage, imgWidth, FloatBuffer.wrap(prototypesRgb), IntBuffer.wrap(prototypesRgbDistN), IntBuffer.wrap(prototypesRgbIdx), IntBuffer.wrap(prototypesSizeX), IntBuffer.wrap(prototypesSizeY), IntBuffer.wrap(prototypesPosX), IntBuffer.wrap(prototypesPosY), length);
         long before = System.nanoTime();
         float[] out = new float[length];
         for(int idx=0;idx<length;idx++) {
