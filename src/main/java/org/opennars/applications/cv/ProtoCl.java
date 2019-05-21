@@ -55,7 +55,7 @@ public class ProtoCl {
                 "\t__global const int *prototypesPosX, // positions of prototypes\n" +
                 "\t__global const int *prototypesPosY, // positions of prototypes\n" +
                 "\n" +
-                "\t__global const float *outRes // array of output result\n" +
+                "\t__global float *outRes // array of output result\n" +
                 ") {\n" +
                 "\tint myIdx=get_global_id(0);\n" +
                 "\n" +
@@ -87,11 +87,13 @@ public class ProtoCl {
                 "\t\t\tfloat imgG = (float)((imgVal >> 8) & 255) / 255.0f;\n" +
                 "\t\t\tfloat imgB = (float)((imgVal >> 16) & 255) / 255.0f;\n" +
                 "\n" +
-                "\t\t\tfloat diffR = abs(pR - imgR);\n" +
-                "\t\t\tfloat diffG = abs(pG - imgG);\n" +
-                "\t\t\tfloat diffB = abs(pB - imgB);\n" +
+                "\t\t\tfloat diffR = fabs(pR - imgR);\n" +
+                "\t\t\tfloat diffG = fabs(pG - imgG);\n" +
+                "\t\t\tfloat diffB = fabs(pB - imgB);\n" +
                 "\n" +
-                "\t\t\tsum += (diffR*(float)nR + diffG*(float)nG + diffB*(float)nB)/((float)(nR + nG + nB));\n" +
+                "\t\t\tif (nR + nG + nB > 0) {\n" +
+                "\t\t\t\tsum += (diffR*(float)nR + diffG*(float)nG + diffB*(float)nB)/((float)(nR + nG + nB));\n" +
+                "\t\t\t}\n" +
                 "\t\t}\n" +
                 "\t}\n" +
                 "\n" +
@@ -200,6 +202,10 @@ public class ProtoCl {
 
     // Wrapper method that takes and returns float array
     public float[] runKrnl(CachedImage cachedImage,  int imgWidth, float[] prototypesRgb, int[] prototypesRgbDistN, int[] prototypesRgbIdx, int[] prototypesSizeX, int[] prototypesSizeY, int[] prototypesPosX, int[] prototypesPosY, int length) {
+        if (length == 0) {
+            return new float[0]; // special case
+        }
+
         Pointer<Float> outBuffer = runKrnlMatchProto(cachedImage, imgWidth, FloatBuffer.wrap(prototypesRgb), IntBuffer.wrap(prototypesRgbDistN), IntBuffer.wrap(prototypesRgbIdx), IntBuffer.wrap(prototypesSizeX), IntBuffer.wrap(prototypesSizeY), IntBuffer.wrap(prototypesPosX), IntBuffer.wrap(prototypesPosY), length);
         long before = System.nanoTime();
         float[] out = new float[length];

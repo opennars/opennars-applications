@@ -129,6 +129,7 @@ public class UnrealCrossing extends PApplet {
         foldImagesPerm = Sdr.createRandomPermutation(sdrAllocator.sdrSize, new Random()); // create permutation for folding of images
 
         convCl = new ConvCl();
+        protoCl = new ProtoCl();
 
         // setup view
         viewport.difx = -480.0f;
@@ -174,7 +175,8 @@ public class UnrealCrossing extends PApplet {
 
     UlProtoClassifier objectPrototypeClassifier = new UlProtoClassifier();
 
-    ConvCl convCl;
+    ConvCl convCl; // OpenCL acceleration of convolution
+    ProtoCl protoCl; // OpenCL acceleration of prototypes
 
 
 
@@ -487,6 +489,7 @@ public class UnrealCrossing extends PApplet {
 
 
         short[] imgGrayscale = new short[img.height*img.width]; // flattened grayscale image
+        int[] imgRgb = new int[img.height*img.width];
 
         long timeConvertImageToGrayscaleWaitInNs = 0;
         { // convert image to grayscale
@@ -513,6 +516,8 @@ public class UnrealCrossing extends PApplet {
                                 //grayscaleImage.writeAtUnsafe(iy, ix, grayscale);
 
                                 imgGrayscale[iy*img_final.width + ix] = (short)(grayscale*255.0f);
+
+                                imgRgb[iy*img_final.width + ix] = colorcode;
                             }
                         }
                     });
@@ -521,7 +526,13 @@ public class UnrealCrossing extends PApplet {
             }
 
             for(int iParallelYStepsize=0;iParallelYStepsize<processingFutures.length;iParallelYStepsize++) {
-                while(!processingFutures[iParallelYStepsize].isDone()){};
+                try {
+                    processingFutures[iParallelYStepsize].get();
+                } catch (InterruptedException e) {
+                    int here = 0; // ignore
+                } catch (ExecutionException e) {
+                    int here = 0; // ignore
+                }
             }
             timeConvertImageToGrayscaleWaitInNs += (System.nanoTime()-timeBefore);
         }
@@ -533,13 +544,21 @@ public class UnrealCrossing extends PApplet {
             // allocate all buffers of the required size
             convCl.allocateBuffersForPosition(img.width*img.height);
         }
+        if (!protoCl.areBuffersAllocated()) {
+            // allocate all buffers of the required size
+            int maximalNumberOfMatchedPrototypes = 500000; // maximal number of concurrently used prototypes
+            int maxsizePrototypesRgbBuffer = 3*128*128    * 100;
+            protoCl.allocateBuffersForPosition(maximalNumberOfMatchedPrototypes, maxsizePrototypesRgbBuffer);
+        }
 
 
         long overalltimeWaitUploadImage = 0;
-        ConvCl.CachedImage cachedImage = new ConvCl.CachedImage();
+        ConvCl.CachedImage cachedImageConv = new ConvCl.CachedImage();
+        ProtoCl.CachedImage cachedImageProto = new ProtoCl.CachedImage();
         {
             long timeBefore = System.nanoTime();
-            cachedImage.update(imgGrayscale, convCl.context); // send image to GPU
+            cachedImageConv.update(imgGrayscale, convCl.context); // send image to GPU
+            cachedImageProto.update(imgRgb, protoCl.context); // send image to GPU
             overalltimeWaitUploadImage += (System.nanoTime()-timeBefore);
         }
 
@@ -585,7 +604,7 @@ public class UnrealCrossing extends PApplet {
                         }
 
                         long systemTimeBefore2 = System.nanoTime();
-                        float[] convResultOfThisKernel = convCl.runConv(cachedImage, img2.width, iKernel.precaculatedFlattenedKernel, iKernel.precalculatedKernel.retWidth(), posXArr, posYArr, posXArr.length);
+                        float[] convResultOfThisKernel = convCl.runConv(cachedImageConv, img2.width, iKernel.precaculatedFlattenedKernel, iKernel.precalculatedKernel.retWidth(), posXArr, posYArr, posXArr.length);
                         long systemTimeEnd2 = System.nanoTime();
                         //System.out.println("   runConv() us=" + Long.toString((systemTimeEnd2 - systemTimeBefore2) / 1000));
 
@@ -1264,7 +1283,7 @@ public class UnrealCrossing extends PApplet {
 
                     float[] convResult = null;
                     if (trainedNns.size() > 0) { // we just need convolution when a NN was trained
-                        convResult = convolutionImg(img, cachedImage, (int) iSt.posX, (int) iSt.posY);
+                        convResult = convolutionImg(img, cachedImageConv, (int) iSt.posX, (int) iSt.posY);
                     }
 
                     for (int iTrainedNnIdx = trainedNns.size() - 1; iTrainedNnIdx >= 0; iTrainedNnIdx--) {
@@ -1418,7 +1437,7 @@ public class UnrealCrossing extends PApplet {
                     int samplePosX = rng.nextInt(img.width - 64)+64;
                     int samplePosY = rng.nextInt(img.height - 64)+64;
 
-                    float[] negativeSampleVector = convolutionImg(img, cachedImage, samplePosX, samplePosY);
+                    float[] negativeSampleVector = convolutionImg(img, cachedImageConv, samplePosX, samplePosY);
 
                     NnPrototypeTrainer.TrainingTuple createdTrainingTuple = new NnPrototypeTrainer.TrainingTuple();
                     createdTrainingTuple.input = negativeSampleVector;
@@ -1720,6 +1739,164 @@ public class UnrealCrossing extends PApplet {
             }
         }
 
+        { // try to recognize known classes with the prototypes of those classes
+
+
+            List<Float> prototypeRgbList = new ArrayList<>(); // rgb buffer for the rgb values of the prototypes (which were allocated for this run with OpenCL)
+            List<Integer> prototypeRgbDistNList = new ArrayList<>(); // counter buffer for the n values of the distributions of the pixels of the prototypes (which were allocated for this run with OpenCL)
+
+
+
+            List<ClassDatabase.Class> classes = new ArrayList<>();
+            for (Map.Entry<Long, ClassDatabase.Class> iClassEntry : classDatabase.classesByClassId.entrySet()) {
+                classes.add(iClassEntry.getValue());
+            }
+
+            for (ClassDatabase.Class iClass : classes) {
+                Map2dGeneric<IncrementalCentralDistribution> channelR = iClass.prototype.channels[0];
+                Map2dGeneric<IncrementalCentralDistribution> channelG = iClass.prototype.channels[1];
+                Map2dGeneric<IncrementalCentralDistribution> channelB = iClass.prototype.channels[2];
+
+                int prototypeWidth = iClass.prototype.channels[0].retWidth();
+                int prototypeHeight = iClass.prototype.channels[0].retHeight();
+
+                // read color
+                for(int y=0;y<prototypeHeight;y++) {
+                    for(int x=0;x<prototypeWidth;x++) {
+                        prototypeRgbList.add((float)channelR.readAtSafe(y,x).mean);
+                        prototypeRgbList.add((float)channelG.readAtSafe(y,x).mean);
+                        prototypeRgbList.add((float)channelB.readAtSafe(y,x).mean);
+                    }
+                }
+
+                // read count of distribution
+                for(int y=0;y<prototypeHeight;y++) {
+                    for(int x=0;x<prototypeWidth;x++) {
+                        prototypeRgbDistNList.add((int)channelR.readAtSafe(y,x).n);
+                        prototypeRgbDistNList.add((int)channelG.readAtSafe(y,x).n);
+                        prototypeRgbDistNList.add((int)channelB.readAtSafe(y,x).n);
+                    }
+                }
+            }
+
+            float[] prototypeRgbArr = new float[prototypeRgbList.size()];
+            int[] prototypeRgbDistNArr = new int[prototypeRgbDistNList.size()];
+
+            // convert to arr
+            for(int i=0;i<prototypeRgbList.size();i++) {
+                prototypeRgbArr[i] = prototypeRgbList.get(i);
+            }
+
+            // convert to arr
+            for(int i=0;i<prototypeRgbDistNList.size();i++) {
+                prototypeRgbDistNArr[i] = prototypeRgbDistNList.get(i);
+            }
+
+
+
+
+            int numberOfAttentionSamples = 10;
+
+            List<PrototypeSample> prototypeSamples = new ArrayList<>(); // all samples which were don eto match against the prototypes
+
+            for(int iSample=0;iSample<numberOfAttentionSamples;iSample++) {
+                // TODO< sample by attention >
+
+                int samplePosX = rng.nextInt(128/2 + img.width - 128);
+                int samplePosY = rng.nextInt(128/2 + img.height - 128);
+
+                int prototypeRgbIdx = 0;
+                for(ClassDatabase.Class iClass : classes) {
+                    PrototypeSample createdSample = new PrototypeSample(samplePosX, samplePosY);
+                    createdSample.prototypesRgbIdx = prototypeRgbIdx;
+                    createdSample.prototypesSizeX = iClass.prototype.channels[0].retWidth();
+                    createdSample.prototypesSizeY = iClass.prototype.channels[0].retHeight();
+                    createdSample.class_ = iClass;
+                    prototypeSamples.add(createdSample);
+
+                    prototypeRgbIdx += (iClass.prototype.channels[0].retWidth()*iClass.prototype.channels[0].retHeight()*3);
+                }
+            }
+
+
+            { // send prototype classification to GPU and collect result
+
+                int numberOfMatchedPrototypes = prototypeSamples.size();
+
+                int[] prototypesRgbIdx = new int[numberOfMatchedPrototypes];
+                int[] prototypesSizeX = new int[numberOfMatchedPrototypes];
+                int[] prototypesSizeY  = new int[numberOfMatchedPrototypes];
+                int[] prototypesPosX = new int[numberOfMatchedPrototypes];
+                int[] prototypesPosY = new int[numberOfMatchedPrototypes];
+
+                for(int idx=0;idx<prototypeSamples.size();idx++) {
+                    prototypesRgbIdx[idx] = prototypeSamples.get(idx).prototypesRgbIdx; // rgb data starts at idx 0 for the matching of this prototype
+                    prototypesSizeX[idx] = prototypeSamples.get(idx).prototypesSizeX;
+                    prototypesSizeY[idx] = prototypeSamples.get(idx).prototypesSizeY;
+                    prototypesPosX[idx] = prototypeSamples.get(idx).prototypesPosX;
+                    prototypesPosY[idx] = prototypeSamples.get(idx).prototypesPosY;
+                }
+
+                // run kernel
+                float[] prototypeMatchingResultArr = protoCl.runKrnl(
+                        cachedImageProto,
+                        img.width,
+
+                        prototypeRgbArr,
+                        prototypeRgbDistNArr,
+
+                        prototypesRgbIdx, prototypesSizeX, prototypesSizeY, prototypesPosX, prototypesPosY, numberOfMatchedPrototypes
+                );
+
+                // copy result back
+                for(int idx=0;idx<prototypeSamples.size();idx++) {
+                    prototypeSamples.get(idx).classificationDist = prototypeMatchingResultArr[idx];
+                }
+            }
+
+            // aggregate result
+            //
+            // we need to figure out the best classification of each sample of every class
+            for(int iSample=0;iSample<numberOfAttentionSamples;iSample++) {
+                int prototypeSampleIdx = iSample*(classes.size()); // index of the beginning of the classification results inside the prototypeSamples array
+
+                float bestClassificationDist = Float.POSITIVE_INFINITY;
+                PrototypeSample bestSample = null;
+
+                for(int iClassIdx=0;iClassIdx<classes.size();iClassIdx++) {
+                    float thisClassificationDist = prototypeSamples.get(prototypeSampleIdx + iClassIdx).classificationDist;
+                    if (thisClassificationDist < bestClassificationDist) {
+                        bestClassificationDist = thisClassificationDist;
+                        bestSample =  prototypeSamples.get(prototypeSampleIdx + iClassIdx);
+                    }
+                }
+
+                if (bestSample == null) {
+                    continue; // ignore
+                }
+
+                // now we have the classification distance together with the best class of the best classification
+
+                // we now just want to display it
+
+
+                // compute confidence with
+                // conf = 1.0/(1.0 + dist * distToConfFactor)
+                double distToConfFactor = 10000.0f; // config - factor used to compute the confidence by the distance when matching the image against a prototype
+                double conf = (float)(1.0/(1.0 + bestClassificationDist * distToConfFactor));
+
+                DebugCursor dc = new DebugCursor();
+                dc.posX = bestSample.prototypesPosX;
+                dc.posY = bestSample.prototypesPosY;
+                dc.text = "S CLS="+bestSample.class_.class_+"   "+"dist="+bestClassificationDist + "    conf="+conf;
+                debugCursors.add(dc);
+            }
+
+            for (AdvancedSpatialTracklet iSt : advancedSpatialTracklets) {
+
+            }
+        }
+
         { // store training sample
             for(RegionProposal iRegionProposal : regionProposals) {
                 int width = iRegionProposal.maxX-iRegionProposal.minX;
@@ -1767,7 +1944,7 @@ public class UnrealCrossing extends PApplet {
 
 
                 if (bestTracklet != null) {
-                    float[] convResult = convolutionImg(img, cachedImage, (int)bestTracklet.prototypeCenterX, (int)bestTracklet.prototypeCenterY);
+                    float[] convResult = convolutionImg(img, cachedImageConv, (int)bestTracklet.prototypeCenterX, (int)bestTracklet.prototypeCenterY);
 
                     bestTracklet.trainingDataOfThisClass.add(convResult);
                 }
@@ -2018,6 +2195,24 @@ public class UnrealCrossing extends PApplet {
 
 
         //System.out.println("[d 1] Concepts: " + nar.memory.concepts.size());
+    }
+
+
+    // used for classification and search with prototypes
+    private static class PrototypeSample {
+        public int prototypesRgbIdx; // has to be initialized manually
+        public int prototypesSizeX; // has to be initialized manually
+        public int prototypesSizeY; // has to be initialized manually
+        public int prototypesPosX;
+        public int prototypesPosY;
+
+        public ClassDatabase.Class class_; // associated class (for classification)
+        public float classificationDist = Float.POSITIVE_INFINITY; // computed distance between the prototype and the real image
+
+        public PrototypeSample(int posX, int posY) {
+            this.prototypesPosX = posX;
+            this.prototypesPosY = posY;
+        }
     }
 
 
