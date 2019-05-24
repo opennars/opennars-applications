@@ -12,6 +12,8 @@
 
 package org.opennars.applications.cv;
 
+import processing.core.PImage;
+
 import java.util.ArrayList;
 import java.util.List;
 

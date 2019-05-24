@@ -2011,7 +2011,7 @@ public class UnrealCrossing extends PApplet {
                     //text("best HCLS="+superpixel.class_.retHumanReadableClass(), x * highestClassificationMapCellSize, y * highestClassificationMapCellSize);
                     //text("  conf="+superpixel.conf, x * highestClassificationMapCellSize, y * highestClassificationMapCellSize + 14);
 
-                    color(0);
+                    fill(0);
                     text(""+superpixel.class_.retHumanReadableClass(), x * highestClassificationMapCellSize, y * highestClassificationMapCellSize);
                     text(String.format("%.2f", superpixel.conf) , x * highestClassificationMapCellSize, y * highestClassificationMapCellSize + 14);
                 }
