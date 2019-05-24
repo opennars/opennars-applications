@@ -206,6 +206,23 @@ public class UnrealCrossing extends PApplet {
 
     List<MotionParticle> motionParticles = new ArrayList<>(); // particles to track motion
 
+    Map2dGeneric<ClassificationMapSuperpixel> highestClassificationMap;
+
+    private static class ClassificationMapSuperpixel {
+        public double conf = 0.0; // confidence of best classification
+        public ClassDatabase.Class class_; // best class
+
+        public long lastUpdateIteration = 0; // iteration of the last update
+
+        public void reset(long lastUpdateIteration) {
+            this.lastUpdateIteration = lastUpdateIteration;
+            class_ = null;
+            conf = 0.0;
+        }
+    }
+
+    long iteration = 0;
+
 
     private float integrateImgGrayscalePixel(int posY, int posX, int size, int stride, PImage img) {
         int numberOfSamples = 0;
@@ -407,6 +424,8 @@ public class UnrealCrossing extends PApplet {
 
     @Override
     public void draw() {
+        iteration++;
+
         if (false) {
             try {
                 Thread.sleep(1500);
@@ -630,6 +649,16 @@ public class UnrealCrossing extends PApplet {
 
         image(img, 0, 0);
 
+
+        int highestClassificationMapCellSize = (heatmapCellsize*4);
+        if(highestClassificationMap == null) {
+            highestClassificationMap = new Map2dGeneric<>(img.height / highestClassificationMapCellSize + 1, img.width / highestClassificationMapCellSize + 1);
+            for(int y=0;y<highestClassificationMap.retHeight();y++) {
+                for(int x=0;x<highestClassificationMap.retWidth();x++) {
+                    highestClassificationMap.writeAtSafe(y, x, new ClassificationMapSuperpixel());
+                }
+            }
+        }
 
 
 
@@ -1797,7 +1826,7 @@ public class UnrealCrossing extends PApplet {
 
 
 
-            int numberOfAttentionSamples = 15;
+            int numberOfAttentionSamples = 100;
 
             List<PrototypeSample> prototypeSamples = new ArrayList<>(); // all samples which were don eto match against the prototypes
 
@@ -1933,6 +1962,23 @@ public class UnrealCrossing extends PApplet {
                 double distToConfFactor = 5*90000.0f; // 3000.0f // config - factor used to compute the confidence by the distance when matching the image against a prototype
                 double conf = (float)(1.0/(1.0 + bestClassificationDist * distToConfFactor));
 
+                {
+                    int xIdx = bestSample.prototypesPosX / highestClassificationMapCellSize;
+                    int yIdx = bestSample.prototypesPosY / highestClassificationMapCellSize;
+
+                    ClassificationMapSuperpixel classfnSuperpixel = highestClassificationMap.readAtSafe(yIdx, xIdx);
+
+                    if (classfnSuperpixel.lastUpdateIteration != iteration) {
+                        classfnSuperpixel.reset(iteration);
+                    }
+
+                    if (conf > classfnSuperpixel.conf) {
+                        classfnSuperpixel.conf = conf;
+                        classfnSuperpixel.class_ = bestSample.class_;
+                    }
+
+                }
+
                 double debug_recognition_confThreshold = 0.09; // threshold for the recognition confidence
 
                 if (conf > debug_recognition_confThreshold) {//&& bestSample.class_.retHumanReadableClass() != 3) {
@@ -1940,7 +1986,7 @@ public class UnrealCrossing extends PApplet {
                     dc.posX = bestSample.prototypesPosX;
                     dc.posY = bestSample.prototypesPosY;
                     dc.text = "S HCLS="+bestSample.class_.retHumanReadableClass()+"   "+"dist="+bestClassificationDist + "    conf="+conf;
-                    debugCursors.add(dc);
+                    //debugCursors.add(dc);
                 }
 
 
@@ -1950,6 +1996,25 @@ public class UnrealCrossing extends PApplet {
 
             for (AdvancedSpatialTracklet iSt : advancedSpatialTracklets) {
 
+            }
+        }
+
+        { // debug classification map
+            for(int y=0;y<highestClassificationMap.retHeight();y++) {
+                for(int x=0;x<highestClassificationMap.retWidth();x++) {
+                    ClassificationMapSuperpixel superpixel = highestClassificationMap.readAtSafe(y, x);
+
+                    if (superpixel.class_ == null) {
+                        continue;
+                    }
+
+                    //text("best HCLS="+superpixel.class_.retHumanReadableClass(), x * highestClassificationMapCellSize, y * highestClassificationMapCellSize);
+                    //text("  conf="+superpixel.conf, x * highestClassificationMapCellSize, y * highestClassificationMapCellSize + 14);
+
+                    color(0);
+                    text(""+superpixel.class_.retHumanReadableClass(), x * highestClassificationMapCellSize, y * highestClassificationMapCellSize);
+                    text(String.format("%.2f", superpixel.conf) , x * highestClassificationMapCellSize, y * highestClassificationMapCellSize + 14);
+                }
             }
         }
 
