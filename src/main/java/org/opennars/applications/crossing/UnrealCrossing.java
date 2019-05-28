@@ -204,8 +204,6 @@ public class UnrealCrossing extends PApplet {
 
     Map2d[] convolutions; // channels of different convolutions applied to the complete (current) image
 
-    List<MotionParticle> motionParticles = new ArrayList<>(); // particles to track motion
-
     Map2dGeneric<ClassificationMapSuperpixel> highestClassificationMap;
 
     private static class ClassificationMapSuperpixel {
@@ -348,20 +346,6 @@ public class UnrealCrossing extends PApplet {
         return minMetricDist < maxThreshold;
     }
 
-    private void trackAndRemoveMotionparticles(double maxDistance, int imgWidth, int imgHeight, PImage img) {
-        for(int particleIdx=motionParticles.size()-1;particleIdx>=0;particleIdx--) {
-            boolean isAliveTracking = traceMotionParticle(motionParticles.get(particleIdx), maxDistance, img);
-
-            boolean isOutOfBoundsX = motionParticles.get(particleIdx).posX <= motionParticles.get(particleIdx).segment[0].retWidth()/2 + maxDistance || motionParticles.get(particleIdx).posX >= imgWidth - motionParticles.get(particleIdx).segment[0].retWidth()/2 - maxDistance;
-            boolean isOutOfBoundsY = motionParticles.get(particleIdx).posY <= motionParticles.get(particleIdx).segment[0].retHeight()/2 + maxDistance || motionParticles.get(particleIdx).posY >= imgHeight - motionParticles.get(particleIdx).segment[0].retHeight()/2 - maxDistance;
-            boolean isOutOfBounds = isOutOfBoundsX || isOutOfBoundsY;
-
-            boolean removeParticle = !isAliveTracking || isOutOfBounds;
-            if (removeParticle) {
-                motionParticles.remove(particleIdx);
-            }
-        }
-    }
 
     private void addMotionParticleAt(double posX, double posY, int size, PImage img) {
         MotionParticle mp = new MotionParticle(posX, posY);
@@ -407,7 +391,7 @@ public class UnrealCrossing extends PApplet {
             mp.segment[channelIdx] = segmentChannel;
         }
 
-        motionParticles.add(mp);
+        motionPrototypeParticles.add(mp);
     }
 
     // pool used for all general work
@@ -444,7 +428,7 @@ public class UnrealCrossing extends PApplet {
 
 
             frameIdx = 1;
-            motionParticles.clear();
+            motionPrototypeParticles.clear();
             attentionField = null;
             advancedSpatialTracklets.clear();
             spatialTracklets.clear();
@@ -487,6 +471,61 @@ public class UnrealCrossing extends PApplet {
                 int here = 5;
             }
             imageLoaderFutures.remove(0);
+        }
+
+
+        {
+            // track motion particles
+            for( MotionParticle iMotionparticle : motionPrototypeParticles) {
+
+
+                int prototypeSearchDistance = 20;//;40;//20; // distance in pixels for the search of the same prototype
+
+                int bestPositionX = 0;
+                int bestPositionY = 0;
+                float bestClassificationDistance = Float.POSITIVE_INFINITY;
+
+                long timeStartInNs = System.nanoTime();
+
+                // TODO< fearch for a pixel distance of 2 inside >
+                // search in region proposal
+                for(int dy=-prototypeSearchDistance;dy<prototypeSearchDistance;dy+=3) {
+                    boolean offsetXCoordinate = (dy % 2) == 0; // do we offset the x coordinate? to reduce the overall distance
+                    int startX = -prototypeSearchDistance + (offsetXCoordinate?3/2:0);
+
+                    for(int dx=startX;dx<prototypeSearchDistance;dx+=3) {
+                        int prototypeClassificationStepsize = 2; // ship every 2nd pixel of the compared prototype
+
+
+                        ImgDistTools.Dists dists2 = ImgDistTools.calcDist(iMotionparticle.segment, (int)(iMotionparticle.posX + dx), (int)(iMotionparticle.posY + dy), prototypeClassificationStepsize, img);
+                        float classificationDistance = dists2.dist;
+
+
+                        if (classificationDistance < bestClassificationDistance) {
+                            bestClassificationDistance = classificationDistance;
+                            bestPositionX = (int)iMotionparticle.posX + dx;
+                            bestPositionY = (int)iMotionparticle.posY + dy;
+                        }
+                    }
+                }
+
+                long timeEndInNs = System.nanoTime();
+                //overalltimeMotionPrototypeSearchInNs += (timeEndInNs-timeStartInNs); // add up time
+
+
+
+                // (*) set information for advanced spatial tracklet
+                if (bestClassificationDistance < Float.POSITIVE_INFINITY) {
+                    System.out.println("retrace motion " + bestPositionX + "," + bestPositionY);
+
+                    iMotionparticle.posX = bestPositionX;
+                    iMotionparticle.posY = bestPositionY;
+
+                    // update so it tracks the new image
+                    // TODO
+                }
+
+            }
         }
 
 
@@ -799,18 +838,33 @@ public class UnrealCrossing extends PApplet {
 
 
         double motionparticleMaxDistance = 8.0; // configuration - maximal distance a motion particle can travel
-        trackAndRemoveMotionparticles(motionparticleMaxDistance, img.width, img.height, img);
 
         { // add new motion particles
-            int motionparticleSize = 12; // configuration - size of a motion particle
+            if (lastframe2 != null) {
+                int motionparticleSize = 12; // configuration - size of a motion particle
 
-            int numberOfSpawnedMotionParticles = 0; // NOTE< disabled motion particles for now because cars move to fast, but pedestriants seem to have the right speed to "pick up" >
+                int numberOfTriedSpawnedMotionParticles = 100;
 
-            for(int i=0;i<numberOfSpawnedMotionParticles;i++) {
-                double spawnPosX = 16 + rng.nextDouble() * (img.width-16*2);
-                double spawnposY = 16 + rng.nextDouble() * (img.height-16*2);
+                double motionparticleMinChangeThreshold = 0.02; // minimal change threshold to add a motion particle
+                // this is a small optimization to save time by not tracking motion when no motion can be possible
 
-                addMotionParticleAt(spawnPosX, spawnposY, motionparticleSize, img);
+                for(int i=0;i<numberOfTriedSpawnedMotionParticles;i++) {
+                    double spawnPosX = 16 + rng.nextDouble() * (img.width-16*2);
+                    double spawnPosY = 16 + rng.nextDouble() * (img.height-16*2);
+
+
+                    float thisFrameGrayscale = integrateImgGrayscalePixel((int)spawnPosY, (int)spawnPosX, heatmapCellsize, 2, img);
+                    float lastFrameGrayscale = integrateImgGrayscalePixel((int)spawnPosY, (int)spawnPosX, heatmapCellsize, 2, lastframe2);
+
+                    float diff = lastFrameGrayscale - thisFrameGrayscale; // difference to last frame
+                    float absDiff = Math.abs(diff);
+
+                    if (absDiff < motionparticleMinChangeThreshold) {
+                        continue;
+                    }
+
+                    addMotionParticleAt(spawnPosX, spawnPosY, motionparticleSize, img);
+                }
             }
         }
 
@@ -2247,7 +2301,7 @@ public class UnrealCrossing extends PApplet {
         if (showMotionparticles) {
             fill(255);
             stroke(0,0,0,0); // transparent
-            for(MotionParticle iMp : motionParticles) {
+            for(MotionParticle iMp : motionPrototypeParticles) {
                 rect((int)iMp.posX, (int)iMp.posY, 3, 3);
             }
         }
@@ -2533,4 +2587,6 @@ public class UnrealCrossing extends PApplet {
         new IncidentSimulator().show();
         PApplet.runSketch(args2, mp);
     }
+
+    public List<MotionParticle> motionPrototypeParticles = new ArrayList<>();
 }
