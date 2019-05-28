@@ -406,6 +406,11 @@ public class UnrealCrossing extends PApplet {
 
     ClassDatabase classDatabase = new ClassDatabase(); // database for all classifications
 
+    // config
+    double motionparticleMinChangeThreshold = 0.02; // minimal change threshold to add a motion particle
+    // this is a small optimization to save time by not tracking motion when no motion can be possible
+
+
     @Override
     public void draw() {
         iteration++;
@@ -477,7 +482,15 @@ public class UnrealCrossing extends PApplet {
         {
             // track motion particles
             for( MotionParticle iMotionparticle : motionPrototypeParticles) {
+                float thisFrameGrayscale = integrateImgGrayscalePixel((int)iMotionparticle.posY, (int)iMotionparticle.posX, heatmapCellsize, 2, img);
+                float lastFrameGrayscale = integrateImgGrayscalePixel((int)iMotionparticle.posY, (int)iMotionparticle.posX, heatmapCellsize, 2, lastframe2);
 
+                float diff = lastFrameGrayscale - thisFrameGrayscale; // difference to last frame
+                float absDiff = Math.abs(diff);
+
+                if (absDiff < motionparticleMinChangeThreshold) {
+                    continue; // we don't track motion particles if they don't participate in change
+                }
 
                 int prototypeSearchDistance = 20;//;40;//20; // distance in pixels for the search of the same prototype
 
@@ -516,8 +529,11 @@ public class UnrealCrossing extends PApplet {
 
                 // (*) set information for advanced spatial tracklet
                 if (bestClassificationDistance < Float.POSITIVE_INFINITY) {
-                    System.out.println("retrace motion " + bestPositionX + "," + bestPositionY);
+                    double diffX = iMotionparticle.posX - bestPositionX;
+                    double diffY = iMotionparticle.posY - bestPositionY;
+                    double traveledDistance = Math.sqrt(diffX*diffX+diffY*diffY);
 
+                    iMotionparticle.traveledDistance += traveledDistance;
                     iMotionparticle.posX = bestPositionX;
                     iMotionparticle.posY = bestPositionY;
 
@@ -839,17 +855,47 @@ public class UnrealCrossing extends PApplet {
 
         double motionparticleMaxDistance = 8.0; // configuration - maximal distance a motion particle can travel
 
+        { // remove motion particles if they don't participated in a motion
+            if(iteration % 10 == 0) { // let it accumulate the motion
+                double motionparticleTraveledRemoveThreshold = 10.0;
+
+                for(int idx=motionPrototypeParticles.size()-1;idx>=0;idx--) {
+                    boolean remove = motionPrototypeParticles.get(idx).traveledDistance < motionparticleTraveledRemoveThreshold;
+                    motionPrototypeParticles.get(idx).traveledDistance = 0; // reset
+                    if (remove) {
+                        motionPrototypeParticles.remove(idx);
+                    }
+                }
+            }
+
+        }
+
+        { // remove motion particles which are outside of the image
+
+            for(int idx=motionPrototypeParticles.size()-1;idx>=0;idx--) {
+                boolean remove = false;
+                remove |= motionPrototypeParticles.get(idx).posX < 16;
+                remove |= motionPrototypeParticles.get(idx).posX > img.width-16;
+                remove |= motionPrototypeParticles.get(idx).posY < 16;
+                remove |= motionPrototypeParticles.get(idx).posY > img.height-16;
+                if (remove) {
+                    motionPrototypeParticles.remove(idx);
+                }
+            }
+
+
+        }
+
         { // add new motion particles
             if (lastframe2 != null) {
                 int motionparticleSize = 12; // configuration - size of a motion particle
 
                 int numberOfTriedSpawnedMotionParticles = 100;
 
-                double motionparticleMinChangeThreshold = 0.02; // minimal change threshold to add a motion particle
-                // this is a small optimization to save time by not tracking motion when no motion can be possible
 
-                for(int spawnPosY = 16; spawnPosY < (img.height-16*2); spawnPosY += 30) {
-                    for(int spawnPosX = 16; spawnPosX < (img.width-16*2); spawnPosX += 30) {
+
+                for(int spawnPosY = 16; spawnPosY < (img.height-16); spawnPosY += 15) {
+                    for(int spawnPosX = 16; spawnPosX < (img.width-16); spawnPosX += 15) {
                         float thisFrameGrayscale = integrateImgGrayscalePixel((int)spawnPosY, (int)spawnPosX, heatmapCellsize, 2, img);
                         float lastFrameGrayscale = integrateImgGrayscalePixel((int)spawnPosY, (int)spawnPosX, heatmapCellsize, 2, lastframe2);
 

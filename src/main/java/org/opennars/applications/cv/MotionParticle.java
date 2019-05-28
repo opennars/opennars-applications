@@ -33,6 +33,8 @@ public class MotionParticle {
     public double posX = 0;
     public double posY = 0;
 
+    public double traveledDistance = 0; // used to remove motion particles
+
     public MotionParticle(double posX, double posY) {
         this.posX = posX;
         this.posY = posY;

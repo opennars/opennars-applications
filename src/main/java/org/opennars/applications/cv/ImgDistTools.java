@@ -81,7 +81,7 @@ public class ImgDistTools {
     }
 
     public static class Dists {
-        float dist = Float.POSITIVE_INFINITY;
-        float mse = Float.POSITIVE_INFINITY;
+        public float dist = Float.POSITIVE_INFINITY;
+        public float mse = Float.POSITIVE_INFINITY;
     }
 }
