@@ -848,23 +848,30 @@ public class UnrealCrossing extends PApplet {
                 double motionparticleMinChangeThreshold = 0.02; // minimal change threshold to add a motion particle
                 // this is a small optimization to save time by not tracking motion when no motion can be possible
 
+                for(int spawnPosY = 16; spawnPosY < (img.height-16*2); spawnPosY += 30) {
+                    for(int spawnPosX = 16; spawnPosX < (img.height-16*2); spawnPosX += 30) {
+                        float thisFrameGrayscale = integrateImgGrayscalePixel((int)spawnPosY, (int)spawnPosX, heatmapCellsize, 2, img);
+                        float lastFrameGrayscale = integrateImgGrayscalePixel((int)spawnPosY, (int)spawnPosX, heatmapCellsize, 2, lastframe2);
+
+                        float diff = lastFrameGrayscale - thisFrameGrayscale; // difference to last frame
+                        float absDiff = Math.abs(diff);
+
+                        if (absDiff < motionparticleMinChangeThreshold) {
+                            continue;
+                        }
+
+                        addMotionParticleAt(spawnPosX, spawnPosY, motionparticleSize, img);
+                    }
+                }
+
+                /* commented because purely random sampling
                 for(int i=0;i<numberOfTriedSpawnedMotionParticles;i++) {
                     double spawnPosX = 16 + rng.nextDouble() * (img.width-16*2);
                     double spawnPosY = 16 + rng.nextDouble() * (img.height-16*2);
 
-
-                    float thisFrameGrayscale = integrateImgGrayscalePixel((int)spawnPosY, (int)spawnPosX, heatmapCellsize, 2, img);
-                    float lastFrameGrayscale = integrateImgGrayscalePixel((int)spawnPosY, (int)spawnPosX, heatmapCellsize, 2, lastframe2);
-
-                    float diff = lastFrameGrayscale - thisFrameGrayscale; // difference to last frame
-                    float absDiff = Math.abs(diff);
-
-                    if (absDiff < motionparticleMinChangeThreshold) {
-                        continue;
-                    }
-
-                    addMotionParticleAt(spawnPosX, spawnPosY, motionparticleSize, img);
+                    // old code was here
                 }
+                */
             }
         }
 
