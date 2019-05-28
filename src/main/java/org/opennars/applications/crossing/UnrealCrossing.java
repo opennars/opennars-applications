@@ -849,7 +849,7 @@ public class UnrealCrossing extends PApplet {
                 // this is a small optimization to save time by not tracking motion when no motion can be possible
 
                 for(int spawnPosY = 16; spawnPosY < (img.height-16*2); spawnPosY += 30) {
-                    for(int spawnPosX = 16; spawnPosX < (img.height-16*2); spawnPosX += 30) {
+                    for(int spawnPosX = 16; spawnPosX < (img.width-16*2); spawnPosX += 30) {
                         float thisFrameGrayscale = integrateImgGrayscalePixel((int)spawnPosY, (int)spawnPosX, heatmapCellsize, 2, img);
                         float lastFrameGrayscale = integrateImgGrayscalePixel((int)spawnPosY, (int)spawnPosX, heatmapCellsize, 2, lastframe2);
 
