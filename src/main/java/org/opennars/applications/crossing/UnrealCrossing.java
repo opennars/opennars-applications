@@ -422,11 +422,6 @@ public class UnrealCrossing extends PApplet {
 
     ClassDatabase classDatabase = new ClassDatabase(); // database for all classifications
 
-    Map2d mapLastFrame;
-    // maps for the motion in positive and negative x and y direction
-    Map2d[] motionX = new Map2d[2]; // negative and positive
-    Map2d[] motionY = new Map2d[2]; // negative and positive
-
     @Override
     public void draw() {
         iteration++;
@@ -664,115 +659,6 @@ public class UnrealCrossing extends PApplet {
                 }
             }
         }
-
-        int motionmapCellsize = 8; // config - size of the superpixels of the motion map
-        // maps for the motion in positive and negative x and y direction
-        if (motionX[0] == null) {
-            // allocate
-            motionX[0] = new Map2d(img.height / motionmapCellsize + 1, img.width / motionmapCellsize + 1);
-            motionX[1] = new Map2d(img.height / motionmapCellsize + 1, img.width / motionmapCellsize + 1);
-            motionY[0] = new Map2d(img.height / motionmapCellsize + 1, img.width / motionmapCellsize + 1);
-            motionY[1] = new Map2d(img.height / motionmapCellsize + 1, img.width / motionmapCellsize + 1);
-        }
-
-
-        { // compute motion maps of directions
-            // we subtract the neightborsuperpixel of the last frame from the superpixel of this frame in the respective direction as described by a neuroscience paper
-            Map2d mapThisFrame = new Map2d(img.height / motionmapCellsize + 1, img.width / motionmapCellsize + 1);
-
-            for(int iy=1;iy<img.height/motionmapCellsize-1;iy++) {
-                for(int ix=1;ix<img.width/motionmapCellsize-1;ix++) {
-                    float grayscaleAccu = 0;
-                    int c = 0;
-
-                    for(int dy=-(int)(motionmapCellsize*(2.0/3));dy<(int)(motionmapCellsize*(2.0/3));dy++) {
-                        for(int dx=-(int)(motionmapCellsize*(2.0/3));dx<(int)(motionmapCellsize*(2.0/3));dx++) {
-                            int dx2 = dx + motionmapCellsize/2;
-                            int dy2 = dy + motionmapCellsize/2;
-
-                            int colorcode =  img.pixels[(iy*motionmapCellsize+dy) *img.width+ix*motionmapCellsize+dx];
-                            //TODO check if the rgb is extracted correctly
-                            float r = (colorcode & 0xff) / 255.0f;
-                            float g = ((colorcode >> 8) & 0xFF) / 255.0f;
-                            float b = ((colorcode >> 8*2) & 0xFF) / 255.0f;
-
-                            float grayscale = (r+g+b)/3.0f;
-
-                            float weightX = 1.0f - (float)Math.abs(dx) / (int)(motionmapCellsize*(2.0/3));
-                            float weightY = 1.0f - (float)Math.abs(dy) / (int)(motionmapCellsize*(2.0/3));
-                            float weight = weightX*weightY;
-
-                            grayscaleAccu += (grayscale*weight);
-                            c++;
-                        }
-                    }
-
-                    grayscaleAccu /= c;
-
-                    /*
-                    int colorcode =  img.pixels[(iy*motionmapCellsize) *img.width+ix*motionmapCellsize];
-                    //TODO check if the rgb is extracted correctly
-                    float r = (colorcode & 0xff) / 255.0f;
-                    float g = ((colorcode >> 8) & 0xFF) / 255.0f;
-                    float b = ((colorcode >> 8*2) & 0xFF) / 255.0f;
-
-                    float grayscale = (r+g+b)/3.0f;
-                    grayscaleAccu += grayscale;
-
-
-                    colorcode =  img.pixels[(iy*motionmapCellsize+1) *img.width+(ix*motionmapCellsize+1)];
-                    //TODO check if the rgb is extracted correctly
-                    r = (colorcode & 0xff) / 255.0f;
-                    g = ((colorcode >> 8) & 0xFF) / 255.0f;
-                    b = ((colorcode >> 8*2) & 0xFF) / 255.0f;
-
-                    grayscale = (r+g+b)/3.0f;
-                    grayscaleAccu += grayscale;
-                    */
-
-                    mapThisFrame.writeAtUnsafe(iy,ix,grayscaleAccu);
-                }
-            }
-
-
-            if(mapLastFrame != null) {
-
-                for(boolean ipx : new boolean[]{false, true}) { // iterate positive x
-                    int idx = ipx ? 1 : 0; // index in array
-                    Map2d map = motionX[idx];
-
-                    for(int iy=0;iy<mapThisFrame.retHeight();iy++) {
-                        for(int ix=1;ix<mapThisFrame.retWidth()-1;ix++) {
-                            int pn = ipx ? -1 : 1; // positive or negative offset from last frame
-
-                            float diff = mapThisFrame.readAtSafe(iy,ix) - mapLastFrame.readAtSafe(iy,ix + pn);
-                            diff = Math.abs(diff);
-
-                            map.writeAtSafe(iy,ix,diff);
-                        }
-                    }
-                }
-
-                for(boolean ipy : new boolean[]{false, true}) { // iterate positive y
-                    int idx = ipy ? 1 : 0; // index in array
-                    Map2d map = motionY[idx];
-
-                    for(int iy=1;iy<mapThisFrame.retHeight()-1;iy++) {
-                        for(int ix=0;ix<mapThisFrame.retWidth();ix++) {
-                            int pn = ipy ? -1 : 1; // positive or negative offset from last frame
-
-                            float diff = mapThisFrame.readAtSafe(iy,ix) - mapLastFrame.readAtSafe(iy + pn,ix);
-                            diff = Math.abs(diff);
-
-                            map.writeAtSafe(iy,ix,diff);
-                        }
-                    }
-                }
-            }
-
-            mapLastFrame = mapThisFrame;
-        }
-
 
 
 
@@ -2404,32 +2290,6 @@ public class UnrealCrossing extends PApplet {
             }
         }
 
-        boolean showMotionVectors = true;
-
-        if (showMotionVectors) {
-            stroke(0);
-            strokeWeight(1.0f);
-
-            for(int iy=0;iy<motionX[0].retHeight();iy+=1) {
-                for(int ix=0;ix<motionX[0].retWidth();ix+=1) {
-                    float motionNegX = motionX[0].readAtUnsafe(iy,ix);
-                    float motionPosX = motionX[1].readAtUnsafe(iy,ix);
-                    float motionNegY = motionY[0].readAtUnsafe(iy,ix);
-                    float motionPosY = motionY[1].readAtUnsafe(iy,ix);
-
-                    float motionX = motionPosX - motionNegX;
-                    float motionY = motionPosY - motionNegY;
-
-                    int posX = motionmapCellsize * ix;
-                    int posY = motionmapCellsize * iy;
-
-                    line(posX, posY, posX + motionX * 70.0f, posY + motionY * 70.0f);
-
-                }
-            }
-
-
-        }
 
 
         boolean showStats = true; // show system statistics
