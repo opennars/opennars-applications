@@ -33,10 +33,25 @@ public class MotionParticle {
     public double posX = 0;
     public double posY = 0;
 
+    public double lastPosX = Double.NaN;
+    public double lastPosY = Double.NaN;
+
+
     public double traveledDistance = 0; // used to remove motion particles
 
-    public MotionParticle(double posX, double posY) {
+    public long id;
+
+    public MotionParticle(double posX, double posY, long id) {
         this.posX = posX;
         this.posY = posY;
+        this.id = id;
+    }
+
+    public double retVelX() {
+        return posX - lastPosX;
+    }
+
+    public double retVelY() {
+        return posY - lastPosY;
     }
 }

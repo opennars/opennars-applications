@@ -346,9 +346,10 @@ public class UnrealCrossing extends PApplet {
         return minMetricDist < maxThreshold;
     }
 
+    private long motionParticleIdCounter = 0;
 
     private void addMotionParticleAt(double posX, double posY, int size, PImage img) {
-        MotionParticle mp = new MotionParticle(posX, posY);
+        MotionParticle mp = new MotionParticle(posX, posY, motionParticleIdCounter++);
         mp.segment = new Map2d[3];
 
         for(int channelIdx=0;channelIdx<3;channelIdx++) {
@@ -480,6 +481,11 @@ public class UnrealCrossing extends PApplet {
 
 
         {
+            for( MotionParticle iParticle : motionPrototypeParticles) {
+                iParticle.lastPosX = iParticle.posX;
+                iParticle.lastPosY = iParticle.posY;
+            }
+
             // track motion particles
             for( MotionParticle iMotionparticle : motionPrototypeParticles) {
                 float thisFrameGrayscale = integrateImgGrayscalePixel((int)iMotionparticle.posY, (int)iMotionparticle.posX, heatmapCellsize, 2, img);
@@ -541,6 +547,19 @@ public class UnrealCrossing extends PApplet {
                     // TODO
                 }
 
+            }
+        }
+
+        List<MotionSegmentationService.SegmentatedMotionParticlesInBoundingHull> motionparticleSegments = new ArrayList<>();
+        { // segmentate motion particles into clusters with roughtly equal motion and filter the clusters for the ones with sufficient motion
+            MotionSegmentationService segmentationService = new MotionSegmentationService();
+            List<MotionSegmentationService.SegmentatedMotionParticlesInBoundingHull> motionparticleSegmentsWithoutFilter = segmentationService.segmentate(motionPrototypeParticles, img.width, img.height);
+
+            // filter for segmentations which move
+            for(MotionSegmentationService.SegmentatedMotionParticlesInBoundingHull iSegmentation : motionparticleSegmentsWithoutFilter) {
+                if (!iSegmentation.quanizedMotion.equals(new MotionSegmentationService.Vec2Long(0,0))) {
+                    motionparticleSegments.add(iSegmentation);
+                }
             }
         }
 
@@ -991,7 +1010,7 @@ public class UnrealCrossing extends PApplet {
 
 
         // debug region proposals
-        boolean debugRegionProposals = true;
+        boolean debugRegionProposals = false;
         if (debugRegionProposals) {
             for(RegionProposal iRp:regionProposals) {
                 DebugCursor dc = new DebugCursor();
@@ -2237,7 +2256,7 @@ public class UnrealCrossing extends PApplet {
         boolean showSpatialTracklets = true; // true
         boolean showDebugCursor = true; // true
         boolean showMotionparticles = true;
-
+        boolean showMotionParticleSegmentations = true;
 
         if (showSpatialTracklets) {
             for(SpatialTracklet ist : spatialTracklets) {
@@ -2248,7 +2267,7 @@ public class UnrealCrossing extends PApplet {
 
                 boolean isRecent = ist.idletime < 5;
 
-                stroke(0,255,0, isRecent ? 255 : 80);
+                stroke(0,127,127, isRecent ? 255 : 80);
                 strokeWeight(2.0f);
 
 
@@ -2356,6 +2375,25 @@ public class UnrealCrossing extends PApplet {
             stroke(0,0,0,0); // transparent
             for(MotionParticle iMp : motionPrototypeParticles) {
                 rect((int)iMp.posX, (int)iMp.posY, 3, 3);
+            }
+        }
+
+
+
+        if (showMotionParticleSegmentations) {
+
+            for(MotionSegmentationService.SegmentatedMotionParticlesInBoundingHull iSegmentation : motionparticleSegments) {
+                // TODO< draw full bounding hull and not just bounding box of it ! >
+
+                double sizeX = iSegmentation.hull.dirs[0].max - iSegmentation.hull.dirs[0].min;
+                double sizeY = iSegmentation.hull.dirs[1].max - iSegmentation.hull.dirs[1].min;
+
+                double minX = iSegmentation.hull.dirs[0].min;
+                double minY = iSegmentation.hull.dirs[1].min;
+
+                fill(0,0,255,(int)(255.0 * 0.2));
+                stroke(0,0,0,0); // transparent
+                rect((int)minX, (int)minY, (int)sizeX, (int)sizeY);
             }
         }
 
