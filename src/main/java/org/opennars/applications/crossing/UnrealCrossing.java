@@ -942,23 +942,13 @@ public class UnrealCrossing extends PApplet {
 
 
         List<RegionProposal> regionProposals = new ArrayList<>();
-        { // translate regions to region proposals
-            for(Map.Entry<Integer, Region> iRegion : regionsByColor.entrySet()){
+        { // translate segmentations to region proposals
+            for(MotionSegmentationService.SegmentatedMotionParticlesInBoundingHull iSegmentation : motionparticleSegments) {
                 RegionProposal rp = new RegionProposal(); // build region proposal
-                rp.minX = iRegion.getValue().minX * heatmapCellsize;
-                rp.minY = iRegion.getValue().minY * heatmapCellsize;
-
-                // add one to take the last cell into account
-                rp.maxX = (iRegion.getValue().maxX + 1)* heatmapCellsize;
-                rp.maxY = (iRegion.getValue().maxY + 1)* heatmapCellsize;
-
-                int width = rp.maxX-rp.minX;
-                int height = rp.maxY-rp.minY;
-
-                if (width <= 1*heatmapCellsize || height <= 1*heatmapCellsize ) {
-                    continue; // disallow regions of size one
-                }
-
+                rp.minX = (int)iSegmentation.hull.dirs[0].min;
+                rp.maxX = (int)iSegmentation.hull.dirs[0].max;
+                rp.minY = (int)iSegmentation.hull.dirs[1].min;
+                rp.maxY = (int)iSegmentation.hull.dirs[1].max;
                 regionProposals.add(rp);
             }
         }
