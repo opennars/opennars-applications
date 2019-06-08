@@ -911,6 +911,22 @@ public class UnrealCrossing extends PApplet {
 
                 int numberOfTriedSpawnedMotionParticles = 100;
 
+                int motionparticleCounterGridCellsize = 8;
+                int motionparticleGridMaxParticlesPerCell = 3;
+
+                // count the number of motion particles in a grid
+                Map2dGeneric<Integer> motionparticleCounterGrid = new Map2dGeneric<>(img.height / motionparticleCounterGridCellsize + 1, img.width / motionparticleCounterGridCellsize + 1);
+                for(int iy=0;iy<motionparticleCounterGrid.retHeight();iy++) {
+                    for(int ix=0;ix<motionparticleCounterGrid.retWidth();ix++) {
+                        motionparticleCounterGrid.writeAtSafe(iy,ix,0);
+                    }
+                }
+
+                for(MotionParticle iParticle : motionPrototypeParticles) {
+                    int c = motionparticleCounterGrid.readAtSafe((int)(iParticle.posY / motionparticleCounterGridCellsize), (int)(iParticle.posX / motionparticleCounterGridCellsize));
+                    c++;
+                    motionparticleCounterGrid.writeAtUnsafe((int)(iParticle.posY / motionparticleCounterGridCellsize), (int)(iParticle.posX / motionparticleCounterGridCellsize), c);
+                }
 
 
                 for(int spawnPosY = 16; spawnPosY < (img.height-16); spawnPosY += 15) {
@@ -922,6 +938,11 @@ public class UnrealCrossing extends PApplet {
                         float absDiff = Math.abs(diff);
 
                         if (absDiff < motionparticleMinChangeThreshold) {
+                            continue;
+                        }
+
+                        int count = motionparticleCounterGrid.readAtSafe((int)(spawnPosY / motionparticleCounterGridCellsize), (int)(spawnPosX / motionparticleCounterGridCellsize));
+                        if (count >= motionparticleGridMaxParticlesPerCell) {
                             continue;
                         }
 
