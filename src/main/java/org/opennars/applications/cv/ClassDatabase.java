@@ -35,6 +35,8 @@ import java.util.Map;
 import static processing.core.PConstants.RGB;
 
 public class ClassDatabase {
+    public boolean isDirty = false; // used to decide when to upload something
+
     public Map<Long, Class> classesByClassId = new HashMap<>();
 
     // counter for the unique id of new classes
@@ -44,6 +46,9 @@ public class ClassDatabase {
         Class createdClass = new Class(classIdCounter, imageHeight, imageWidth);
         classesByClassId.put(classIdCounter, createdClass);
         classIdCounter++;
+
+        isDirty = true; // is dirty because we added a new class
+
         return createdClass;
     }
 
@@ -63,6 +68,8 @@ public class ClassDatabase {
 
         // for debugging
         public PImage protoMeanImg; // image of the mean of the prototype
+
+        public boolean isDirty;
 
         public Class(long class_, int imageHeight, int imageWidth) {
             this.class_ = class_;
@@ -101,6 +108,8 @@ public class ClassDatabase {
          */
 
         public void reviseByMask(Map2d[] imageColors, Map2dGeneric<Boolean> mask, UnrealCrossing applet) {
+            isDirty = true;
+
             prototype.reviseByMask(imageColors, mask);
 
             // update image for debugging purposes

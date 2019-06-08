@@ -1904,6 +1904,8 @@ public class UnrealCrossing extends PApplet {
             }
         }
 
+        boolean prototypeUpdate_wasAnyUpdated;
+
         long overalltime_recognitionPrototype_copy1 = 0;
         long overalltime_recognitionPrototype_run = 0;
         { // try to recognize known classes with the prototypes of those classes
@@ -1915,51 +1917,65 @@ public class UnrealCrossing extends PApplet {
                 classes.add(iClassEntry.getValue());
             }
 
-            //List<Float> prototypeRgbList = new ArrayList<>(); // rgb buffer for the rgb values of the prototypes (which were allocated for this run with OpenCL)
-            //List<Integer> prototypeRgbDistNList = new ArrayList<>(); // counter buffer for the n values of the distributions of the pixels of the prototypes (which were allocated for this run with OpenCL)
-
-            int sizeOfPrototypeArrToAllocate = 0;
-
-            for (ClassDatabase.Class iClass : classes) {
-                int prototypeWidth = iClass.prototype.channels[0].retWidth();
-                int prototypeHeight = iClass.prototype.channels[0].retHeight();
-
-                sizeOfPrototypeArrToAllocate += (prototypeWidth*prototypeHeight)*3;
+            boolean isAnyDirty = false;
+            for(ClassDatabase.Class iClass : classes) {
+                isAnyDirty |= iClass.isDirty;
             }
 
+            boolean isUpdateRequired = classDatabase.isDirty || isAnyDirty; // do we need to update the data on the GPU?
+            prototypeUpdate_wasAnyUpdated = isUpdateRequired;
+
+            if (isUpdateRequired) {
+                classDatabase.isDirty = false; // is not anymore dirty because we transfered it
+
+                int sizeOfPrototypeArrToAllocate = 0;
+
+                for (ClassDatabase.Class iClass : classes) {
+                    int prototypeWidth = iClass.prototype.channels[0].retWidth();
+                    int prototypeHeight = iClass.prototype.channels[0].retHeight();
+
+                    sizeOfPrototypeArrToAllocate += (prototypeWidth*prototypeHeight)*3;
+                }
 
 
 
-            float[] prototypeRgbArr = new float[sizeOfPrototypeArrToAllocate];
-            int[] prototypeRgbDistNArr = new int[sizeOfPrototypeArrToAllocate];
 
-            int prototypeRgbArrIdx = 0; // index in prototypeRgbArr and prototypeRgbDistNArr
+                prototypeRgbArr = new float[sizeOfPrototypeArrToAllocate];
+                prototypeRgbDistNArr = new int[sizeOfPrototypeArrToAllocate];
 
-
-            for (ClassDatabase.Class iClass : classes) {
-                Map2dGeneric<IncrementalCentralDistribution> channelR = iClass.prototype.channels[0];
-                Map2dGeneric<IncrementalCentralDistribution> channelG = iClass.prototype.channels[1];
-                Map2dGeneric<IncrementalCentralDistribution> channelB = iClass.prototype.channels[2];
-
-                int prototypeWidth = iClass.prototype.channels[0].retWidth();
-                int prototypeHeight = iClass.prototype.channels[0].retHeight();
+                int prototypeRgbArrIdx = 0; // index in prototypeRgbArr and prototypeRgbDistNArr
 
 
-                for(int y=0;y<prototypeHeight;y++) {
-                    for(int x=0;x<prototypeWidth;x++) {
-                        // read color
-                        prototypeRgbArr[prototypeRgbArrIdx + 0] = (float)channelR.readAtSafe(y,x).mean;
-                        prototypeRgbArr[prototypeRgbArrIdx + 1] = (float)channelG.readAtSafe(y,x).mean;
-                        prototypeRgbArr[prototypeRgbArrIdx + 2] = (float)channelB.readAtSafe(y,x).mean;
+                for (ClassDatabase.Class iClass : classes) {
+                    Map2dGeneric<IncrementalCentralDistribution> channelR = iClass.prototype.channels[0];
+                    Map2dGeneric<IncrementalCentralDistribution> channelG = iClass.prototype.channels[1];
+                    Map2dGeneric<IncrementalCentralDistribution> channelB = iClass.prototype.channels[2];
 
-                        // read count of distribution
-                        prototypeRgbDistNArr[prototypeRgbArrIdx + 0] = (int)channelR.readAtSafe(y,x).n;
-                        prototypeRgbDistNArr[prototypeRgbArrIdx + 1] = (int)channelG.readAtSafe(y,x).n;
-                        prototypeRgbDistNArr[prototypeRgbArrIdx + 2] = (int)channelB.readAtSafe(y,x).n;
+                    int prototypeWidth = iClass.prototype.channels[0].retWidth();
+                    int prototypeHeight = iClass.prototype.channels[0].retHeight();
 
-                        prototypeRgbArrIdx+=3; // inc by 3 because of RGB
+
+                    for(int y=0;y<prototypeHeight;y++) {
+                        for(int x=0;x<prototypeWidth;x++) {
+                            // read color
+                            prototypeRgbArr[prototypeRgbArrIdx + 0] = (float)channelR.readAtSafe(y,x).mean;
+                            prototypeRgbArr[prototypeRgbArrIdx + 1] = (float)channelG.readAtSafe(y,x).mean;
+                            prototypeRgbArr[prototypeRgbArrIdx + 2] = (float)channelB.readAtSafe(y,x).mean;
+
+                            // read count of distribution
+                            prototypeRgbDistNArr[prototypeRgbArrIdx + 0] = (int)channelR.readAtSafe(y,x).n;
+                            prototypeRgbDistNArr[prototypeRgbArrIdx + 1] = (int)channelG.readAtSafe(y,x).n;
+                            prototypeRgbDistNArr[prototypeRgbArrIdx + 2] = (int)channelB.readAtSafe(y,x).n;
+
+                            prototypeRgbArrIdx+=3; // inc by 3 because of RGB
+                        }
                     }
                 }
+
+            }
+
+            for(ClassDatabase.Class iClass : classes) {
+                iClass.isDirty = false;
             }
 
 
@@ -2465,6 +2481,8 @@ public class UnrealCrossing extends PApplet {
             text("NAR wait         us="+(overallTimeNarWaitInNs/1000), 0, (7+1)*15);
 
             text("frametime        us="+((System.nanoTime()-systemTimeStart)/1000),0,(8+1)*15);
+
+            text("recognition.proto.wasAnyUpdated = " + prototypeUpdate_wasAnyUpdated, 0, (11+1)*15);
         }
 
 
@@ -2478,6 +2496,11 @@ public class UnrealCrossing extends PApplet {
 
         //System.out.println("[d 1] Concepts: " + nar.memory.concepts.size());
     }
+
+    // arrays used to store prototypes which are sent to the GPU
+    private float[] prototypeRgbArr = new float[0];
+    private int[] prototypeRgbDistNArr = new int[0];
+
 
 
     // used for classification and search with prototypes
