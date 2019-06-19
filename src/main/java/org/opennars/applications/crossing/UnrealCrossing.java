@@ -1756,7 +1756,7 @@ public class UnrealCrossing extends PApplet {
                 }
 
 
-                    //reset to default values
+                //reset to default values
                 iSt.prototypeCenterX = -1;
                 iSt.prototypeCenterY = -1;
 
@@ -1792,9 +1792,16 @@ public class UnrealCrossing extends PApplet {
                         iSt.width = width;
                         iSt.height = height;
 
+                        // for debugging
+                        { // add subsection to images for debugging
+                            Map2d[] channels = org.opennars.applications.cv.Util.subimageRect(iSt.centerX, iSt.centerY, 128, 128, iSt.width*2, iSt.height*2, img);
+                            if (channels != null) {
+                                debugImages.add(channels);
+                            }
+                        }
+
                         // (*) add sample
-                        ///DEBUG : we added *2 to see if this is a problem
-                        long class_ = iSt.prototypeClassifier.forceAddPrototype(iSt.centerX,iSt.centerY, iSt.width*2, iSt.height*2, 128, 128, img);
+                        long class_ = iSt.prototypeClassifier.forceAddPrototype(iSt.centerX,iSt.centerY, iSt.width, iSt.height, 128, 128, img);
 
                         int debugHere = 5;
 
@@ -1890,9 +1897,11 @@ public class UnrealCrossing extends PApplet {
 
                             // update so it tracks the new image
                             iSt.prototypeClassifier = new MultichannelProtoClassifier();
+
+                            System.out.println("DBG x=" + iSt.width);
+                            System.out.println("DBG y=" + iSt.height);
+
                             iSt.prototypeClassifier.forceAddPrototype(iSt.centerX, iSt.centerY, iSt.width, iSt.height, width, height, img);
-
-
                         }
 
 
@@ -2430,6 +2439,33 @@ public class UnrealCrossing extends PApplet {
             }
         }
 
+        { // display debug images
+            int idx = 0;
+            for (Map2d[] iDbgImgChannels : debugImages) {
+                int displayX = (idx % 8) * (128/2 + 30); // coordinate of the display of the image
+                int displayY = 800 + (128/2 + 30)*(idx / 8);
+
+                try {
+                    PImage dbgImg = createImage(iDbgImgChannels[0].retWidth(),iDbgImgChannels[0].retHeight(), RGB); // image of prototype
+                    for(int iy=0;iy<iDbgImgChannels[0].retHeight();iy++) {
+                        for(int ix=0;ix<iDbgImgChannels[0].retWidth();ix++) {
+                            float r = iDbgImgChannels[0].readAtSafe(iy,ix);
+                            float g = iDbgImgChannels[1].readAtSafe(iy,ix);
+                            float b = iDbgImgChannels[2].readAtSafe(iy,ix);
+                            dbgImg.set(ix, iy, color(r*255.0f,g*255.0f,b*255.0f));
+                        }
+                    }
+
+                    image(dbgImg, displayX, displayY, 128/2, 128/2);
+
+                } catch(Exception e) {
+                    int here = 5;
+                }
+
+                idx++;
+            }
+        }
+
         boolean showDbPrototypes = true; // show the prototypes of all classes in the db
 
         if (showDbPrototypes) {
@@ -2438,7 +2474,7 @@ public class UnrealCrossing extends PApplet {
             for( Map.Entry<Long, ClassDatabase.Class> iDbEntry : classDatabase.classesByClassId.entrySet()) {
                 ClassDatabase.Class class_ = iDbEntry.getValue();
 
-                int displayX = (idx % 8) * (128/2 + 30); // coordinate of the display of the class
+                int displayX = (idx % 8) * (128/2 + 30) + 200; // coordinate of the display of the class
                 int displayY = 800 + (128/2 + 30)*(idx / 8);
 
                 /*
@@ -2507,7 +2543,7 @@ public class UnrealCrossing extends PApplet {
     private float[] prototypeRgbArr = new float[0];
     private int[] prototypeRgbDistNArr = new int[0];
 
-
+    private List<Map2d[]> debugImages = new ArrayList<>(); // images for debugging
 
     // used for classification and search with prototypes
     private static class PrototypeSample {
