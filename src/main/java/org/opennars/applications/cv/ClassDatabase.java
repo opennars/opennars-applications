@@ -71,6 +71,8 @@ public class ClassDatabase {
 
         public boolean isDirty;
 
+        public long revisionCount = 0;
+
         public Class(long class_, int imageHeight, int imageWidth) {
             this.class_ = class_;
 
@@ -108,6 +110,13 @@ public class ClassDatabase {
          */
 
         public void reviseByMask(Map2d[] imageColors, Map2dGeneric<Boolean> mask, UnrealCrossing applet) {
+            if (revisionCount >= 1) {
+                return; // FOR DEBUGGING
+            }
+
+            revisionCount++;
+
+
             isDirty = true;
 
             prototype.reviseByMask(imageColors, mask);

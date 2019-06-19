@@ -26,11 +26,11 @@ package org.opennars.applications.cv;
 import processing.core.PImage;
 
 public class Util {
-    public static Map2d[] subimage(int posX, int posY, int width, int height, PImage img) {
+    public static Map2d[] subimageRect(double posX, double posY, int mapWidth, int mapHeight, double width, double height, PImage img) {
         Map2d[] maps = new Map2d[3];
-        maps[0] = new Map2d(height, width);
-        maps[1] = new Map2d(height, width);
-        maps[2] = new Map2d(height, width);
+        maps[0] = new Map2d(mapHeight, mapWidth);
+        maps[1] = new Map2d(mapHeight, mapWidth);
+        maps[2] = new Map2d(mapHeight, mapWidth);
 
         if (posX <= width/2 || posX >= img.width-width/2) {
             return null; // not valid
@@ -40,13 +40,20 @@ public class Util {
             return null; // not valid
         }
 
-        for(int iy=0;iy<height;iy++) {
-            for(int ix=0;ix<width;ix++){
-                int dx = ix-width/2;
-                int dy = iy-height/2;
+        if (width > 50) {
+            int debugHere = 5;
+        }
 
-                int x = posX + dx;
-                int y = posY + dy;
+        for(int iy=0;iy<mapHeight;iy++) {
+            for(int ix=0;ix<mapWidth;ix++){
+                double relX = (double)ix / (double)mapWidth;
+                double relY = (double)iy / (double)mapHeight;
+
+                double dx = (relX - 0.5) * width;
+                double dy = (relY - 0.5) * height;
+
+                int x = (int)(posX + dx);
+                int y = (int)(posY + dy);
 
                 int colorcode =  img.pixels[y*img.width+x];
                 //TODO check if the rgb is extracted correctly
@@ -63,15 +70,15 @@ public class Util {
         return maps;
     }
 
-    public static Map2dGeneric<Boolean> subimageField(int posX, int posY, int width, int height, Map2dGeneric<Boolean> field, int cellsize) {
-        Map2dGeneric<Boolean> map = new Map2dGeneric<>(height, width);
-        for(int iy=0;iy<height;iy++) {
-            for(int ix=0;ix<width;ix++) {
+    public static Map2dGeneric<Boolean> subimageFieldRect(double posX, double posY, int mapWidth, int mapHeight,  double width, double height, Map2dGeneric<Boolean> field, int cellsize) {
+        Map2dGeneric<Boolean> map = new Map2dGeneric<>(mapHeight, mapWidth);
+        for(int iy=0;iy<mapHeight;iy++) {
+            for(int ix=0;ix<mapWidth;ix++) {
                 map.writeAtUnsafe(iy,ix,false); // we need to init it
             }
         }
 
-        if (posX <= width/2 || posX >= field.retWidth()*cellsize-width/2) {
+        if (posX <= width/2 || posX >=  field.retWidth()*cellsize-width/2) {
             return null; // not valid
         }
 
@@ -79,13 +86,16 @@ public class Util {
             return null; // not valid
         }
 
-        for(int iy=0;iy<height;iy++) {
-            for(int ix=0;ix<width;ix++){
-                int dx = ix-width/2;
-                int dy = iy-height/2;
+        for(int iy=0;iy<mapHeight;iy++) {
+            for(int ix=0;ix<mapWidth;ix++){
+                double relX = (double)ix / mapWidth;
+                double relY = (double)iy / mapHeight;
 
-                int x = posX + dx;
-                int y = posY + dy;
+                double dx = (relX - 0.5) * width;
+                double dy = (relY - 0.5) * height;
+
+                int x = (int)(posX + dx);
+                int y = (int)(posY + dy);
 
                 boolean fieldValue = readField(x, y, field, cellsize);
 
@@ -128,15 +138,15 @@ public class Util {
     }
 
     // calculated difference between ectual image and prototype
-    public static float calcMaskedDiff(int posX, int posY, MultichannelCentralDistPrototype prototype, PImage img) {
+    public static float calcMaskedDiff(double posX, double posY, double width, double height, MultichannelCentralDistPrototype prototype, PImage img) {
         int prototypeWidth = prototype.channels[0].retWidth();
         int prototypeHeight = prototype.channels[0].retHeight();
 
-        if (posX <= prototypeWidth/2 || posX >= img.width-prototypeWidth/2) {
+        if (posX <= width/2 || posX >= img.width-width/2) {
             return Float.POSITIVE_INFINITY;
         }
 
-        if (posY <= prototypeHeight/2 || posY >= img.height-prototypeHeight/2) {
+        if (posY <= height/2 || posY >= img.height-height/2) {
             return Float.POSITIVE_INFINITY;
         }
 
@@ -146,11 +156,14 @@ public class Util {
 
         for(int iy=0;iy<prototypeHeight;iy+=stepsize) {
             for(int ix=0;ix<prototypeWidth;ix+=stepsize){
-                int dx = ix-prototypeWidth/2;
-                int dy = iy-prototypeHeight/2;
+                double relX = (double)ix / prototypeWidth;
+                double relY = (double)iy / prototypeHeight;
 
-                int x = posX + dx;
-                int y = posY + dy;
+                double dx = (relX - 0.5) * width;
+                double dy = (relY - 0.5) * height;
+
+                int x = (int)(posX + dx);
+                int y = (int)(posY + dy);
 
                 int colorcode =  img.pixels[y*img.width+x];
                 //TODO check if the rgb is extracted correctly

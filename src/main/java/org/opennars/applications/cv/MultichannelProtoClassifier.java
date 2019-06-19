@@ -50,14 +50,14 @@ public class MultichannelProtoClassifier {
     }
 
     // position is center of prototype to classify or add
-    public long classifyAt(int posX, int posY, int stepsize, PImage img) {
+    public long classifyAt(double posX, double posY, double width, double height, int stepsize, PImage img) {
         classificationLastDistance = Float.POSITIVE_INFINITY;
         classificationLastDistanceMse = Float.POSITIVE_INFINITY;
 
         long class_ = -1;
 
         for(MultichannelPrototype iPrototype : prototypes) {
-            MultichannelPrototype.Dists dists = iPrototype.calcDist(posX, posY, stepsize, img);
+            MultichannelPrototype.Dists dists = iPrototype.calcDist(posX, posY, width, height, stepsize, img);
             float currentDistance = dists.mse;
             if (currentDistance < classificationLastDistance) {
                 classificationLastDistance = currentDistance;
@@ -74,12 +74,12 @@ public class MultichannelProtoClassifier {
     }
 
     // position is center of prototype to add
-    private MultichannelPrototype createNewPrototypeAt(int posX, int posY, int prototypeWidth, int prototypeHeight, PImage img) {
-        if (posX <= prototypeWidth/2 || posX >= img.width-prototypeWidth/2) {
+    private MultichannelPrototype createNewPrototypeAt(double posX, double posY, double width, double height, int prototypeWidth, int prototypeHeight, PImage img) {
+        if (posX <= width/2 || posX >= img.width-width/2) {
             return null;
         }
 
-        if (posY <= prototypeHeight/2 || posY >= img.height-prototypeHeight/2) {
+        if (posY <= height/2 || posY >= img.height-height/2) {
             return null;
         }
 
@@ -93,11 +93,14 @@ public class MultichannelProtoClassifier {
 
         for(int iy=0;iy<prototypeHeight;iy++) {
             for(int ix=0;ix<prototypeWidth;ix++){
-                int dx = ix-prototypeWidth/2;
-                int dy = iy-prototypeHeight/2;
+                double relX = (double)ix / prototypeWidth;
+                double relY = (double)iy / prototypeHeight;
 
-                int x = posX + dx;
-                int y = posY + dy;
+                double dx = (relX - 0.5) * width;
+                double dy = (relY - 0.5) * height;
+
+                int x = (int)(posX + dx);
+                int y = (int)(posY + dy);
 
                 int colorcode =  img.pixels[y*img.width+x];
                 //TODO check if the rgb is extracted correctly
@@ -114,11 +117,11 @@ public class MultichannelProtoClassifier {
         return created;
     }
 
-    public long forceAddPrototype(int centerX, int centerY, int width, int height, PImage img) {
+    public long forceAddPrototype(double centerX, double centerY, double width, double height,  int prototypeWidth, int prototypeHeight, PImage img) {
         long class_ = -1;
         classificationLastDistance = Float.POSITIVE_INFINITY;
 
-        MultichannelPrototype createdPrototype = createNewPrototypeAt(centerX, centerY, width, height, img);
+        MultichannelPrototype createdPrototype = createNewPrototypeAt(centerX, centerY, width, height,  prototypeWidth, prototypeHeight, img);
 
         if (createdPrototype != null) {
             class_ = createdPrototype.class_;

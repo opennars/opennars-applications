@@ -43,8 +43,8 @@ public class MultichannelPrototype {
      * @param img
      * @return
      */
-    public Dists calcDist(int posX, int posY, int stepsize, PImage img) {
-        ImgDistTools.Dists dists2 = ImgDistTools.calcDist(channels, posX, posY, stepsize, img);
+    public Dists calcDist(double posX, double posY, double widht, double height, int stepsize, PImage img) {
+        ImgDistTools.Dists dists2 = ImgDistTools.calcDist(channels, posX, posY, widht, height, stepsize, img);
         Dists dists = new Dists();
         dists.dist = dists2.dist;
         dists.mse = dists2.mse;

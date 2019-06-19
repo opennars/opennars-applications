@@ -26,15 +26,15 @@ package org.opennars.applications.cv;
 import processing.core.PImage;
 
 public class ImgDistTools {
-    public static Dists calcDist(Map2d[] channels, int posX, int posY, int stepsize, PImage img) {
+    public static Dists calcDist(Map2d[] channels, double posX, double posY, double width, double height, int stepsize, PImage img) {
         int prototypeWidth = channels[0].retWidth();
         int prototypeHeight = channels[0].retHeight();
 
-        if (posX <= prototypeWidth/2 || posX >= img.width-prototypeWidth/2) {
+        if (posX <= width/2 || posX >= img.width-width/2) {
             return new Dists();
         }
 
-        if (posY <= prototypeHeight/2 || posY >= img.height-prototypeHeight/2) {
+        if (posY <= height/2 || posY >= img.height-height/2) {
             return new Dists();
         }
 
@@ -43,11 +43,14 @@ public class ImgDistTools {
 
         for(int iy=0;iy<prototypeHeight;iy+=stepsize) {
             for(int ix=0;ix<prototypeWidth;ix+=stepsize){
-                int dx = ix-prototypeWidth/2;
-                int dy = iy-prototypeHeight/2;
+                double relX = (double)ix / prototypeWidth;
+                double relY = (double)iy / prototypeHeight;
 
-                int x = posX + dx;
-                int y = posY + dy;
+                double dx = (relX - 0.5) * width;
+                double dy = (relY - 0.5) * height;
+
+                int x = (int)(posX + dx);
+                int y = (int)(posY + dy);
 
                 int colorcode =  img.pixels[y*img.width+x];
                 //TODO check if the rgb is extracted correctly
