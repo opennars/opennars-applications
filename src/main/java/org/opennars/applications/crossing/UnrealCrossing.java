@@ -1725,7 +1725,7 @@ public class UnrealCrossing extends PApplet {
                             iSt.prototypeClassifier = new MultichannelProtoClassifier();
 
                             // (*) add sample
-                            long class_ = iSt.prototypeClassifier.forceAddPrototype(iSt.centerX, iSt.centerY, iSt.width, iSt.height, thisRegionProposalWidth, thisRegionProposalheight, img);
+                            long class_ = iSt.prototypeClassifier.forceAddPrototype(iSt.centerX, iSt.centerY, iSt.width*2, iSt.height*2, thisRegionProposalWidth, thisRegionProposalheight, img);
 
 
                             { // add debug cursor
@@ -1793,7 +1793,7 @@ public class UnrealCrossing extends PApplet {
                         iSt.height = height;
 
                         // for debugging
-                        { // add subsection to images for debugging
+                        if(false){ // add subsection to images for debugging
                             Map2d[] channels = org.opennars.applications.cv.Util.subimageRect(iSt.centerX, iSt.centerY, 128, 128, iSt.width*2, iSt.height*2, img);
                             if (channels != null) {
                                 debugImages.add(channels);
@@ -1801,7 +1801,7 @@ public class UnrealCrossing extends PApplet {
                         }
 
                         // (*) add sample
-                        long class_ = iSt.prototypeClassifier.forceAddPrototype(iSt.centerX,iSt.centerY, iSt.width, iSt.height, 128, 128, img);
+                        long class_ = iSt.prototypeClassifier.forceAddPrototype(iSt.centerX,iSt.centerY, iSt.width*2, iSt.height*2, 128, 128, img);
 
                         int debugHere = 5;
 
@@ -1859,10 +1859,10 @@ public class UnrealCrossing extends PApplet {
 
                                 if (hasAssociatedPrototype) {
                                     // use the associated prototype to find it in the image
-                                    classificationDistance = calcMaskedDiff(regionProposalCenterX + dx, regionProposalCenterY + dy, iSt.width, iSt.height, multichannelCentralDistPrototype, img);
+                                    classificationDistance = calcMaskedDiff(regionProposalCenterX + dx, regionProposalCenterY + dy, iSt.width*2, iSt.height*2, multichannelCentralDistPrototype, img);
                                 }
                                 else {
-                                    iSt.prototypeClassifier.classifyAt((int)regionProposalCenterX + dx, (int)regionProposalCenterY + dy, iSt.width, iSt.height, prototypeClassificationStepsize, img);
+                                    iSt.prototypeClassifier.classifyAt((int)regionProposalCenterX + dx, (int)regionProposalCenterY + dy, iSt.width*2, iSt.height*2, prototypeClassificationStepsize, img);
                                     classificationDistance = iSt.prototypeClassifier.classificationLastDistanceMse;
 
                                 }
@@ -1901,7 +1901,7 @@ public class UnrealCrossing extends PApplet {
                             System.out.println("DBG x=" + iSt.width);
                             System.out.println("DBG y=" + iSt.height);
 
-                            iSt.prototypeClassifier.forceAddPrototype(iSt.centerX, iSt.centerY, iSt.width, iSt.height, width, height, img);
+                            iSt.prototypeClassifier.forceAddPrototype(iSt.centerX, iSt.centerY, iSt.width*2, iSt.height*2, width, height, img);
                         }
 
 
@@ -2252,8 +2252,8 @@ public class UnrealCrossing extends PApplet {
                 }
 
                 // subsection of image
-                Map2d[] subImg = org.opennars.applications.cv.Util.subimageRect(iSt.prototypeCenterX, iSt.prototypeCenterY, 128, 128,  iSt.width, iSt.height, img);
-                Map2dGeneric<Boolean> subImgMask = subimageFieldRect(iSt.prototypeCenterX, iSt.prototypeCenterY, 128, 128,  iSt.width, iSt.height, regionField, heatmapCellsize); // read mask from regionField
+                Map2d[] subImg = org.opennars.applications.cv.Util.subimageRect(iSt.prototypeCenterX, iSt.prototypeCenterY, 128, 128,  iSt.width*2, iSt.height*2, img);
+                Map2dGeneric<Boolean> subImgMask = subimageFieldRect(iSt.prototypeCenterX, iSt.prototypeCenterY, 128, 128,  iSt.width*2, iSt.height*2, regionField, heatmapCellsize); // read mask from regionField
                 if (subImg == null) {
                     continue;
                 }
@@ -2299,6 +2299,8 @@ public class UnrealCrossing extends PApplet {
         boolean showDebugCursor = true; // true
         boolean showMotionparticles = true;
         boolean showMotionParticleSegmentations = true;
+        boolean showDbPrototypes = true; // show the prototypes of all classes in the db
+
 
         if (showSpatialTracklets) {
             for(SpatialTracklet ist : spatialTracklets) {
@@ -2356,7 +2358,7 @@ public class UnrealCrossing extends PApplet {
                 int posY = (int) iSt.centerY;
 
 
-                Map2d[] subimage = org.opennars.applications.cv.Util.subimageRect(posX, posY, 128, 128, iSt.width, iSt.height, img);
+                Map2d[] subimage = org.opennars.applications.cv.Util.subimageRect(posX, posY, 128, 128, iSt.width*2, iSt.height*2, img);
                 boolean isSubimageValid = subimage != null;
                 if (isSubimageValid) {
                     int idx = 0;
@@ -2465,8 +2467,6 @@ public class UnrealCrossing extends PApplet {
                 idx++;
             }
         }
-
-        boolean showDbPrototypes = true; // show the prototypes of all classes in the db
 
         if (showDbPrototypes) {
             int idx = 0;
