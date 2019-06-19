@@ -295,56 +295,6 @@ public class UnrealCrossing extends PApplet {
         return sum / (mp.segment.length*mp.segment[0].retWidth()*mp.segment[0].retHeight());
     }
 
-    /**
-     *
-     * @param mp
-     * @param maxDistance
-     * @return false if tracking lost
-     */
-    private boolean traceMotionParticle(MotionParticle mp, double maxDistance, PImage img) {
-        double minMetricDist = Double.POSITIVE_INFINITY;
-        double minMetricX = 0;
-        double minMetricY = 0;
-
-        for(int distance = 0; distance < maxDistance; distance++) {
-
-
-
-            // calc distance in rectangular shape
-            for(int dist:new int[]{-distance,distance}) {
-                for(int dist2=-distance;dist2<distance;dist2++) {
-                    {
-                        double metricDist = calcDistOfParticleAt(mp,  mp.posX + dist, mp.posY+dist2, img);
-                        if (metricDist < minMetricDist) {
-                            minMetricDist = metricDist;
-                            minMetricX = mp.posX + dist;
-                            minMetricY = mp.posY+dist2;
-                        }
-                    }
-
-                    {
-                        double metricDist = calcDistOfParticleAt(mp,  mp.posX + dist2, mp.posY+dist, img);
-                        if (metricDist < minMetricDist) {
-                            minMetricDist = metricDist;
-                            minMetricX = mp.posX + dist2;
-                            minMetricY = mp.posY+dist;
-                        }
-                    }
-                }
-            }
-
-
-        }
-
-        double maxThreshold = 50.0; // parameter
-        if (minMetricDist < maxThreshold) {
-            // retrace
-            mp.posX = minMetricX;
-            mp.posY = minMetricY;
-        }
-
-        return minMetricDist < maxThreshold;
-    }
 
     private long motionParticleIdCounter = 0;
 
@@ -566,18 +516,6 @@ public class UnrealCrossing extends PApplet {
 
 
 
-        /* commented because it is the old syncronous loading
-        PImage img;
-        {
-            long startTime = System.nanoTime();
-            String nr = String.format("%05d", frameIdx);
-            img =loadImage(videopath+nr+".jpg");
-            overallTimeImgLoadWaitInNs += (System.nanoTime() - startTime);
-        }
-        */
-
-
-
         short[] imgGrayscale = new short[img.height*img.width]; // flattened grayscale image
         int[] imgRgb = new int[img.height*img.width];
 
@@ -722,7 +660,6 @@ public class UnrealCrossing extends PApplet {
         }
 
 
-        image(img, 0, 0);
 
 
         int highestClassificationMapCellSize = (heatmapCellsize*4);
@@ -1518,126 +1455,6 @@ public class UnrealCrossing extends PApplet {
 
 
 
-        boolean enableTrainNn = false; // disable it because we don't use the NN anyways
-
-        if (enableTrainNn) {
-            for(AdvancedSpatialTracklet iSt : advancedSpatialTracklets) {
-                if (iSt.trainingDataOfThisClass.size() < 8 || iSt.notTrainedSince < 500) {
-                    continue;
-                }
-
-                iSt.notTrainedSince = 0;
-
-
-                List<NnPrototypeTrainer.TrainingTuple> trainingTuples = new ArrayList<>();
-
-                int iPositiveClassId = 0;
-
-                List<Long> nnPositiveClasses = new ArrayList<>(); // real classes of the positive classes
-                nnPositiveClasses.add(iSt.id); // add the id as the positive class
-
-                // add positives to training
-                for(float[] iPositiveSample : iSt.trainingDataOfThisClass) {
-                    NnPrototypeTrainer.TrainingTuple createdTrainingTuple = new NnPrototypeTrainer.TrainingTuple();
-                    createdTrainingTuple.input = iPositiveSample;
-                    createdTrainingTuple.class_ = iPositiveClassId; // positive sample class
-                    trainingTuples.add(createdTrainingTuple);
-                }
-
-                int maxCountOfOtherClasses = 15; // configuration - how many other classes should be used for training
-
-                if (nnSampleData.size() > 0) {
-
-
-                    List<Integer> candidateIndices = new ArrayList<>();
-                    for(int idx=0;idx<nnSampleData.size();idx++) { // loop to add candidate indices
-                        if (nnSampleData.get(idx).class_ != iSt.id) { // class must be different - this may be always true
-                            candidateIndices.add(idx);
-                        }
-                    }
-
-                    System.out.println("DBG "+Integer.toString(candidateIndices.size()));
-
-                    List<Integer> chosenIndices = new ArrayList<>();
-                    for(int i=0;i<maxCountOfOtherClasses;i++) { // loop to chose indices
-                        if (candidateIndices.size() == 0) {
-                            break;
-                        }
-
-                        int idxidx = rng.nextInt(candidateIndices.size());
-                        int idx = candidateIndices.get(idxidx);
-
-                        candidateIndices.remove(idxidx);
-
-                        chosenIndices.add(idx);
-                    }
-
-                    for(int iChosenIdx : chosenIndices) {
-                        SampleData chosenSampleData = nnSampleData.get(iChosenIdx);
-
-                        nnPositiveClasses.add(chosenSampleData.class_); // add the class as the positive class
-
-                        for(float[] iPositiveSample : chosenSampleData.samples) {
-                            NnPrototypeTrainer.TrainingTuple createdTrainingTuple = new NnPrototypeTrainer.TrainingTuple();
-                            createdTrainingTuple.input = iPositiveSample;
-                            createdTrainingTuple.class_ = iPositiveClassId; // positive sample class
-                            trainingTuples.add(createdTrainingTuple);
-                        }
-
-                        iPositiveClassId++;
-                    }
-                }
-
-
-                int negativeClassId = iPositiveClassId+1;// allocate a class for the negative class
-
-                // add negatives to training by sampling random positions in the image
-                // TODO< ensure that the image is different by computing the distance of the samples and checking it >
-
-                // TODO< store a global collection of negative images >
-
-                int nnClassifierNumberOfNegativeSamples = (int)(1.5*trainingTuples.size());
-                nnClassifierNumberOfNegativeSamples = Math.min(nnClassifierNumberOfNegativeSamples, 100);
-
-                for(int iSampleCounter=0;iSampleCounter<nnClassifierNumberOfNegativeSamples;iSampleCounter++) {
-                    int samplePosX = rng.nextInt(img.width - 64)+64;
-                    int samplePosY = rng.nextInt(img.height - 64)+64;
-
-                    float[] negativeSampleVector = convolutionImg(img, cachedImageConv, samplePosX, samplePosY);
-
-                    NnPrototypeTrainer.TrainingTuple createdTrainingTuple = new NnPrototypeTrainer.TrainingTuple();
-                    createdTrainingTuple.input = negativeSampleVector;
-                    createdTrainingTuple.class_ = negativeClassId; // negative sample class
-                    trainingTuples.add(createdTrainingTuple);
-                }
-
-                int trainedNumberOfClasses = negativeClassId+1;
-
-
-                enqueuedTrainingRunner.clear(); // flush because all others got outdated now
-
-                // send to pool for async training
-                NnTrainerRunner nnTrainingRunner = new NnTrainerRunner(trainingTuples);
-                nnTrainingRunner.positiveClasses = nnPositiveClasses; // set the classes for which it is training for
-                enqueuedTrainingRunner.add(nnTrainingRunner);
-
-            /*
-            System.out.println("[d 2] queue training of NN with #classes=" + Integer.toString(trainedNumberOfClasses));
-
-
-            // send to pool for async training
-            NnTrainerRunner nnTrainingRunner = new NnTrainerRunner(trainingTuples);
-            nnTrainingRunner.positiveClasses = nnPositiveClasses; // set the classes for which it is training for
-            Future<NnTrainerRunner> trainingtaskFuture = pool.submit(nnTrainingRunner);
-            nnTrainingFutures.add(trainingtaskFuture);
-
-            System.out.println("[frameIdx 1] queue taskCount ="+Long.toString(pool.getTaskCount()));
-
-            int here = 5;
-            */
-            }
-        }
-
 
         // look for completed training of NN's and store them
         for(int idx=nnTrainingFutures.size()-1;idx>=0;idx--) {
@@ -2301,6 +2118,7 @@ public class UnrealCrossing extends PApplet {
         boolean showMotionParticleSegmentations = true;
         boolean showDbPrototypes = true; // show the prototypes of all classes in the db
 
+        image(img, 0, 0);
 
         if (showSpatialTracklets) {
             for(SpatialTracklet ist : spatialTracklets) {
