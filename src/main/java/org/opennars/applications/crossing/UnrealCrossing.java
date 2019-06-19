@@ -72,6 +72,8 @@ public class UnrealCrossing extends PApplet {
 
     CaFill caFill = new CaFill(); // used to fill with an CA
 
+    VisionContext visionContext = new VisionContext();
+
 
     @Override
     public void setup() {
@@ -155,7 +157,7 @@ public class UnrealCrossing extends PApplet {
         return s.replace("[", "").replace("]", "");
     }
 
-    public static String videopath="/mnt/sda1/Users/patha/Downloads/Test/Test/Test001/";
+    //public static String videopath="/mnt/sda1/Users/patha/Downloads/Test/Test/Test001/";
     public static String trackletpath = null; //"/home/tc/Dateien/CROSSING/Test001/";
     public static double movementThreshold = 10;
 
@@ -347,13 +349,10 @@ public class UnrealCrossing extends PApplet {
         motionPrototypeParticles.add(mp);
     }
 
+
     // pool used for all general work
-    ThreadPoolExecutor generalPool = (ThreadPoolExecutor)Executors.newFixedThreadPool(8);
+    ThreadPoolExecutor generalPool = (ThreadPoolExecutor) Executors.newFixedThreadPool(8);
 
-    long nrLoader = 1; // iterator of image number for loader
-    List<Future<PImage>> imageLoaderFutures = new ArrayList<>(); // futures for the loading of the images
-
-    int imagePreloadCount = 4; // number of images which are preloaded
 
     boolean debug_enableClassification = false; // used for debugging - best to be kept enabled in "production"
 
@@ -400,36 +399,7 @@ public class UnrealCrossing extends PApplet {
             s.draw(this);
         }
 
-        long overallTimeImgLoadWaitInNs = 0; // wait time for image load in nanoseconds
-
-        PImage img = null;
-        {
-            while (imageLoaderFutures.size() < imagePreloadCount) {
-                Future<PImage> f = generalPool.submit(() -> {
-                    String nr = String.format("%05d", nrLoader);
-                    PImage img2 =loadImage(videopath+nr+".jpg");
-                    nrLoader++;
-                    return img2;
-                });
-                imageLoaderFutures.add(f);
-            }
-
-            // wait for loading of latest enqueed image
-            long startTime = System.nanoTime();
-            while(!imageLoaderFutures.get(0).isDone()){}
-            overallTimeImgLoadWaitInNs += (System.nanoTime() - startTime);
-
-            try {
-                img = imageLoaderFutures.get(0).get();
-            } catch (InterruptedException e) {
-                //e.printStackTrace();
-                int here = 5;
-            } catch (ExecutionException e) {
-                //e.printStackTrace();
-                int here = 5;
-            }
-            imageLoaderFutures.remove(0);
-        }
+        PImage img = visionContext.imageLoader.fetchNextImgage(this);
 
         int motionparticleSize = 12; // configuration - size of a motion particle
 
@@ -2337,7 +2307,7 @@ public class UnrealCrossing extends PApplet {
             fill(0);
             text("prototype search us="+(overalltimePrototypeSearchInNs/1000), 0, 0*15+15);
 
-            text("img load wait    us="+(overallTimeImgLoadWaitInNs/1000), 0, 1*15+15);
+            text("img load wait    us="+(visionContext.imageLoader.overallTimeImgLoadWaitInNs/1000), 0, 1*15+15);
             text("gpu upload:img  wait us="+(overalltimeWaitUploadImage/1000), 0, (2+1)*15); // wait time for finishing GPU upload of image
             text("gpu convl  wait us="+(overalltimeWaitConvl/1000),0,(3+1)*15); // wait time for finishing of GPU convolution
             text("conv to gray     us="+(timeConvertImageToGrayscaleWaitInNs/1000),0,4*15+15);
@@ -2526,44 +2496,6 @@ public class UnrealCrossing extends PApplet {
         viewport.mouseDragged();
     }
 
-    public static void main2(String[] args) {
-        /* Set the Nimbus look and feel */
-        //<editor-fold defaultstate="collapsed" desc=" Look and feel setting code (optional) ">
-        /* If Nimbus (introduced in Java SE 6) is not available, stay with the default look and feel.
-         * For details see http://download.oracle.com/javase/tutorial/uiswing/lookandfeel/plaf.html
-         */
-        try {
-            for (javax.swing.UIManager.LookAndFeelInfo info : javax.swing.UIManager.getInstalledLookAndFeels()) {
-                if ("Nimbus".equals(info.getName())) {
-                    javax.swing.UIManager.setLookAndFeel(info.getClassName());
-                    break;
-                }
-            }
-        } catch (ClassNotFoundException | InstantiationException | IllegalAccessException | javax.swing.UnsupportedLookAndFeelException ex) {
-            java.util.logging.Logger.getLogger(NarSimpleGUI.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-        }
-        //</editor-fold>
-        //</editor-fold>
-        System.out.println("args: videopath trackletpath [discretization movementThreshold]");
-        System.out.println("example: java -cp \"*\" org.opennars.applications.crossing.RealCrossing /mnt/sda1/Users/patha/Downloads/Test/Test/Test001/ /home/tc/Dateien/CROSSING/Test001/ 100 10");
-        Util.discretization = 100;
-        if(args.length == 2) {
-            RealCrossing.videopath = args[0];
-            RealCrossing.trackletpath = args[1];
-        }
-        if(args.length == 4) {
-            RealCrossing.videopath = args[0];
-            RealCrossing.trackletpath = args[1];
-            Util.discretization = Integer.valueOf(args[2]);
-            RealCrossing.movementThreshold = Integer.valueOf(args[3]);
-
-        }
-        String[] args2 = {"Crossing"};
-        RealCrossing mp = new RealCrossing();
-        new IncidentSimulator().show();
-        PApplet.runSketch(args2, mp);
-    }
-
     public static void main(String[] args) {
         Util.discretization = 100;
 
@@ -2573,9 +2505,9 @@ public class UnrealCrossing extends PApplet {
         // configure
         mp.imageSampler = new PrototypeBasedImageSampler();
 
-        videopath = "S:\\win10host\\files\\nda\\traffic\\Train\\Train001\\";
-        videopath = "S:\\win10host\\files\\nda\\traffic\\Train\\Train046\\";
-        videopath = "S:\\win10host\\files\\nda\\traffic\\Test\\Test010\\";
+        mp.visionContext.imageLoader.videopath = "S:\\win10host\\files\\nda\\traffic\\Train\\Train001\\";
+        mp.visionContext.imageLoader.videopath = "S:\\win10host\\files\\nda\\traffic\\Train\\Train046\\";
+        mp.visionContext.imageLoader.videopath = "S:\\win10host\\files\\nda\\traffic\\Test\\Test010\\";
 
         new IncidentSimulator().show();
         PApplet.runSketch(args2, mp);
