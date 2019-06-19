@@ -1758,7 +1758,6 @@ public class UnrealCrossing extends PApplet {
             prototypeUpdate_wasAnyUpdated = isUpdateRequired;
 
             if (isUpdateRequired) {
-                classDatabase.isDirty = false; // is not anymore dirty because we transfered it
 
                 int sizeOfPrototypeArrToAllocate = 0;
 
@@ -1769,11 +1768,13 @@ public class UnrealCrossing extends PApplet {
                     sizeOfPrototypeArrToAllocate += (prototypeWidth*prototypeHeight)*3;
                 }
 
+                boolean isFullTransferRequired = classDatabase.isDirty;
 
+                if (isFullTransferRequired) {
+                    prototypeRgbArr = new float[sizeOfPrototypeArrToAllocate];
+                    prototypeRgbDistNArr = new int[sizeOfPrototypeArrToAllocate];
+                }
 
-
-                prototypeRgbArr = new float[sizeOfPrototypeArrToAllocate];
-                prototypeRgbDistNArr = new int[sizeOfPrototypeArrToAllocate];
 
                 int prototypeRgbArrIdx = 0; // index in prototypeRgbArr and prototypeRgbDistNArr
 
@@ -1789,15 +1790,17 @@ public class UnrealCrossing extends PApplet {
 
                     for(int y=0;y<prototypeHeight;y++) {
                         for(int x=0;x<prototypeWidth;x++) {
-                            // read color
-                            prototypeRgbArr[prototypeRgbArrIdx + 0] = (float)channelR.readAtSafe(y,x).mean;
-                            prototypeRgbArr[prototypeRgbArrIdx + 1] = (float)channelG.readAtSafe(y,x).mean;
-                            prototypeRgbArr[prototypeRgbArrIdx + 2] = (float)channelB.readAtSafe(y,x).mean;
+                            if (iClass.isDirty || isFullTransferRequired) {
+                                // read color
+                                prototypeRgbArr[prototypeRgbArrIdx + 0] = (float)channelR.readAtSafe(y,x).mean;
+                                prototypeRgbArr[prototypeRgbArrIdx + 1] = (float)channelG.readAtSafe(y,x).mean;
+                                prototypeRgbArr[prototypeRgbArrIdx + 2] = (float)channelB.readAtSafe(y,x).mean;
 
-                            // read count of distribution
-                            prototypeRgbDistNArr[prototypeRgbArrIdx + 0] = (int)channelR.readAtSafe(y,x).n;
-                            prototypeRgbDistNArr[prototypeRgbArrIdx + 1] = (int)channelG.readAtSafe(y,x).n;
-                            prototypeRgbDistNArr[prototypeRgbArrIdx + 2] = (int)channelB.readAtSafe(y,x).n;
+                                // read count of distribution
+                                prototypeRgbDistNArr[prototypeRgbArrIdx + 0] = (int)channelR.readAtSafe(y,x).n;
+                                prototypeRgbDistNArr[prototypeRgbArrIdx + 1] = (int)channelG.readAtSafe(y,x).n;
+                                prototypeRgbDistNArr[prototypeRgbArrIdx + 2] = (int)channelB.readAtSafe(y,x).n;
+                            }
 
                             prototypeRgbArrIdx+=3; // inc by 3 because of RGB
                         }
@@ -1805,6 +1808,9 @@ public class UnrealCrossing extends PApplet {
                 }
 
             }
+
+            classDatabase.isDirty = false; // is not anymore dirty because we transfered it
+
 
             for(ClassDatabase.Class iClass : classes) {
                 iClass.isDirty = false;
