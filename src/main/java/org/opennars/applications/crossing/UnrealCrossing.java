@@ -62,8 +62,8 @@ public class UnrealCrossing extends PApplet {
     Nar nar;
     int entityID = 1;
 
-    List<Prediction> predictions = new ArrayList<Prediction>();
-    List<Prediction> disappointments = new ArrayList<Prediction>();
+    List<Prediction> predictions = new ArrayList<>();
+    List<Prediction> disappointments = new ArrayList<>();
     final int streetWidth = 40;
     final int fps = 20;
 
@@ -120,13 +120,6 @@ public class UnrealCrossing extends PApplet {
         new NarSimpleGUI(nar);
 
 
-        sdrAllocator = new SdrAllocator();
-        sdrAllocator.sdrSize = 16000;
-        sdrAllocator.sdrUsedBits = 5;
-
-        layer1Classifier.minDistance = 1020.0f; // TODO< tune >
-
-        foldImagesPerm = Sdr.createRandomPermutation(sdrAllocator.sdrSize, new Random()); // create permutation for folding of images
 
         convCl = new ConvCl();
         protoCl = new ProtoCl();
@@ -163,15 +156,12 @@ public class UnrealCrossing extends PApplet {
 
     public int heatmapCellsize = 16; // configuration
 
-    SdrAllocator sdrAllocator;
-    UlSdrProtoClassifier layer1Classifier = new UlSdrProtoClassifier();
     Random rng = new Random(43);
 
     // threshold for region proposal
     float regionProposalAttentionThreshold = 0.07f; // 0.1f was to less  was 0.2f which was to less
 
-    // permutation used to "fold" images for layer2
-    int[] foldImagesPerm;
+
 
     UlProtoClassifier objectPrototypeClassifier = new UlProtoClassifier();
 
@@ -194,9 +184,6 @@ public class UnrealCrossing extends PApplet {
 
 
 
-
-    // array with all futures for NN training tasks
-    public List<Future<NnTrainerRunner>> nnTrainingFutures = new ArrayList<>();
 
 
 
@@ -1428,59 +1415,6 @@ public class UnrealCrossing extends PApplet {
 
 
 
-        // look for completed training of NN's and store them
-        for(int idx=nnTrainingFutures.size()-1;idx>=0;idx--) {
-            if (nnTrainingFutures.get(idx).isDone()) { // training is done
-                // store into specific class for trained Nn together with the class for which it was trained for
-                TrainedNn trainedNn = new TrainedNn();
-                try {
-                    NnTrainerRunner trainerRunner = nnTrainingFutures.get(idx).get();
-
-                    // try to kick out old NN's which classify all classes
-                    for(int oldNnIdx=trainedNns.size()-1;oldNnIdx>=0;oldNnIdx--) {
-                        boolean oldNnClassifiesAllClasses = trainerRunner.positiveClasses.containsAll(trainedNns.get(oldNnIdx).positiveClasses);
-                        if (oldNnClassifiesAllClasses) {
-
-
-                            trainedNns.remove(oldNnIdx);
-                        }
-
-                    }
-
-                    trainedNn.network = trainerRunner.trainer.network;
-                    trainedNn.positiveClasses = trainerRunner.positiveClasses;
-                    trainedNns.add(trainedNn);
-
-                    System.out.println("[d 1] # trained NN's="+Long.toString(trainedNns.size()));
-                } catch (InterruptedException e) {
-                    //
-                    int here = 5;
-                } catch (ExecutionException e) {
-                    //
-                    int here = 5;
-                }
-
-                nnTrainingFutures.remove(idx);
-            }
-        }
-
-
-        { // logic to fill the pool for training if it is empty
-
-            if (pool.getActiveCount() == 0 && enqueuedTrainingRunner.size() > 0) {
-                // pick first and train it
-                NnTrainerRunner firstEneuqued = enqueuedTrainingRunner.get(0);
-                enqueuedTrainingRunner.remove(0);
-
-                // send to pool for async training
-                Future<NnTrainerRunner> trainingtaskFuture = pool.submit(firstEneuqued);
-                nnTrainingFutures.add(trainingtaskFuture);
-            }
-
-            //System.out.println("[frameIdx 1] queue taskCount ="+Long.toString(pool.getTaskCount()));
-
-            int here = 5;
-        }
 
 
         { // try to enlarge prototypes
