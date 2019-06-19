@@ -24,6 +24,8 @@ package org.opennars.applications.crossing;
  * THE SOFTWARE.
  */
 
+// TODO< change OpenCL to use size of prototype >
+
 // TODO< removal of spatial advanced spatial tracklet after timeout >
 // TODO< test if AdvancedSpatialTracklet works fine and is used correctly for training data gathering & training >
 
