@@ -136,7 +136,7 @@ public class OperatorPanel extends javax.swing.JFrame {
 
         jTextArea1.setColumns(20);
         jTextArea1.setRows(5);
-        jTextArea1.setText("(&|,<?1 --> pedestrian>,<(*,?1,lane1) --> at>)? :|:\n(&|,<?1 --> pedestrian>,<(*,?1,lane2) --> at>)? :|:");
+        jTextArea1.setText("(&|,<?1 --> pedestrian>,<(*,?1,street) --> at>)? :|:");
         jTextArea1.setToolTipText("");
         jScrollPane1.setViewportView(jTextArea1);
 
@@ -232,7 +232,7 @@ public class OperatorPanel extends javax.swing.JFrame {
                 .addComponent(jLabel2)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(jScrollPane2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(19, Short.MAX_VALUE))
+                .addContainerGap(49, Short.MAX_VALUE))
         );
 
         pack();

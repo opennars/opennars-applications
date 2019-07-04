@@ -40,10 +40,16 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import javax.swing.JOptionPane;
+import org.opennars.entity.Sentence;
 import org.opennars.entity.Task;
 import org.opennars.interfaces.Timable;
+import org.opennars.io.Parser;
+import org.opennars.io.events.AnswerHandler;
 import org.opennars.io.events.Events;
 import org.opennars.io.events.OutputHandler.DISAPPOINT;
+import org.opennars.language.Inheritance;
+import org.opennars.language.Product;
+import org.opennars.language.SetExt;
 import org.opennars.language.Term;
 import org.opennars.main.Nar;
 import org.opennars.operator.Operation;
@@ -56,6 +62,7 @@ import processing.event.MouseEvent;
 public class RealCrossing extends PApplet {
     static Nar nar;
     static Nar qanar;
+    static Nar locationNar;
     int entityID = 1;
     
     List<Prediction> predictions = new ArrayList<Prediction>();
@@ -88,7 +95,16 @@ public class RealCrossing extends PApplet {
             qanar = new Nar();
             qanar.addPlugin(new Say());
             qanar.narParameters.VOLUME = 0;
+            locationNar = new Nar();
             nar = new Nar();
+            
+            locationNar.narParameters.SEQUENCE_BAG_ATTEMPTS=0;
+            nar.narParameters.SEQUENCE_BAG_ATTEMPTS=0;
+            
+            //nar.narParameters.THREADS_AMOUNT = 2;
+            //qanar.narParameters.THREADS_AMOUNT = 2;
+            //locationNar.narParameters.THREADS_AMOUNT = 2;
+            
             nar.narParameters.VOLUME = 0;
             nar.narParameters.DURATION*=10;
             NarListener listener = new NarListener(cameras.get(0), nar, predictions, disappointments, entities);
@@ -177,6 +193,24 @@ public class RealCrossing extends PApplet {
     
     @Override
     public void draw() {
+
+        /*try {
+            locationNar.ask("<?what --> sidewalk>", new AnswerHandler() {
+                @Override
+                public void onSolution(Sentence belief) {
+                    //<50_20 --> sidewalk>
+                    String what = ((Inheritance) belief.getTerm()).getSubject().toString();
+                    String X = what.split("_")[0];
+                    String Y = what.split("_")[1];
+                    Integer Xv = Integer.valueOf(X);
+                    Integer Yv = Integer.valueOf(Y);
+                    
+                }
+            });
+        } catch (Parser.InvalidInputException ex) {
+            Logger.getLogger(RealCrossing.class.getName()).log(Level.SEVERE, null, ex);
+        }*/
+        
         viewport.Transform();
         background(64,128,64);
         fill(0);
@@ -223,12 +257,18 @@ public class RealCrossing extends PApplet {
             }
             
             if(props[0].equals("0")) { //person or vehicle for now, TODO make car motorcycle distinction
-                entities.add(new Pedestrian(id, X, Y, 0, 0, label));
+                Pedestrian toAdd = new Pedestrian(id, X, Y, 0, 0, label);
+                entities.add(toAdd);
+                locationResolution(toAdd);
             } else {
                 if(!props[0].equals("1")) {
-                    entities.add(new Car(id, X, Y, 0, 0, label));
+                    Car toAdd = new Car(id, X, Y, 0, 0, label);
+                    entities.add(toAdd);
+                    locationResolution(toAdd);
                 } else {
-                    entities.add(new Bike(id, X, Y, 0, 0, label));
+                    Bike toAdd = new Bike(id, X, Y, 0, 0, label);
+                    entities.add(toAdd);
+                    locationResolution(toAdd);
                 }
             }
         }
@@ -236,6 +276,7 @@ public class RealCrossing extends PApplet {
         i++;
         
         if(t > 0 && t % (5*perception_update) == 0) {
+            
             System.out.println("TICK spatial");
             informNARSForQA();
             if(!"".equals(questionsAndKnowledge)) {
@@ -244,7 +285,6 @@ public class RealCrossing extends PApplet {
         }
         
         if (t % perception_update == 0) {
-            
             boolean hadInput = false;
             for(Camera c : cameras) {
                 final boolean force = false; // not required HACK
@@ -314,6 +354,50 @@ public class RealCrossing extends PApplet {
         }
         stroke(128);
         System.out.println("Concepts: " + nar.memory.concepts.size());
+    }
+
+    private void locationResolution(Entity toAdd) {
+        if(t > 0 && t % (5*perception_update) == 0) {
+            String instname = name(toAdd);
+            try {
+                locationNar.askNow("<(*,"+instname+",[?where]) --> at>", new AnswerHandler() {
+                    @Override
+                    public void onSolution(Sentence belief) {
+                        if(!belief.isEternal() && locationNar.time()-belief.getOccurenceTime() > 100000) {
+                            return;
+                        }
+                        //<(*,car3,(*,street)) --> at>.
+                        String qanarInput = "(&|,"+belief.getTerm().toString()+",";
+                        qanarInput = qanarInput.replace("[street]", "street").replace("[bikelane]", "bikelane").
+                                replace("[sidewalk]", "sidewalk"); //TODO remove product cleanly
+                        String car3 = ((Product) ((Inheritance) belief.getTerm()).getSubject()).term[0].toString();
+                        if(car3.startsWith("car")) {
+                            qanarInput += "<"+car3 + " --> car>). :|:";
+                        } else
+                        if(car3.startsWith("pedestrian")) {
+                            qanarInput += "<"+car3 + " --> pedestrian>). :|:";
+                        } else
+                        if(car3.startsWith("bike")) {
+                            qanarInput += "<"+car3 + " --> bike>). :|:";
+                        }
+                        qanar.addInput(qanarInput);
+                        if(belief.isEternal()) {
+                            System.out.println("QAnar input: eternal ++++++" + qanarInput);
+                        } else {
+                            System.out.println("QAnar input: time[" + String.valueOf(locationNar.time()-belief.getOccurenceTime()) + " ++++++" + qanarInput);
+                        }
+                    }
+                });
+            } catch (Parser.InvalidInputException ex) {
+                Logger.getLogger(RealCrossing.class.getName()).log(Level.SEVERE, null, ex);
+            }
+            locationNar.addInput("<(&|,<#1 --> pedestrian>,<(*,#1,$location) --> at>) =|> <$location --> [sidewalk]>>.");
+            locationNar.addInput("<(&|,<#1 --> car>,<(*,#1,$location) --> at>) =|> <$location --> [street]>>.");
+            locationNar.addInput("<(&|,<#1 --> bike>,<(*,#1,$location) --> at>) =|> <$location --> [bikelane]>>.");
+        }
+        if(t > 0 && t % (1*perception_update) == 0) {
+            locationNar.cycles(1000);
+        }
     }
     
     List<String> information = new ArrayList<String>();
@@ -393,14 +477,19 @@ public class RealCrossing extends PApplet {
                     }
                 }
             }
+            String typeInfo = informType(ent)+". :|:";
+            information.add(typeInfo);
+            locationNar.addInput(typeInfo);
             //also give info about position at labelled locations
-            information.add(informType(ent)+". :|:");
-            int X = (int) (ent.posX / Util.discretization);
-            int Y = (int) (ent.posY / Util.discretization);
-            if(names[X][Y] != null) {
-                System.out.println("<(*,"+name(ent)+","+names[X][Y]+") --> at>. :|:");
-                qanar.addInput("<(*,"+name(ent)+","+names[X][Y]+") --> at>. :|:");
-            }
+            //int X = (int) (ent.posX / Util.discretization);
+            //int Y = (int) (ent.posY / Util.discretization);
+            //if(names[X][Y] != null) {
+            //    System.out.println("<(*,"+name(ent)+","+names[X][Y]+") --> at>. :|:");
+            //   qanar.addInput("<(*,"+name(ent)+","+names[X][Y]+") --> at>. :|:");
+            //}
+            String locationnarInput = "<(*,"+name(ent)+","+Util.positionToTerm((int)ent.posX,(int)ent.posY)+") --> at>. :|:";
+            locationNar.addInput(locationnarInput);
+            System.out.println("location nar input: " + locationnarInput);
             //if(ent == sortedEntX.get(0)) {
             //    System.out.println(ent.posY/100);
             //}
