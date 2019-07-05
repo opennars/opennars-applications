@@ -126,58 +126,8 @@ public class RealCrossing extends PApplet {
         }
         panel = new OperatorPanel(qanar);
         panel.show();
-        //int trafficLightRadius = 25;
-        //streets.add(new Street(false, 0, 500, 1000, 500 + streetWidth));
-        //streets.add(new Street(true, 500, 0, 500 + streetWidth, 1000));
-        //trafficLights.add(new TrafficLight(trafficLightID++, trafficLightRadius, 500 + streetWidth + trafficLightRadius, 500 + streetWidth/2, 0));
-        //trafficLights.add(new TrafficLight(trafficLightID++, trafficLightRadius, 500 - trafficLightRadius, 500 + streetWidth/2, 0));
-        //trafficLights.add(new TrafficLight(trafficLightID++, trafficLightRadius/2, 500 + streetWidth, 500 + streetWidth + trafficLightRadius, 1));
-        //trafficLights.add(new TrafficLight(trafficLightID++, trafficLightRadius/2, 500, 500 - trafficLightRadius, 1));
-        int cars = 4; //cars and pedestrians
-        for (float i = 0; i < cars/2; i += 1.05) {
-            entities.add(new Car(entityID++, 500 + streetWidth - Util.discretization+1, 900 - i * 100, 0.3, -PI / 2));
-            entities.add(new Car(entityID++, 500 + Util.discretization, 900 - i * 100, 0.3, PI / 2));
-        }
-        int pedestrians = 4;//4;
-        for (float i = 0; i < pedestrians/2; i += 1.05) {
-            entities.add(new Pedestrian(entityID++, 900 - i * 100, 500 + streetWidth - Util.discretization, 0.3, 0));
-            entities.add(new Pedestrian(entityID++, 900 - i * 100, 500 + Util.discretization, 0.3, -PI));
-        }
-        /*for (TrafficLight l : trafficLights) { //it can't move anyway, so why would the coordinates matter to NARS?
-            String pos = Util.positionToTerm(l.posX, l.posY);
-            String narsese = "<(*,{" + l.id + "}," + pos + ") --> at>.";
-            nar.addInput(narsese);
-        }*/
         
-        File file = new File("./StreetScene/labels.txt"); 
-        BufferedReader br = null; 
-        try {
-            br = new BufferedReader(new FileReader(file));
-        } catch (FileNotFoundException ex) {
-            Logger.getLogger(RealCrossing.class.getName()).log(Level.SEVERE, null, ex);
-            System.exit(0);
-        }
-
-        String st; 
-        try {
-            while ((st = br.readLine()) != null) {
-                if(!st.trim().isEmpty()) {
-                    //1,1,Name,InstanceID
-                    String[] fields = st.split(",");
-                    int X = Integer.valueOf(fields[0])-1;
-                    int Y = Integer.valueOf(fields[1])-1;
-                    names[X][Y] = fields[2];
-                    if(fields.length >= 4) {
-                        names[X][Y] += fields[3];
-                    }
-                }
-            }
-        } catch (IOException ex) {
-            Logger.getLogger(RealCrossing.class.getName()).log(Level.SEVERE, null, ex);
-            System.exit(0);
-        }
-        
-        size(1920, 1080);
+        size(1280, 720);
         frameRate(fps);
         //new NarSimpleGUI(nar);
         //new NarSimpleGUI(qanar);
@@ -208,25 +158,8 @@ public class RealCrossing extends PApplet {
     
     @Override
     public void draw() {
-
-        /*try {
-            locationNar.ask("<?what --> sidewalk>", new AnswerHandler() {
-                @Override
-                public void onSolution(Sentence belief) {
-                    //<50_20 --> sidewalk>
-                    String what = ((Inheritance) belief.getTerm()).getSubject().toString();
-                    String X = what.split("_")[0];
-                    String Y = what.split("_")[1];
-                    Integer Xv = Integer.valueOf(X);
-                    Integer Yv = Integer.valueOf(Y);
-                    
-                }
-            });
-        } catch (Parser.InvalidInputException ex) {
-            Logger.getLogger(RealCrossing.class.getName()).log(Level.SEVERE, null, ex);
-        }*/
         frame.setTitle("RealCrossing (frame=" + i +")");
-        viewport.Transform();
+        //viewport.Transform();
         background(64,128,64);
         fill(0);
         for (Street s : streets) {
@@ -430,28 +363,6 @@ public class RealCrossing extends PApplet {
                                     mapval.bike = revised;
                                 }
                             }
-                            /*
-                            //<(*,car3,(*,street)) --> at>.
-                            String qanarInput = "(&|,"+belief.getTerm().toString()+",";
-                            qanarInput = qanarInput.replace("[street]", "street").replace("[bikelane]", "bikelane").
-                                    replace("[sidewalk]", "sidewalk"); //TODO remove product cleanly
-                            String car3 = ((Product) ((Inheritance) belief.getTerm()).getSubject()).term[0].toString();
-                            if(car3.startsWith("car")) {
-                                qanarInput += "<"+car3 + " --> car>). :|:";
-                            } else
-                            if(car3.startsWith("pedestrian")) {
-                                qanarInput += "<"+car3 + " --> pedestrian>). :|:";
-                            } else
-                            if(car3.startsWith("bike")) {
-                                qanarInput += "<"+car3 + " --> bike>). :|:";
-                            }
-                            qanar.addInput(qanarInput);
-                            if(belief.isEternal()) {
-                                System.out.println("QAnar input: eternal ++++++" + qanarInput);
-                            } else {
-                                System.out.println("QAnar input: time[" + String.valueOf(locationNar.time()-belief.getOccurenceTime()) + " ++++++" + qanarInput);
-                            }*/
-
                         }
                     });
                 }
@@ -564,10 +475,6 @@ public class RealCrossing extends PApplet {
             //also give info about position at labelled locations
             int X = (int) (ent.posX / Util.discretization);
             int Y = (int) (ent.posY / Util.discretization);
-            //if(names[X][Y] != null) {
-            //   System.out.println("<(*,"+name(ent)+","+names[X][Y]+") --> at>. :|:");
-            //   qanar.addInput("<(*,"+name(ent)+","+names[X][Y]+") --> at>. :|:");
-            //}
             String subj = X + "_" + Y;
             if(!updateLocationNar && locationToLabel.containsKey(subj)) {
                 System.out.println("QA INFO: <(*,"+name(ent)+","+locationToLabel.get(subj).choice()+") --> at>. :|:");
@@ -576,15 +483,11 @@ public class RealCrossing extends PApplet {
                 Atinfo.add("<(*,"+name(ent)+","+locationToLabel.get(subj).choice()+") --> at>. :|:");
                 QAinformation.add(Atinfo);
             }
-            //TODO put in semantic labels
             if(updateLocationNar) {
                 String locationnarInput = "<(*,"+name(ent)+","+Util.positionToTerm((int)ent.posX,(int)ent.posY)+") --> at>. :|:";
                 locationNar.addInput(locationnarInput);
                 System.out.println("location nar input: " + locationnarInput);
             }
-            //if(ent == sortedEntX.get(0)) {
-            //    System.out.println(ent.posY/100);
-            //}
         }
         if(updateLocationNar) {
             return;
