@@ -33,17 +33,26 @@ import java.nio.file.Paths;
 import org.opennars.applications.crossing.NarListener.Prediction;
 import org.opennars.applications.gui.NarSimpleGUI;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import javax.swing.JOptionPane;
+import org.opennars.entity.Sentence;
 import org.opennars.entity.Task;
+import org.opennars.entity.TruthValue;
+import org.opennars.inference.TruthFunctions;
 import org.opennars.interfaces.Timable;
+import org.opennars.io.Parser;
+import org.opennars.io.events.AnswerHandler;
 import org.opennars.io.events.Events;
 import org.opennars.io.events.OutputHandler.DISAPPOINT;
+import org.opennars.language.Inheritance;
 import org.opennars.language.Term;
 import org.opennars.main.Nar;
 import org.opennars.operator.Operation;
@@ -54,8 +63,9 @@ import processing.core.PImage;
 import processing.event.MouseEvent;
 
 public class RealCrossing extends PApplet {
-    static Nar nar;
+    public static Nar nar;
     static Nar qanar;
+    static Nar locationNar;
     int entityID = 1;
     
     List<Prediction> predictions = new ArrayList<Prediction>();
@@ -71,16 +81,22 @@ public class RealCrossing extends PApplet {
         @Override
         public List<Task> execute(Operation operation, Term[] args, Memory memory, Timable time) {
             String s = "";
-            for(int i=0;i<args.length;i++) {
+            for(int i=1;i<args.length;i++) {
                 s+=args[i].toString() + " ";
             }
-            JOptionPane.showMessageDialog(null, "Operator information: "+s);
+            //JOptionPane.showMessageDialog(null, "Operator information: "+s);
+            panel.jTextArea5.setText(s + "\n" + panel.jTextArea5.getText() + " (frame=" + i + ")");
             return null;
         }
     }
     
+    public static int SEQUENCE_BAG_ATTEMPTS = 0;
+    public static boolean RELATIVE_LOCATION_RELATIONS = false;
+    OperatorPanel panel = null;
+    public static boolean running = false;
     @Override
     public void setup() {
+        running = true;
         Camera cam = new Camera(500+streetWidth/2, 500+streetWidth/2);
         cam.radius = 600;
         cameras.add(cam);
@@ -88,7 +104,17 @@ public class RealCrossing extends PApplet {
             qanar = new Nar();
             qanar.addPlugin(new Say());
             qanar.narParameters.VOLUME = 0;
+            locationNar = new Nar();
             nar = new Nar();
+            
+            SEQUENCE_BAG_ATTEMPTS = nar.narParameters.SEQUENCE_BAG_ATTEMPTS;
+            locationNar.narParameters.SEQUENCE_BAG_ATTEMPTS=0;
+            nar.narParameters.SEQUENCE_BAG_ATTEMPTS=0;
+            
+            //nar.narParameters.THREADS_AMOUNT = 2;
+            //qanar.narParameters.THREADS_AMOUNT = 2;
+            locationNar.narParameters.THREADS_AMOUNT = 4;
+            
             nar.narParameters.VOLUME = 0;
             nar.narParameters.DURATION*=10;
             NarListener listener = new NarListener(cameras.get(0), nar, predictions, disappointments, entities);
@@ -98,62 +124,14 @@ public class RealCrossing extends PApplet {
             System.out.println(ex);
             System.exit(1);
         }
-        new OperatorPanel(qanar).show();
-        //int trafficLightRadius = 25;
-        //streets.add(new Street(false, 0, 500, 1000, 500 + streetWidth));
-        //streets.add(new Street(true, 500, 0, 500 + streetWidth, 1000));
-        //trafficLights.add(new TrafficLight(trafficLightID++, trafficLightRadius, 500 + streetWidth + trafficLightRadius, 500 + streetWidth/2, 0));
-        //trafficLights.add(new TrafficLight(trafficLightID++, trafficLightRadius, 500 - trafficLightRadius, 500 + streetWidth/2, 0));
-        //trafficLights.add(new TrafficLight(trafficLightID++, trafficLightRadius/2, 500 + streetWidth, 500 + streetWidth + trafficLightRadius, 1));
-        //trafficLights.add(new TrafficLight(trafficLightID++, trafficLightRadius/2, 500, 500 - trafficLightRadius, 1));
-        int cars = 4; //cars and pedestrians
-        for (float i = 0; i < cars/2; i += 1.05) {
-            entities.add(new Car(entityID++, 500 + streetWidth - Util.discretization+1, 900 - i * 100, 0.3, -PI / 2));
-            entities.add(new Car(entityID++, 500 + Util.discretization, 900 - i * 100, 0.3, PI / 2));
-        }
-        int pedestrians = 4;//4;
-        for (float i = 0; i < pedestrians/2; i += 1.05) {
-            entities.add(new Pedestrian(entityID++, 900 - i * 100, 500 + streetWidth - Util.discretization, 0.3, 0));
-            entities.add(new Pedestrian(entityID++, 900 - i * 100, 500 + Util.discretization, 0.3, -PI));
-        }
-        /*for (TrafficLight l : trafficLights) { //it can't move anyway, so why would the coordinates matter to NARS?
-            String pos = Util.positionToTerm(l.posX, l.posY);
-            String narsese = "<(*,{" + l.id + "}," + pos + ") --> at>.";
-            nar.addInput(narsese);
-        }*/
+        panel = new OperatorPanel(qanar);
+        panel.show();
         
-        File file = new File("./StreetScene/labels.txt"); 
-        BufferedReader br = null; 
-        try {
-            br = new BufferedReader(new FileReader(file));
-        } catch (FileNotFoundException ex) {
-            Logger.getLogger(RealCrossing.class.getName()).log(Level.SEVERE, null, ex);
-            System.exit(0);
-        }
-
-        String st; 
-        try {
-            while ((st = br.readLine()) != null) {
-                if(!st.trim().isEmpty()) {
-                    //1,1,Name,InstanceID
-                    String[] fields = st.split(",");
-                    int X = Integer.valueOf(fields[0])-1;
-                    int Y = Integer.valueOf(fields[1])-1;
-                    names[X][Y] = fields[2];
-                    if(fields.length >= 4) {
-                        names[X][Y] += fields[3];
-                    }
-                }
-            }
-        } catch (IOException ex) {
-            Logger.getLogger(RealCrossing.class.getName()).log(Level.SEVERE, null, ex);
-            System.exit(0);
-        }
-        
-        size(1920, 1080);
+        size(1280, 720);
         frameRate(fps);
-        new NarSimpleGUI(nar);
-        new NarSimpleGUI(qanar);
+        //new NarSimpleGUI(nar);
+        //new NarSimpleGUI(qanar);
+        //new NarSimpleGUI(locationNar);
     }
 
     List<Street> streets = new ArrayList<Street>();
@@ -165,19 +143,23 @@ public class RealCrossing extends PApplet {
 
     public static String questionsAndKnowledge = "(&|,<?1 --> pedestrian>,<?2 --> car>,<(*,?1,?2) --> leftOf>)? :|:";
     int perception_update = 1;
-    int i = 2;
+    public static int i = 4100; //2
     
     public String unwrap(String s) {
         return s.replace("[", "").replace("]", "");
     }
     
-    public static String videopath="/mnt/sda1/Users/patha/Downloads/Test/Test/Test001/";
-    public static String trackletpath = "/home/tc/Dateien/CROSSING/Test001/";
-    public static double movementThreshold = 13;
+    public static String videopath="/mnt/sda1/Users/patha/Downloads/Test/Test/Test003/";
+    public static String trackletpath = "/home/tc/Dateien/CROSSING/Test003/";
+    public static double movementThresholdCar = 23;
+    public static double movementThresholdBike = 5;
+    public static double movementThresholdPedestrian = 5;
+    public int skipFrames = 1; //skip frames for processing (not visualization)
     
     @Override
     public void draw() {
-        viewport.Transform();
+        frame.setTitle("RealCrossing (frame=" + i +")");
+        //viewport.Transform();
         background(64,128,64);
         fill(0);
         for (Street s : streets) {
@@ -187,71 +169,85 @@ public class RealCrossing extends PApplet {
         PImage img = loadImage(videopath+nr+".jpg"); //1 2 3 7
         image(img, 0, 0);
         
-        entities.clear(); //refresh
-        String tracklets = "";
-        try {
-            ///home/tc/Dateien/CROSSING/Test001/TKL00342.txt
-            tracklets = new String(Files.readAllBytes(Paths.get(trackletpath+"TKL"+nr+".txt")));
-        } catch (IOException ex) {
-            Logger.getLogger(RealCrossing.class.getName()).log(Level.SEVERE, null, ex);
-        }
-        String[] lines = tracklets.replace("[ ","[").replace(" ]","]").replace("  "," ").replace("  "," ").split("\n");
-        for(String s : lines) {
-            //ClassID TrackID : [X5c Y5c W5 H5] 
-            String[] props = s.split(" ");
-            String label = props[1];
-            int id = 0; //treat them as same for now, but distinguished by type!
-            if(unwrap(props[3]).equals("")) {
-                System.out.println(s);
+        if(i % skipFrames == 0) {
+            entities.clear(); //refresh
+            String tracklets = "";
+            try {
+                ///home/tc/Dateien/CROSSING/Test001/TKL00342.txt
+                tracklets = new String(Files.readAllBytes(Paths.get(trackletpath+"TKL"+nr+".txt")));
+            } catch (IOException ex) {
+                Logger.getLogger(RealCrossing.class.getName()).log(Level.SEVERE, null, ex);
             }
-            Integer X = Integer.valueOf(unwrap(props[3]));
-            Integer Y = Integer.valueOf(unwrap(props[4]));
-            
-            Integer X2 = Integer.valueOf(unwrap(props[19])); //7 6
-            Integer Y2 = Integer.valueOf(unwrap(props[20]));
-            
-            //use an id according to movement direction
-            if(X < X2) {
-                id += 10;
-            }
-            if(Y < Y2) {
-                id += 1;
-            }
-            
-            if(Math.sqrt((X-X2)*(X-X2) + (Y - Y2)*(Y - Y2)) < (double)movementThreshold) {
-                continue;
-            }
-            
-            if(props[0].equals("0")) { //person or vehicle for now, TODO make car motorcycle distinction
-                entities.add(new Pedestrian(id, X, Y, 0, 0, label));
-            } else {
-                if(!props[0].equals("1")) {
-                    entities.add(new Car(id, X, Y, 0, 0, label));
+            String[] lines = tracklets.replace("[ ","[").replace(" ]","]").replace("  "," ").replace("  "," ").split("\n");
+            for(String s : lines) {
+                //ClassID TrackID : [X5c Y5c W5 H5] 
+                String[] props = s.split(" ");
+                String label = props[1];
+                int id = 0; //treat them as same for now, but distinguished by type!
+                if(unwrap(props[3]).equals("")) {
+                    System.out.println(s);
+                }
+                Integer X = Integer.valueOf(unwrap(props[3]));
+                Integer Y = Integer.valueOf(unwrap(props[4]));
+
+                Integer X2 = Integer.valueOf(unwrap(props[19])); //7 6
+                Integer Y2 = Integer.valueOf(unwrap(props[20]));
+
+                //use an id according to movement direction
+                if(X < X2) {
+                    id += 10;
+                }
+                if(Y < Y2) {
+                    id += 1;
+                }
+
+                double movement = Math.sqrt((X-X2)*(X-X2) + (Y - Y2)*(Y - Y2));
+                if(props[0].equals("0")) { //person or vehicle for now
+                    if(movement < (double)movementThresholdPedestrian) {
+                        continue;
+                    }
+                    Pedestrian toAdd = new Pedestrian(id, X, Y, 0, 0, label);
+                    entities.add(toAdd);
                 } else {
-                    entities.add(new Bike(id, X, Y, 0, 0, label));
+                    if(!props[0].equals("1")) {
+                        if(movement < (double)movementThresholdCar) {
+                            continue;
+                        }
+                        Car toAdd = new Car(id, X, Y, 0, 0, label);
+                        entities.add(toAdd);
+                    } else {
+                        if(movement < (double)movementThresholdBike) {
+                            continue;
+                        }
+                        Bike toAdd = new Bike(id, X, Y, 0, 0, label);
+                        entities.add(toAdd);
+                    }
                 }
             }
         }
         
         i++;
         
-        if(t > 0 && t % (5*perception_update) == 0) {
-            System.out.println("TICK spatial");
-            informNARSForQA();
-            if(!"".equals(questionsAndKnowledge)) {
-                qanar.addInput(questionsAndKnowledge);
+        if(i % skipFrames == 0) {
+            if(t > 0 && t % (5*perception_update) == 0) {
+
+                System.out.println("TICK spatial");
+                informNARSForQA(false);
+                if(!"".equals(questionsAndKnowledge)) {
+                    qanar.addInput(questionsAndKnowledge);
+                }
             }
-        }
-        
-        if (t % perception_update == 0) {
-            
-            boolean hadInput = false;
-            for(Camera c : cameras) {
-                final boolean force = false; // not required HACK
-                hadInput = hadInput || c.see(nar, entities, trafficLights, force);
-            }
-            if(hadInput) {
-                //qanar.addInput(questions);
+
+            if (t % perception_update == 0) {
+                askForSemanticLabel();
+                boolean hadInput = false;
+                for(Camera c : cameras) {
+                    final boolean force = false; // not required HACK
+                    hadInput = hadInput || c.see(nar, entities, trafficLights, force);
+                }
+                if(hadInput) {
+                    //qanar.addInput(questions);
+                }
             }
         }
         
@@ -275,14 +271,15 @@ public class RealCrossing extends PApplet {
             ie.tick();
         }
 
-
         t++;
-        qanar.cycles(1000); //for now its a seperate nar but can be merged potentially
-                            //but this way we make sure predictions don't get worse when
-                            //questions are given and vice versa
-        nar.cycles(10); //only doing prediction so no need
-        removeOutdatedPredictions(predictions);
-        removeOutdatedPredictions(disappointments);
+        if(i % skipFrames == 0) {
+            qanar.cycles(1000); //for now its a seperate nar but can be merged potentially
+                                //but this way we make sure predictions don't get worse when
+                                //questions are given and vice versa
+            nar.cycles(10); //only doing prediction so no need
+            removeOutdatedPredictions(predictions);
+            removeOutdatedPredictions(disappointments);
+        }
         for (Prediction pred : predictions) {
             Entity e = pred.ent;
             pushMatrix();
@@ -316,7 +313,73 @@ public class RealCrossing extends PApplet {
         System.out.println("Concepts: " + nar.memory.concepts.size());
     }
     
-    List<String> information = new ArrayList<String>();
+    public class MapEvidence {
+        public TruthValue car = new TruthValue(1.0f, 0.001f,locationNar.narParameters);
+        public TruthValue pedestrian = new TruthValue(1.0f, 0.001f,locationNar.narParameters);
+        public TruthValue bike = new TruthValue(1.0f, 0.001f,locationNar.narParameters);
+        public String choice() {
+            if(bike.getExpectation() > pedestrian.getExpectation() && bike.getExpectation() > car.getExpectation()) {
+                return "street"; //TODO bikelane
+            }
+            if(pedestrian.getExpectation() > bike.getExpectation() && pedestrian.getExpectation() > car.getExpectation()) {
+                return "sidewalk";
+            }
+            return "street";
+        }
+    }
+    Map<String,MapEvidence> locationToLabel = new HashMap<String,MapEvidence>();
+    private void askForSemanticLabel() {
+        if(t > 0 && t % (5*perception_update) == 0) {
+            locationNar.reset();
+            informNARSForQA(true); //input locations
+            try {
+                for(String s : new String[] {"street","sidewalk","bikelane"}) {
+                    locationNar.askNow("<?what --> ["+s+"]>", new AnswerHandler() {
+                        @Override
+                        public void onSolution(Sentence belief) {
+                            //eternal or outdated
+                            if(belief.isEternal() || locationNar.time()-belief.getOccurenceTime() > 100000) {
+                                return;
+                            }
+                            String subj = ((Inheritance) belief.getTerm()).getSubject().toString();
+                            if(subj.contains("_")) {
+                                if(!locationToLabel.containsKey(subj)) {
+                                    locationToLabel.put(subj, new MapEvidence());
+                                }
+                                MapEvidence mapval = locationToLabel.get(subj);
+                                if(s.equals("street")) {
+                                   TruthValue truth = mapval.car;
+                                   TruthValue revised = TruthFunctions.revision(belief.truth, truth, locationNar.narParameters);
+                                   mapval.car = revised;
+                                }
+                                if(s.equals("sidewalk")) {
+                                    TruthValue truth = mapval.pedestrian;
+                                    TruthValue revised = TruthFunctions.revision(belief.truth, truth, locationNar.narParameters);
+                                    mapval.pedestrian = revised;
+                                }
+                                if(s.equals("bikelane")) {
+                                    TruthValue truth = mapval.bike;
+                                    TruthValue revised = TruthFunctions.revision(belief.truth, truth, locationNar.narParameters);
+                                    mapval.bike = revised;
+                                }
+                            }
+                        }
+                    });
+                }
+            } catch (Parser.InvalidInputException ex) {
+                Logger.getLogger(RealCrossing.class.getName()).log(Level.SEVERE, null, ex);
+            }
+            locationNar.addInput("<(&|,<#1 --> pedestrian>,<(*,#1,$location) --> at>) =|> <$location --> [sidewalk]>>.");
+            locationNar.addInput("<(&|,<#1 --> car>,<(*,#1,$location) --> at>) =|> <$location --> [street]>>.");
+            locationNar.addInput("<(&|,<#1 --> bike>,<(*,#1,$location) --> at>) =|> <$location --> [street]>>.");
+            //locationNar.addInput("<(&|,<#1 --> bike>,<(*,#1,$location) --> at>) =|> <$location --> [bikelane]>>.");
+        }
+        if(t > 0 && t % (1*perception_update) == 0) {
+            locationNar.cycles(300);
+        }
+    }
+    
+    ArrayList<ArrayList<String>> QAinformation = new ArrayList<ArrayList<String>>();
     public String informType(Entity entity) {
         if(entity instanceof Bike) {
             return "<" + name(entity) + " --> bike>";
@@ -363,53 +426,88 @@ public class RealCrossing extends PApplet {
     List<Entity> relatedLeft = new ArrayList<Entity>(); //just to visualize the entities that have been spatially related
     List<Entity> relatedRight = new ArrayList<Entity>(); //just to visualize the entities that have been spatially related
     Random rnd = new Random(1337);
-    private void informNARSForQA() {
-        information.clear();
-        relatedLeft.clear();
-        relatedRight.clear();
-        qanar.reset();
+    private void informNARSForQA(boolean updateLocationNar) {
+        if(!updateLocationNar) {
+            QAinformation.clear();
+            relatedLeft.clear();
+            relatedRight.clear();
+            qanar.reset();
+        }
         //inform NARS about the spatial relationships between objects and which categories they belong to according to the Tracker
         List<Entity> sortedEntX = entities.stream().sorted(Comparator.comparing(Entity::getPosX)).collect(Collectors.toList());
         for(Entity ent : sortedEntX) {
-            for(Entity entity : entities) {
-                if(ent != entity && near(ent, entity)) {
-                    if(ent.posX < entity.posX) {
-                        information.add("<(*," + name(ent) + "," + name(entity) + ") --> leftOf>. :|:");
-                        information.add("(&|," + informType(ent) + "," + informType(entity)+"). :|:");
-                        if(veryClose(ent, entity)) {
-                            information.add("<(*," + name(ent) + "," + name(entity) + ") --> closeTo>. :|:");
+            if(!updateLocationNar && RealCrossing.RELATIVE_LOCATION_RELATIONS) {
+                for(Entity entity : entities) {
+                    if(ent != entity && near(ent, entity)) {
+                        ArrayList<String> QAInfo = new ArrayList<String>();
+                        if(ent.posX < entity.posX) {
+                            QAInfo.add("<(*," + name(ent) + "," + name(entity) + ") --> leftOf>. :|:");
+                            QAInfo.add("(&|," + informType(ent) + "," + informType(entity)+"). :|:");
+                            if(veryClose(ent, entity)) {
+                                QAInfo.add("<(*," + name(ent) + "," + name(entity) + ") --> closeTo>. :|:");
+                            }
+                            QAinformation.add(QAInfo);
+                            relatedLeft.add(ent);
+                            relatedRight.add(entity);
                         }
-                        relatedLeft.add(ent);
-                        relatedRight.add(entity);
-                    }
-                    if(ent.posY < entity.posY) {
-                        information.add("<(*," + name(ent) + "," + name(entity) + ") --> aboveOf>. :|:");
-                        information.add("(&|," + informType(ent) + "," + informType(entity)+"). :|:");
-                        if(veryClose(ent, entity)) {
-                            information.add("<(*," + name(ent) + "," + name(entity) + ") --> closeTo>. :|:");
+                        if(ent.posY < entity.posY) {
+                            QAInfo.add("<(*," + name(ent) + "," + name(entity) + ") --> aboveOf>. :|:");
+                            QAInfo.add("(&|," + informType(ent) + "," + informType(entity)+"). :|:");
+                            if(veryClose(ent, entity)) {
+                                QAInfo.add("<(*," + name(ent) + "," + name(entity) + ") --> closeTo>. :|:");
+                            }
+                            QAinformation.add(QAInfo);
+                            relatedLeft.add(ent);
+                            relatedRight.add(entity);
                         }
-                        relatedLeft.add(ent);
-                        relatedRight.add(entity);
                     }
                 }
             }
+            String typeInfo = informType(ent)+". :|:";
+            ArrayList<String> info = new ArrayList<String>();
+            info.add(typeInfo);
+            if(!updateLocationNar) {
+                //QAinformation.add(info); //already below
+            }
+            if(updateLocationNar) {
+                locationNar.addInput(typeInfo);
+            }
             //also give info about position at labelled locations
-            information.add(informType(ent)+". :|:");
             int X = (int) (ent.posX / Util.discretization);
             int Y = (int) (ent.posY / Util.discretization);
-            if(names[X][Y] != null) {
-                System.out.println("<(*,"+name(ent)+","+names[X][Y]+") --> at>. :|:");
-                qanar.addInput("<(*,"+name(ent)+","+names[X][Y]+") --> at>. :|:");
+            String subj = X + "_" + Y;
+            if(!updateLocationNar && locationToLabel.containsKey(subj)) {
+                System.out.println("QA INFO: <(*,"+name(ent)+","+locationToLabel.get(subj).choice()+") --> at>. :|:");
+                ArrayList<String> Atinfo = new ArrayList<String>();
+                Atinfo.add(typeInfo);
+                Atinfo.add("<(*,"+name(ent)+","+locationToLabel.get(subj).choice()+") --> at>. :|:");
+                QAinformation.add(Atinfo);
             }
-            //if(ent == sortedEntX.get(0)) {
-            //    System.out.println(ent.posY/100);
-            //}
+            if(updateLocationNar) {
+                String locationnarInput = "<(*,"+name(ent)+","+Util.positionToTerm((int)ent.posX,(int)ent.posY)+") --> at>. :|:";
+                locationNar.addInput(locationnarInput);
+                System.out.println("location nar input: " + locationnarInput);
+            }
         }
-        for(String s : information) {
-            System.out.println(s);
+        if(updateLocationNar) {
+            return;
         }
-        for(String s : information) {
-           qanar.addInput(s);
+        
+        Collections.shuffle(QAinformation);
+        int take_k = 16;
+        int k = 0;
+        for(ArrayList<String> info : QAinformation) {
+            for(String s : info) {
+                System.out.println(s);
+                qanar.addInput(s);
+                k++;
+                if(k >= take_k) {
+                    break;
+                }
+            }
+            if(k >= take_k) {
+                break;
+            }
         }
     }
 
@@ -475,7 +573,7 @@ public class RealCrossing extends PApplet {
             RealCrossing.videopath = args[0];
             RealCrossing.trackletpath = args[1];
             Util.discretization = Integer.valueOf(args[2]);
-            RealCrossing.movementThreshold = Integer.valueOf(args[3]);
+            RealCrossing.movementThresholdCar = Integer.valueOf(args[3]);
             
         }
         String[] args2 = {"Street Scene"};
