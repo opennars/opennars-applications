@@ -75,7 +75,7 @@ public class OperatorPanel extends javax.swing.JFrame {
                         //}
                     }
                 }
-                int maxChars = 2000;
+                int maxChars = Integer.MAX_VALUE; //200
                 if(changed) {
                     if(narText.length() > maxChars) {
                         narText = narText.substring(narText.length() / 2, narText.length());

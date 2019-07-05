@@ -96,6 +96,8 @@ public class RealCrossing extends PApplet {
     public static boolean running = false;
     @Override
     public void setup() {
+        size(1280, 720);
+        this.setSize(1280, 720);
         running = true;
         Camera cam = new Camera(500+streetWidth/2, 500+streetWidth/2);
         cam.radius = 600;
@@ -126,8 +128,7 @@ public class RealCrossing extends PApplet {
         }
         panel = new OperatorPanel(qanar);
         panel.show();
-        
-        size(1280, 720);
+
         frameRate(fps);
         //new NarSimpleGUI(nar);
         //new NarSimpleGUI(qanar);
@@ -159,7 +160,7 @@ public class RealCrossing extends PApplet {
     @Override
     public void draw() {
         frame.setTitle("RealCrossing (frame=" + i +")");
-        viewport.Transform();
+        //viewport.Transform();
         background(64,128,64);
         fill(0);
         for (Street s : streets) {
