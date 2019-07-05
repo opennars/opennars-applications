@@ -65,7 +65,7 @@ public class OperatorPanel extends javax.swing.JFrame {
                         //if(Math.abs(nar.time() - t.sentence.getOccurenceTime()) < 10000) { //not too long ago //outcommented as system reports newest result anyway
                             for(int i = 0; i<filter.size(); i++) {
                                 if(filter.get(i).equals(t.getTerm())) {
-                                    narText = "Q"+i+": "+t.getBestSolution() + "\n" + narText;
+                                    narText = "Q"+i+": "+t.getBestSolution() + " (frame=" + RealCrossing.i + ")\n" + narText;
                                     if(narText.length() > 2000) {
                                         narText = "";
                                     }
