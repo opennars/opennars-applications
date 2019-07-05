@@ -85,7 +85,7 @@ public class RealCrossing extends PApplet {
                 s+=args[i].toString() + " ";
             }
             //JOptionPane.showMessageDialog(null, "Operator information: "+s);
-            panel.jTextArea5.setText(s + "\n" + panel.jTextArea5.getText() + " (frame=" + i + ")");
+            panel.jTextArea5.setText(s + " (frame=" + i + ")" + "\n" + panel.jTextArea5.getText());
             return null;
         }
     }
@@ -159,7 +159,7 @@ public class RealCrossing extends PApplet {
     @Override
     public void draw() {
         frame.setTitle("RealCrossing (frame=" + i +")");
-        //viewport.Transform();
+        viewport.Transform();
         background(64,128,64);
         fill(0);
         for (Street s : streets) {
