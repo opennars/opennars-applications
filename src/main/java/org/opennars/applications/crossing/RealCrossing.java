@@ -85,7 +85,7 @@ public class RealCrossing extends PApplet {
                 s+=args[i].toString() + " ";
             }
             //JOptionPane.showMessageDialog(null, "Operator information: "+s);
-            panel.jTextArea5.setText(s + "\n" + panel.jTextArea5.getText() + " (frame=" + i + ")");
+            panel.jTextArea5.setText(s + " (frame=" + i + ")" + "\n" + panel.jTextArea5.getText());
             return null;
         }
     }
@@ -96,6 +96,8 @@ public class RealCrossing extends PApplet {
     public static boolean running = false;
     @Override
     public void setup() {
+        size(1280, 720);
+        this.setSize(1280, 720);
         running = true;
         Camera cam = new Camera(500+streetWidth/2, 500+streetWidth/2);
         cam.radius = 600;
@@ -126,8 +128,7 @@ public class RealCrossing extends PApplet {
         }
         panel = new OperatorPanel(qanar);
         panel.show();
-        
-        size(1280, 720);
+
         frameRate(fps);
         //new NarSimpleGUI(nar);
         //new NarSimpleGUI(qanar);
