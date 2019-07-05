@@ -93,9 +93,35 @@ public class Entity {
         if(truth == null && DrawDirection) {
             applet.rect(0, 0, Util.discretization*scale, Util.discretization/2*scale);
         }
+        if(RealCrossing.running) {
+            if(this instanceof Car) {
+                applet.stroke(255,0,0);
+            }
+            if(this instanceof Pedestrian) {
+                applet.stroke(0,255,0);
+            }
+            if(this instanceof Bike) {
+                applet.stroke(0,0,255);
+            }
+            applet.fill(128,0,0,0);
+        }
         applet.ellipse(2.5f, 2.5f, Util.discretization*scale, Util.discretization*scale);
         applet.popMatrix();
-        applet.fill(0);
+        
+        if(RealCrossing.running) {
+            if(this instanceof Car) {
+                applet.fill(255,0,0);
+            }
+            if(this instanceof Pedestrian) {
+                applet.fill(0,255,0);
+            }
+            if(this instanceof Bike) {
+                applet.fill(0,0,255);
+            }
+        } else {
+            applet.fill(0);
+        }
+        
         if(DrawID) {
             if(label.isEmpty()) {
                 applet.text(String.valueOf(id), (float)posX, (float)posY);
@@ -103,6 +129,7 @@ public class Entity {
                 applet.text(String.valueOf(id) + " ("+label+")", (float)posX, (float)posY);
             }
         }
+        
         if(truth != null) {
             return;
         }
