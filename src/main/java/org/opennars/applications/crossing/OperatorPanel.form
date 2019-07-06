@@ -172,7 +172,7 @@
           <Properties>
             <Property name="columns" type="int" value="20"/>
             <Property name="rows" type="int" value="5"/>
-            <Property name="text" type="java.lang.String" value="&lt;(&amp;/,(&amp;|,&lt;#1 --&gt; pedestrian&gt;,&lt;#2 --&gt; car&gt;,&lt;(*,#1,#2) --&gt; closeTo&gt;),+1,&lt;(*,{SELF},#1,in,danger) --&gt; ^say&gt;,+1) =/&gt; &lt;{SELF} --&gt; [informative]&gt;&gt;.&#xa;&lt;(&amp;/,(&amp;|,&lt;#1 --&gt; car&gt;,&lt;#2 --&gt; bike&gt;,&lt;(*,#2,#1) --&gt; closeTo&gt;),+1,&lt;(*,{SELF},#2,in,danger) --&gt; ^say&gt;,+1) =/&gt; &lt;{SELF} --&gt; [informative]&gt;&gt;.&#xa;&lt;(&amp;/,(&amp;|,&lt;#1 --&gt; pedestrian&gt;,&lt;(*,#1,street) --&gt; at&gt;),+1,&lt;(*,{SELF},#1,is,jaywalking) --&gt; ^say&gt;,+1) =/&gt; &lt;{SELF} --&gt; [informative]&gt;&gt;."/>
+            <Property name="text" type="java.lang.String" value="&lt;(&amp;/,(&amp;|,&lt;#1 --&gt; pedestrian&gt;,&lt;#2 --&gt; car&gt;,&lt;(*,#1,#2) --&gt; closeTo&gt;),+1,&lt;(*,{SELF},#1,is_in_danger) --&gt; ^say&gt;,+1) =/&gt; &lt;{SELF} --&gt; [informative]&gt;&gt;.&#xa;&lt;(&amp;/,(&amp;|,&lt;#1 --&gt; car&gt;,&lt;#2 --&gt; bike&gt;,&lt;(*,#2,#1) --&gt; closeTo&gt;),+1,&lt;(*,{SELF},#2,is_in_danger) --&gt; ^say&gt;,+1) =/&gt; &lt;{SELF} --&gt; [informative]&gt;&gt;.&#xa;&lt;(&amp;/,(&amp;|,&lt;#1 --&gt; pedestrian&gt;,&lt;(*,#1,street) --&gt; at&gt;),+1,&lt;(*,{SELF},#1,is_jaywalking) --&gt; ^say&gt;,+1) =/&gt; &lt;{SELF} --&gt; [informative]&gt;&gt;."/>
             <Property name="toolTipText" type="java.lang.String" value=""/>
           </Properties>
         </Component>
