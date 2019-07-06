@@ -326,7 +326,7 @@ public class RealCrossing extends PApplet {
         for(int i=0; i<relatedLeft.size(); i++) {
             Entity left = relatedLeft.get(i);
             Entity right = relatedRight.get(i);
-            stroke(255,0,0);
+            stroke(200,200,0);
             line((float)left.posX, (float)left.posY, (float)right.posX, (float)right.posY);
         }
         stroke(128);

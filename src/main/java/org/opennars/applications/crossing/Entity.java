@@ -23,6 +23,7 @@
  */
 package org.opennars.applications.crossing;
 
+import static java.lang.Math.PI;
 import java.util.List;
 import org.opennars.entity.TruthValue;
 import processing.core.PApplet;
@@ -95,6 +96,20 @@ public class Entity {
         }
         if(RealCrossing.running) {
             if(this instanceof Car) {
+                applet.stroke(200,0,0);
+            }
+            if(this instanceof Pedestrian) {
+                applet.stroke(0,200,0);
+            }
+            if(this instanceof Bike) {
+                applet.stroke(0,0,200);
+            }
+            applet.fill(128,0,0,0);
+        }
+        applet.ellipse(2.5f, 2.5f, Util.discretization*scale, Util.discretization*scale);
+        
+        if(RealCrossing.running) {
+            if(this instanceof Car) {
                 applet.stroke(255,0,0);
             }
             if(this instanceof Pedestrian) {
@@ -105,28 +120,53 @@ public class Entity {
             }
             applet.fill(128,0,0,0);
         }
-        applet.ellipse(2.5f, 2.5f, Util.discretization*scale, Util.discretization*scale);
-        applet.popMatrix();
-        
-        if(RealCrossing.running) {
-            if(this instanceof Car) {
-                applet.fill(255,0,0);
-            }
-            if(this instanceof Pedestrian) {
-                applet.fill(0,255,0);
-            }
-            if(this instanceof Bike) {
-                applet.fill(0,0,255);
-            }
-        } else {
-            applet.fill(0);
-        }
         
         if(DrawID) {
+            //applet.stroke(255,0,0);
+            //applet.fill(255,0,0);
+            applet.pushMatrix();
+            applet.strokeWeight(5.0f);
+            applet.scale(0.3f);
+            if(id == 0) {
+                applet.rotate((float) (-PI/4.0f- PI/2.0f));
+                applet.line(0, 0,   100, 0);
+                applet.line(70, 30, 100, 0);
+                applet.line(70,-30, 100, 0);
+            }
+            else
+            if(id == 11) {
+                applet.rotate((float) (-PI/4.0f + PI/2.0f));
+                applet.line(0, 0,   100, 0);
+                applet.line(70, 30, 100, 0);
+                applet.line(70,-30, 100, 0);
+            }
+            else
+            if(id == 10) {
+                applet.rotate((float) (-PI/4.0f));
+                applet.line(0, 0,   100, 0);
+                applet.line(70, 30, 100, 0);
+                applet.line(70,-30, 100, 0);
+            }
+            else { //1
+                applet.rotate((float) (-PI/4.0f + PI));
+                applet.line(0, 0,   100, 0);
+                applet.line(70, 30, 100, 0);
+                applet.line(70,-30, 100, 0);
+            }
+            applet.popMatrix();
+            applet.strokeWeight(1.0f);
+            //applet.text(String.valueOf(id) + " ("+label+")", (float)posX, (float)posY);
+        }
+        
+        applet.popMatrix();
+        
+        applet.fill(0,255,255);
+        if(DrawID) {
+            applet.textSize(20);
             if(label.isEmpty()) {
-                applet.text(String.valueOf(id), (float)posX, (float)posY);
+                applet.text(String.valueOf(id), (float)posX, (float)posY - Util.discretization/2);
             } else {
-                applet.text(String.valueOf(id) + " ("+label+")", (float)posX, (float)posY);
+                applet.text(label, (float)posX, (float)posY - Util.discretization/2);
             }
         }
         
