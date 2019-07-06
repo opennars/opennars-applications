@@ -90,8 +90,27 @@ public class RealCrossing extends PApplet {
         }
     }
     
+    public Boolean QAWork = false; 
+    public class QANarThread extends Thread {
+
+        public void run(){
+            while(true) {
+                boolean DoWork = false;
+                synchronized(QAWork) {
+                    if(QAWork) {
+                        QAWork = false;
+                        DoWork = true;
+                    }
+                }
+                if(DoWork) {
+                    informNARSForQA(false);
+                }
+            }
+        }
+    }
+    
     public static int SEQUENCE_BAG_ATTEMPTS = 0;
-    public static boolean RELATIVE_LOCATION_RELATIONS = false;
+    public static boolean RELATIVE_LOCATION_RELATIONS = true;
     OperatorPanel panel = null;
     public static boolean running = false;
     @Override
@@ -99,6 +118,10 @@ public class RealCrossing extends PApplet {
         size(1280, 720);
         this.setSize(1280, 720);
         running = true;
+        
+        QANarThread qaThread = new QANarThread();
+        qaThread.start();
+        
         Camera cam = new Camera(500+streetWidth/2, 500+streetWidth/2);
         cam.radius = 600;
         cameras.add(cam);
@@ -112,10 +135,7 @@ public class RealCrossing extends PApplet {
             SEQUENCE_BAG_ATTEMPTS = nar.narParameters.SEQUENCE_BAG_ATTEMPTS;
             locationNar.narParameters.SEQUENCE_BAG_ATTEMPTS=0;
             nar.narParameters.SEQUENCE_BAG_ATTEMPTS=0;
-            
-            //nar.narParameters.THREADS_AMOUNT = 2;
-            //qanar.narParameters.THREADS_AMOUNT = 2;
-            locationNar.narParameters.THREADS_AMOUNT = 4;
+            //qanar.narParameters.SEQUENCE_BAG_ATTEMPTS *= 2;
             
             nar.narParameters.VOLUME = 0;
             nar.narParameters.DURATION*=10;
@@ -233,9 +253,8 @@ public class RealCrossing extends PApplet {
             if(t > 0 && t % (5*perception_update) == 0) {
 
                 System.out.println("TICK spatial");
-                informNARSForQA(false);
-                if(!"".equals(questionsAndKnowledge)) {
-                    qanar.addInput(questionsAndKnowledge);
+                synchronized(QAWork) {
+                    QAWork = true;
                 }
             }
 
@@ -274,7 +293,7 @@ public class RealCrossing extends PApplet {
 
         t++;
         if(i % skipFrames == 0) {
-            qanar.cycles(1000); //for now its a seperate nar but can be merged potentially
+            qanar.cycles(10); //for now its a seperate nar but can be merged potentially
                                 //but this way we make sure predictions don't get worse when
                                 //questions are given and vice versa
             nar.cycles(10); //only doing prediction so no need
@@ -415,7 +434,7 @@ public class RealCrossing extends PApplet {
         return false;
     }
     
-    public double veryClosenessThreshold = 199; //1 times the discretization + 1 tolerance for the cell width
+    public double veryClosenessThreshold = 169; //1 times the discretization + 1 tolerance for the cell width
     public boolean veryClose(Entity a, Entity b) {
         if(Math.sqrt(Math.pow(a.posX - b.posX, 2)+Math.pow(a.posY - b.posY, 2)) < veryClosenessThreshold) {
             return true;
@@ -423,7 +442,7 @@ public class RealCrossing extends PApplet {
         return false;
     }
     
-    public static boolean showPredictions = true;
+    public static boolean showPredictions = false;
     List<Entity> relatedLeft = new ArrayList<Entity>(); //just to visualize the entities that have been spatially related
     List<Entity> relatedRight = new ArrayList<Entity>(); //just to visualize the entities that have been spatially related
     Random rnd = new Random(1337);
@@ -445,7 +464,11 @@ public class RealCrossing extends PApplet {
                             QAInfo.add("<(*," + name(ent) + "," + name(entity) + ") --> leftOf>. :|:");
                             QAInfo.add("(&|," + informType(ent) + "," + informType(entity)+"). :|:");
                             if(veryClose(ent, entity)) {
-                                QAInfo.add("<(*," + name(ent) + "," + name(entity) + ") --> closeTo>. :|:");
+                                if(ent instanceof Car) {
+                                    QAInfo.add("<(*," + name(entity) + "," + name(ent) + ") --> closeTo>. :|:");
+                                } else {
+                                    QAInfo.add("<(*," + name(ent) + "," + name(entity) + ") --> closeTo>. :|:");
+                                }
                             }
                             QAinformation.add(QAInfo);
                             relatedLeft.add(ent);
@@ -455,7 +478,11 @@ public class RealCrossing extends PApplet {
                             QAInfo.add("<(*," + name(ent) + "," + name(entity) + ") --> aboveOf>. :|:");
                             QAInfo.add("(&|," + informType(ent) + "," + informType(entity)+"). :|:");
                             if(veryClose(ent, entity)) {
-                                QAInfo.add("<(*," + name(ent) + "," + name(entity) + ") --> closeTo>. :|:");
+                                if(ent instanceof Car) {
+                                    QAInfo.add("<(*," + name(entity) + "," + name(ent) + ") --> closeTo>. :|:");
+                                } else {
+                                    QAInfo.add("<(*," + name(ent) + "," + name(entity) + ") --> closeTo>. :|:");
+                                }
                             }
                             QAinformation.add(QAInfo);
                             relatedLeft.add(ent);
@@ -495,7 +522,7 @@ public class RealCrossing extends PApplet {
         }
         
         Collections.shuffle(QAinformation);
-        int take_k = 16;
+        int take_k = 8;
         int k = 0;
         for(ArrayList<String> info : QAinformation) {
             for(String s : info) {
@@ -508,6 +535,11 @@ public class RealCrossing extends PApplet {
             }
             if(k >= take_k) {
                 break;
+            }
+        }
+        if(!updateLocationNar) {
+            if(!"".equals(questionsAndKnowledge)) {
+                qanar.addInput(questionsAndKnowledge);
             }
         }
     }
