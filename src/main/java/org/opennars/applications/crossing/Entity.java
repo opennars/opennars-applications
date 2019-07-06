@@ -166,7 +166,16 @@ public class Entity {
             if(label.isEmpty()) {
                 applet.text(String.valueOf(id), (float)posX, (float)posY - Util.discretization/2);
             } else {
-                applet.text(label, (float)posX, (float)posY - Util.discretization/2);
+                if(this instanceof Car) {
+                    applet.text("car"+label, (float)posX- Util.discretization/2, (float)posY - Util.discretization/2);
+                }
+                else
+                if(this instanceof Pedestrian) {
+                    applet.text("pedestrian"+label, (float)posX- Util.discretization/2, (float)posY - Util.discretization/2);
+                }
+                else { //this instanceof Bike
+                    applet.text("bike"+label, (float)posX- Util.discretization/2, (float)posY - Util.discretization/2);
+                }
             }
         }
         

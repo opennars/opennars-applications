@@ -165,7 +165,7 @@ public class OperatorPanel extends javax.swing.JFrame {
 
         jTextArea3.setColumns(20);
         jTextArea3.setRows(5);
-        jTextArea3.setText("<(&/,(&|,<#1 --> pedestrian>,<#2 --> car>,<(*,#1,#2) --> closeTo>),+1,<(*,{SELF},#1,in,danger) --> ^say>,+1) =/> <{SELF} --> [informative]>>.\n<(&/,(&|,<#1 --> car>,<#2 --> bike>,<(*,#2,#1) --> closeTo>),+1,<(*,{SELF},#2,in,danger) --> ^say>,+1) =/> <{SELF} --> [informative]>>.\n<(&/,(&|,<#1 --> pedestrian>,<(*,#1,street) --> at>),+1,<(*,{SELF},#1,is,jaywalking) --> ^say>,+1) =/> <{SELF} --> [informative]>>.");
+        jTextArea3.setText("<(&/,(&|,<#1 --> pedestrian>,<#2 --> car>,<(*,#1,#2) --> closeTo>),+1,<(*,{SELF},#1,is_in_danger) --> ^say>,+1) =/> <{SELF} --> [informative]>>.\n<(&/,(&|,<#1 --> car>,<#2 --> bike>,<(*,#2,#1) --> closeTo>),+1,<(*,{SELF},#2,is_in_danger) --> ^say>,+1) =/> <{SELF} --> [informative]>>.\n<(&/,(&|,<#1 --> pedestrian>,<(*,#1,street) --> at>),+1,<(*,{SELF},#1,is_jaywalking) --> ^say>,+1) =/> <{SELF} --> [informative]>>.");
         jTextArea3.setToolTipText("");
         jScrollPane3.setViewportView(jTextArea3);
 

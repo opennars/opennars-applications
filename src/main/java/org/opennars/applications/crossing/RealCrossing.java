@@ -82,7 +82,7 @@ public class RealCrossing extends PApplet {
         public List<Task> execute(Operation operation, Term[] args, Memory memory, Timable time) {
             String s = "";
             for(int i=1;i<args.length;i++) {
-                s+=args[i].toString() + " ";
+                s+=args[i].toString().replace("_", " ") + " ";
             }
             //JOptionPane.showMessageDialog(null, "Operator information: "+s);
             panel.jTextArea5.setText(s + " (frame=" + i + ")" + "\n" + panel.jTextArea5.getText());
