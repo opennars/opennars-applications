@@ -141,7 +141,7 @@ public class Launcher extends javax.swing.JFrame {
         RealCrossing.videopath = javax.swing.JOptionPane.showInputDialog("Enter path to video files", RealCrossing.videopath);
         RealCrossing.trackletpath = javax.swing.JOptionPane.showInputDialog("Enter path to tracklet files", RealCrossing.trackletpath);
         String ret = javax.swing.JOptionPane.showInputDialog("Enter frame offset", RealCrossing.i);
-        RealCrossing.i = Integer.valueOf(ret);
+        RealCrossing.i = Math.max(2, Integer.valueOf(ret));
         try {
             new Thread(() -> {
                 RealCrossing.main(new String[0]);

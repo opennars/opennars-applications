@@ -140,7 +140,7 @@ public class OperatorPanel extends javax.swing.JFrame {
 
         jTextArea1.setColumns(20);
         jTextArea1.setRows(5);
-        jTextArea1.setText("(&|,<?1 --> pedestrian>,<(*,?1,street) --> at>)? :|:");
+        jTextArea1.setText("(&|,<?1 --> bike>,<(*,?1,street) --> at>)? :|:");
         jTextArea1.setToolTipText("");
         jScrollPane1.setViewportView(jTextArea1);
 
@@ -165,7 +165,7 @@ public class OperatorPanel extends javax.swing.JFrame {
 
         jTextArea3.setColumns(20);
         jTextArea3.setRows(5);
-        jTextArea3.setText("//<(&/,(&|,<#1 --> pedestrian>,<#2 --> car>,<(*,#1,#2) --> closeTo>),+1,<(*,{SELF},#1,in,danger) --> ^say>,+1) =/> <{SELF} --> [informative]>>.\n//<(&/,(&|,<#1 --> car>,<#2 --> bike>,<(*,#2,#1) --> closeTo>),+1,<(*,{SELF},#2,in,danger) --> ^say>,+1) =/> <{SELF} --> [informative]>>.\n<(&/,(&|,<#1 --> pedestrian>,<(*,#1,street) --> at>),+1,<(*,{SELF},#1,is,jaywalking) --> ^say>,+1) =/> <{SELF} --> [informative]>>.");
+        jTextArea3.setText("<(&/,(&|,<#1 --> pedestrian>,<#2 --> car>,<(*,#1,#2) --> closeTo>),+1,<(*,{SELF},#1,in,danger) --> ^say>,+1) =/> <{SELF} --> [informative]>>.\n<(&/,(&|,<#1 --> car>,<#2 --> bike>,<(*,#2,#1) --> closeTo>),+1,<(*,{SELF},#2,in,danger) --> ^say>,+1) =/> <{SELF} --> [informative]>>.\n<(&/,(&|,<#1 --> pedestrian>,<(*,#1,street) --> at>),+1,<(*,{SELF},#1,is,jaywalking) --> ^say>,+1) =/> <{SELF} --> [informative]>>.");
         jTextArea3.setToolTipText("");
         jScrollPane3.setViewportView(jTextArea3);
 
@@ -184,6 +184,7 @@ public class OperatorPanel extends javax.swing.JFrame {
         jTextArea4.setToolTipText("");
         jScrollPane4.setViewportView(jTextArea4);
 
+        jCheckBox2.setSelected(true);
         jCheckBox2.setText("Allow relative location relations");
         jCheckBox2.setToolTipText("");
         jCheckBox2.addActionListener(new java.awt.event.ActionListener() {
