@@ -91,12 +91,25 @@ public class Entity {
         //float posYDiscrete = (((int) this.posY)/Util.discretization * Util.discretization);
         applet.translate((float) posX, (float) posY);
         applet.rotate((float) angle);
+        
+        String name = "";
+        if(this instanceof Bike) {
+            name = "bike"+label;
+        }
+        else
+        if(this instanceof Pedestrian) {
+            name = "pedestrian"+label;
+        }
+        else { //this instanceof Bike
+            name = "car"+label;
+        }
+        
         if(truth == null && DrawDirection) {
             applet.rect(0, 0, Util.discretization*scale, Util.discretization/2*scale);
         }
         if(RealCrossing.running) {
             if(this instanceof Car) {
-                applet.stroke(200,0,0);
+                applet.stroke(200,0,200);
             }
             if(this instanceof Pedestrian) {
                 applet.stroke(0,200,0);
@@ -104,13 +117,22 @@ public class Entity {
             if(this instanceof Bike) {
                 applet.stroke(0,0,200);
             }
-            applet.fill(128,0,0,0);
+            
+            if(RealCrossing.indangers.containsKey(name)) {
+                applet.fill(255,0,0,128);
+            } else
+            if(RealCrossing.jaywalkers.containsKey(name)) {
+                applet.fill(255,128,0,128);
+            }
+            else {
+                applet.fill(128,0,0,0);
+            }
         }
         applet.ellipse(2.5f, 2.5f, Util.discretization*scale, Util.discretization*scale);
         
         if(RealCrossing.running) {
             if(this instanceof Car) {
-                applet.stroke(255,0,0);
+                applet.stroke(255,0,255);
             }
             if(this instanceof Pedestrian) {
                 applet.stroke(0,255,0);
@@ -166,16 +188,7 @@ public class Entity {
             if(label.isEmpty()) {
                 applet.text(String.valueOf(id), (float)posX, (float)posY - Util.discretization/2);
             } else {
-                if(this instanceof Car) {
-                    applet.text("car"+label, (float)posX- Util.discretization/2, (float)posY - Util.discretization/2);
-                }
-                else
-                if(this instanceof Pedestrian) {
-                    applet.text("pedestrian"+label, (float)posX- Util.discretization/2, (float)posY - Util.discretization/2);
-                }
-                else { //this instanceof Bike
-                    applet.text("bike"+label, (float)posX- Util.discretization/2, (float)posY - Util.discretization/2);
-                }
+                applet.text(name, (float)posX- Util.discretization/2, (float)posY - Util.discretization/2);
             }
         }
         
