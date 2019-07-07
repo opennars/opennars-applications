@@ -122,7 +122,7 @@ public class Entity {
                 applet.fill(255,0,0,128);
             } else
             if(RealCrossing.jaywalkers.containsKey(name)) {
-                applet.fill(255,128,0,128);
+                applet.fill(255,0,0,128);
             }
             else {
                 applet.fill(128,0,0,0);
