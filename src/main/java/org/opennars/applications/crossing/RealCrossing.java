@@ -493,33 +493,41 @@ public class RealCrossing extends PApplet {
                 for(Entity entity : entities) {
                     if(ent != entity && near(ent, entity)) {
                         ArrayList<String> QAInfo = new ArrayList<String>();
-                        if(ent.posX < entity.posX) {
-                            QAInfo.add("<(*," + name(ent) + "," + name(entity) + ") --> leftOf>. :|:");
-                            QAInfo.add("(&|," + informType(ent) + "," + informType(entity)+"). :|:");
-                            if(veryClose(ent, entity)) {
-                                if(ent instanceof Car) {
-                                    QAInfo.add("<(*," + name(entity) + "," + name(ent) + ") --> closeTo>. :|:");
-                                } else {
-                                    QAInfo.add("<(*," + name(ent) + "," + name(entity) + ") --> closeTo>. :|:");
+                        boolean enable_leftOf_aboveOf = false;
+                        boolean relate_pedestrians = false;
+                        if(relate_pedestrians || !(entity instanceof Pedestrian && ent instanceof Pedestrian)) {
+                            if(ent.posX < entity.posX) {
+                                if(enable_leftOf_aboveOf) {
+                                    QAInfo.add("<(*," + name(ent) + "," + name(entity) + ") --> leftOf>. :|:");
                                 }
-                            }
-                            QAinformation.add(QAInfo);
-                            relatedLeft.add(ent);
-                            relatedRight.add(entity);
-                        }
-                        if(ent.posY < entity.posY) {
-                            QAInfo.add("<(*," + name(ent) + "," + name(entity) + ") --> aboveOf>. :|:");
-                            QAInfo.add("(&|," + informType(ent) + "," + informType(entity)+"). :|:");
-                            if(veryClose(ent, entity)) {
-                                if(ent instanceof Car) {
-                                    QAInfo.add("<(*," + name(entity) + "," + name(ent) + ") --> closeTo>. :|:");
-                                } else {
-                                    QAInfo.add("<(*," + name(ent) + "," + name(entity) + ") --> closeTo>. :|:");
+                                QAInfo.add("(&|," + informType(ent) + "," + informType(entity)+"). :|:");
+                                if(veryClose(ent, entity)) {
+                                    if(ent instanceof Car) {
+                                        QAInfo.add("<(*," + name(entity) + "," + name(ent) + ") --> closeTo>. :|:");
+                                    } else {
+                                        QAInfo.add("<(*," + name(ent) + "," + name(entity) + ") --> closeTo>. :|:");
+                                    }
                                 }
+                                QAinformation.add(QAInfo);
+                                relatedLeft.add(ent);
+                                relatedRight.add(entity);
                             }
-                            QAinformation.add(QAInfo);
-                            relatedLeft.add(ent);
-                            relatedRight.add(entity);
+                            if(ent.posY < entity.posY) {
+                                if(enable_leftOf_aboveOf) {
+                                    QAInfo.add("<(*," + name(ent) + "," + name(entity) + ") --> aboveOf>. :|:");
+                                }
+                                QAInfo.add("(&|," + informType(ent) + "," + informType(entity)+"). :|:");
+                                if(veryClose(ent, entity)) {
+                                    if(ent instanceof Car) {
+                                        QAInfo.add("<(*," + name(entity) + "," + name(ent) + ") --> closeTo>. :|:");
+                                    } else {
+                                        QAInfo.add("<(*," + name(ent) + "," + name(entity) + ") --> closeTo>. :|:");
+                                    }
+                                }
+                                QAinformation.add(QAInfo);
+                                relatedLeft.add(ent);
+                                relatedRight.add(entity);
+                            }
                         }
                     }
                 }
