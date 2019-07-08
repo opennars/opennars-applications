@@ -27,7 +27,7 @@ import java.util.ArrayList;
 import java.util.List;
 import org.opennars.main.Nar;
 
-public class InformNARS {
+public class InformPredictionNar {
     String lastInput = "";
     String input = "";
     List<String> inputs = new ArrayList<String>();

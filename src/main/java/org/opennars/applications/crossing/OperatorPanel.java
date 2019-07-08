@@ -104,7 +104,7 @@ public class OperatorPanel extends javax.swing.JFrame {
                 }
             }
         }
-        RealCrossing.trafficMultiNar.informNARS.questionsAndKnowledge = narsese;
+        RealCrossing.trafficMultiNar.informQaNar.questionsAndKnowledge = narsese;
         Crossing.questions = narsese; //will also work for crosssing
     }
 
@@ -287,7 +287,7 @@ public class OperatorPanel extends javax.swing.JFrame {
     }//GEN-LAST:event_jCheckBox1ActionPerformed
 
     private void jCheckBox2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBox2ActionPerformed
-        RealCrossing.trafficMultiNar.informNARS.RELATIVE_LOCATION_RELATIONS = jCheckBox2.isSelected();
+        RealCrossing.trafficMultiNar.informQaNar.RELATIVE_LOCATION_RELATIONS = jCheckBox2.isSelected();
     }//GEN-LAST:event_jCheckBox2ActionPerformed
 
     /**

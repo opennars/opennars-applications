@@ -26,7 +26,7 @@ public class Camera {
         this.minY = posY-radius*2;
     }
     
-    InformNARS informer = new InformNARS();
+    InformPredictionNar informer = new InformPredictionNar();
     public boolean see(Nar nar, List<Entity> entities, List<TrafficLight> trafficLights, final boolean force) {
         //InformNARS.informAboutEntity(nar, chosen);
         for (Entity ent : entities) {

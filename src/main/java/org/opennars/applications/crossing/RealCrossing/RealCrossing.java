@@ -273,9 +273,9 @@ public class RealCrossing extends PApplet {
         for(Camera c : cameras) {
             //c.draw(this);
         }
-        for(int i=0; i<trafficMultiNar.informNARS.relatedLeft.size(); i++) {
-            Entity left = trafficMultiNar.informNARS.relatedLeft.get(i);
-            Entity right = trafficMultiNar.informNARS.relatedRight.get(i);
+        for(int i=0; i<trafficMultiNar.informQaNar.relatedLeft.size(); i++) {
+            Entity left = trafficMultiNar.informQaNar.relatedLeft.get(i);
+            Entity right = trafficMultiNar.informQaNar.relatedRight.get(i);
             stroke(200,200,0);
             line((float)left.posX, (float)left.posY, (float)right.posX, (float)right.posY);
         }

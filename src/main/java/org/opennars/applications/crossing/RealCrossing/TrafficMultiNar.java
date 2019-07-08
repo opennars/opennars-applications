@@ -24,23 +24,14 @@
 package org.opennars.applications.crossing.RealCrossing;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import org.opennars.applications.crossing.Camera;
 import org.opennars.applications.crossing.Entity;
 import org.opennars.applications.crossing.NarListener;
 import org.opennars.applications.crossing.TrafficLight;
-import org.opennars.entity.Sentence;
 import org.opennars.entity.TruthValue;
-import org.opennars.inference.TruthFunctions;
-import org.opennars.io.Parser;
-import org.opennars.io.events.AnswerHandler;
 import org.opennars.io.events.Events;
 import org.opennars.io.events.OutputHandler;
-import org.opennars.language.Inheritance;
 import org.opennars.main.Nar;
 import org.opennars.operator.Operator;
 
@@ -66,7 +57,8 @@ public class TrafficMultiNar {
     List<Entity> entities;
     Camera camera;
     
-    public InformNARS informNARS = new InformNARS();
+    public InformQaNar informQaNar = new InformQaNar();
+    public InformLocationNar informLocationNar = new InformLocationNar();
     
     public void reason() {
         qanar.cycles(10); //for now its a seperate nar but can be merged potentially
@@ -120,77 +112,12 @@ public class TrafficMultiNar {
                     }
                 }
                 if(DoWork) {
-                    informNARS.informNARSForQA(false, qanar, entities, locationToLabel);
+                    informQaNar.inform(qanar, entities, informLocationNar.locationToLabel);
                 }
             }
         }
     }
-    
-    public class MapEvidence {
-        public TruthValue car = new TruthValue(1.0f, 0.001f,locationNar.narParameters);
-        public TruthValue pedestrian = new TruthValue(1.0f, 0.001f,locationNar.narParameters);
-        public TruthValue bike = new TruthValue(1.0f, 0.001f,locationNar.narParameters);
-        public String choice() {
-            if(bike.getExpectation() > pedestrian.getExpectation() && bike.getExpectation() > car.getExpectation()) {
-                return "street"; //TODO bikelane
-            }
-            if(pedestrian.getExpectation() > bike.getExpectation() && pedestrian.getExpectation() > car.getExpectation()) {
-                return "sidewalk";
-            }
-            return "street";
-        }
-    }
-    Map<String,MapEvidence> locationToLabel = new HashMap<String,MapEvidence>();
-    public void askForSemanticLabel(int t, int perception_update) {
-        if(t > 0 && t % (5*perception_update) == 0) {
-            locationNar.reset();
-            informNARS.informNARSForQA(true, qanar, entities, locationToLabel); //input locations
-            try {
-                for(String s : new String[] {"street","sidewalk","bikelane"}) {
-                    locationNar.askNow("<?what --> ["+s+"]>", new AnswerHandler() {
-                        @Override
-                        public void onSolution(Sentence belief) {
-                            //eternal or outdated
-                            if(belief.isEternal() || locationNar.time()-belief.getOccurenceTime() > 100000) {
-                                return;
-                            }
-                            String subj = ((Inheritance) belief.getTerm()).getSubject().toString();
-                            if(subj.contains("_")) {
-                                if(!locationToLabel.containsKey(subj)) {
-                                    locationToLabel.put(subj, new MapEvidence());
-                                }
-                                MapEvidence mapval = locationToLabel.get(subj);
-                                if(s.equals("street")) {
-                                   TruthValue truth = mapval.car;
-                                   TruthValue revised = TruthFunctions.revision(belief.truth, truth, locationNar.narParameters);
-                                   mapval.car = revised;
-                                }
-                                if(s.equals("sidewalk")) {
-                                    TruthValue truth = mapval.pedestrian;
-                                    TruthValue revised = TruthFunctions.revision(belief.truth, truth, locationNar.narParameters);
-                                    mapval.pedestrian = revised;
-                                }
-                                if(s.equals("bikelane")) {
-                                    TruthValue truth = mapval.bike;
-                                    TruthValue revised = TruthFunctions.revision(belief.truth, truth, locationNar.narParameters);
-                                    mapval.bike = revised;
-                                }
-                            }
-                        }
-                    });
-                }
-            } catch (Parser.InvalidInputException ex) {
-                Logger.getLogger(RealCrossing.class.getName()).log(Level.SEVERE, null, ex);
-            }
-            locationNar.addInput("<(&|,<#1 --> pedestrian>,<(*,#1,$location) --> at>) =|> <$location --> [sidewalk]>>.");
-            locationNar.addInput("<(&|,<#1 --> car>,<(*,#1,$location) --> at>) =|> <$location --> [street]>>.");
-            locationNar.addInput("<(&|,<#1 --> bike>,<(*,#1,$location) --> at>) =|> <$location --> [street]>>.");
-            //locationNar.addInput("<(&|,<#1 --> bike>,<(*,#1,$location) --> at>) =|> <$location --> [bikelane]>>.");
-        }
-        if(t > 0 && t % (1*perception_update) == 0) {
-            locationNar.cycles(300);
-        }
-    }
+
     
     public void perceiveScene(int t, int perception_update) {
         if(t > 0 && t % (5*perception_update) == 0) {
@@ -201,7 +128,7 @@ public class TrafficMultiNar {
         }
 
         if (t % perception_update == 0) {
-            askForSemanticLabel(t, perception_update);
+            this.informLocationNar.askForLabels(t, perception_update, entities);
             camera.see(nar, entities, new ArrayList<TrafficLight>(), false);
         }
     }

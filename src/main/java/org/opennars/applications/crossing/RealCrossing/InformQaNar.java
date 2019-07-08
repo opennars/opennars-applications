@@ -30,11 +30,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.stream.Collectors;
-import org.opennars.applications.crossing.Bike;
 import org.opennars.applications.crossing.Car;
 import org.opennars.applications.crossing.Entity;
 import org.opennars.applications.crossing.Pedestrian;
-import static org.opennars.applications.crossing.RealCrossing.TrafficMultiNar.locationNar;
+import static org.opennars.applications.crossing.RealCrossing.EntityToNarsese.informType;
+import static org.opennars.applications.crossing.RealCrossing.EntityToNarsese.name;
 import org.opennars.applications.crossing.Util;
 import org.opennars.main.Nar;
 
@@ -42,42 +42,17 @@ import org.opennars.main.Nar;
  *
  * @author tc
  */
-public class InformNARS {
+public class InformQaNar {
     
     //user questions
-    public String questionsAndKnowledge = "(&|,<?1 --> pedestrian>,<?2 --> car>,<(*,?1,?2) --> leftOf>)? :|:";
+    public String questionsAndKnowledge = ""; //currently loaded from operator panel
     
     //allow relative location relations
     public boolean RELATIVE_LOCATION_RELATIONS = true;
     
-    public String informType(Entity entity) {
-    if(entity instanceof Bike) {
-        return "<" + name(entity) + " --> bike>";
-    }
-    if(entity instanceof Car) {
-        return "<" + name(entity) + " --> car>";
-    }
-    if(entity instanceof Pedestrian) {
-        return "<" +name(entity) + " --> pedestrian>";
-    }
-    return "<" +name(entity) + " --> entity>";
-    }
-    
-    public String name(Entity entity) { //TODO put in class
-        if(entity instanceof Bike) {
-            return "bike" + entity.label;
-        }
-        if(entity instanceof Car) {
-            return "car" + entity.label;
-        }
-        if(entity instanceof Pedestrian) {
-            return "pedestrian" + entity.label;
-        }
-        return "entity";
-    }
-    
+
     public double nearnessThreshold = 399; //3 times the discretization + 1 tolerance for the cell width
-    public boolean near(Entity a, Entity b) {
+    private boolean near(Entity a, Entity b) {
         if(Math.sqrt(Math.pow(a.posX - b.posX, 2)+Math.pow(a.posY - b.posY, 2)) < nearnessThreshold) {
             return true;
         }
@@ -85,28 +60,26 @@ public class InformNARS {
     }
     
     public double veryClosenessThreshold = 169; //1 times the discretization + 1 tolerance for the cell width
-    public boolean veryClose(Entity a, Entity b) {
+    private boolean veryClose(Entity a, Entity b) {
         if(Math.sqrt(Math.pow(a.posX - b.posX, 2)+Math.pow(a.posY - b.posY, 2)) < veryClosenessThreshold) {
             return true;
         }
         return false;
     }
     
-    ArrayList<ArrayList<String>> QAinformation = new ArrayList<ArrayList<String>>();
-    List<Entity> relatedLeft = new ArrayList<Entity>(); //just to visualize the entities that have been spatially related
-    List<Entity> relatedRight = new ArrayList<Entity>(); //just to visualize the entities that have been spatially related
+    ArrayList<ArrayList<String>> QAinformation = new ArrayList<>();
+    List<Entity> relatedLeft = new ArrayList<>(); //just to visualize the entities that have been spatially related
+    List<Entity> relatedRight = new ArrayList<>(); //just to visualize the entities that have been spatially related
     Random rnd = new Random(1337);
-    void informNARSForQA(boolean updateLocationNar, Nar qanar, List<Entity> entities, Map<String,TrafficMultiNar.MapEvidence> locationToLabel) {
-        if(!updateLocationNar) {
-            QAinformation.clear();
-            relatedLeft.clear();
-            relatedRight.clear();
-            qanar.reset();
-        }
+    public void inform(Nar qanar, List<Entity> entities, Map<String,MapEvidence> locationToLabel) {
+        QAinformation.clear();
+        relatedLeft.clear();
+        relatedRight.clear();
+        qanar.reset();
         //inform NARS about the spatial relationships between objects and which categories they belong to according to the Tracker
         List<Entity> sortedEntX = entities.stream().sorted(Comparator.comparing(Entity::getPosX)).collect(Collectors.toList());
         for(Entity ent : sortedEntX) {
-            if(!updateLocationNar && RELATIVE_LOCATION_RELATIONS) {
+            if(RELATIVE_LOCATION_RELATIONS) {
                 for(Entity entity : entities) {
                     if(ent != entity && near(ent, entity)) {
                         ArrayList<String> QAInfo = new ArrayList<String>();
@@ -152,31 +125,17 @@ public class InformNARS {
             String typeInfo = informType(ent)+". :|:";
             ArrayList<String> info = new ArrayList<String>();
             info.add(typeInfo);
-            if(!updateLocationNar) {
-                //QAinformation.add(info); //already below
-            }
-            if(updateLocationNar) {
-                locationNar.addInput(typeInfo);
-            }
             //also give info about position at labelled locations
             int X = (int) (ent.posX / Util.discretization);
             int Y = (int) (ent.posY / Util.discretization);
             String subj = X + "_" + Y;
-            if(!updateLocationNar && locationToLabel.containsKey(subj)) {
+            if(locationToLabel.containsKey(subj)) {
                 System.out.println("QA INFO: <(*,"+name(ent)+","+locationToLabel.get(subj).choice()+") --> at>. :|:");
                 ArrayList<String> Atinfo = new ArrayList<String>();
                 Atinfo.add(typeInfo);
                 Atinfo.add("<(*,"+name(ent)+","+locationToLabel.get(subj).choice()+") --> at>. :|:");
                 QAinformation.add(Atinfo);
             }
-            if(updateLocationNar) {
-                String locationnarInput = "<(*,"+name(ent)+","+Util.positionToTerm((int)ent.posX,(int)ent.posY)+") --> at>. :|:";
-                locationNar.addInput(locationnarInput);
-                System.out.println("location nar input: " + locationnarInput);
-            }
-        }
-        if(updateLocationNar) {
-            return;
         }
         
         Collections.shuffle(QAinformation, rnd);
@@ -195,10 +154,12 @@ public class InformNARS {
                 break;
             }
         }
-        if(!updateLocationNar) {
-            if(!"".equals(questionsAndKnowledge)) {
-                qanar.addInput(questionsAndKnowledge);
-            }
+        inputOntology(qanar);
+    }
+    
+    private void inputOntology(Nar qanar) {
+        if(!"".equals(questionsAndKnowledge)) {
+            qanar.addInput(questionsAndKnowledge);
         }
     }
 }
