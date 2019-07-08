@@ -44,8 +44,8 @@ import org.opennars.main.Nar;
  */
 public class InformQaNar {
     
-    //user questions
-    public String questionsAndKnowledge = ""; //currently loaded from operator panel
+    //knowledge, user questions, motivations
+    public String ontology = ""; //currently loaded from operator panel
     
     //allow relative location relations
     public boolean RELATIVE_LOCATION_RELATIONS = true;
@@ -158,8 +158,8 @@ public class InformQaNar {
     }
     
     private void inputOntology(Nar qanar) {
-        if(!"".equals(questionsAndKnowledge)) {
-            qanar.addInput(questionsAndKnowledge);
+        if(!"".equals(ontology)) {
+            qanar.addInput(ontology);
         }
     }
 }

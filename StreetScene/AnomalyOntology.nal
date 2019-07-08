@@ -1,0 +1,42 @@
+>>QANar:
+
+//Anomaly ontology:
+<(&/,(&|,<#1 --> pedestrian>,<#2 --> car>,<(*,#1,#2) --> closeTo>),+1,<(*,{SELF},#1,is_in_danger) --> ^say>,+1) =/> <{SELF} --> [informative]>>.
+<(&/,(&|,<#1 --> car>,<#2 --> bike>,<(*,#2,#1) --> closeTo>),+1,<(*,{SELF},#2,is_in_danger) --> ^say>,+1) =/> <{SELF} --> [informative]>>.
+<(&/,(&|,<#1 --> pedestrian>,<(*,#1,street) --> at>),+1,<(*,{SELF},#1,is_jaywalking) --> ^say>,+1) =/> <{SELF} --> [informative]>>.
+
+//Motivations:
+<{SELF} --> [informative]>! :|:
+
+//Questions:
+(&|,<?1 --> bike>,<(*,?1,street) --> at>)? :|:
+
+>>LocationNar:
+
+<(&|,<#1 --> pedestrian>,<(*,#1,$location) --> at>) =|> <$location --> [sidewalk]>>.
+<(&|,<#1 --> car>,<(*,#1,$location) --> at>) =|> <$location --> [street]>>.
+<(&|,<#1 --> bike>,<(*,#1,$location) --> at>) =|> <$location --> [street]>>.
+//<(&|,<#1 --> bike>,<(*,#1,$location) --> at>) =|> <$location --> [bikelane]>>.
+
+>>General information:
+
+//Relations:
+//<(*,a,b) --> R>.
+//closeTo, at
+//leftOf, aboveOf (currently disabled)
+
+//Atoms:
+//bikeID, carID, pedestrianID
+//Annotation classes:
+//street, sidewalk
+//bikelane (currently unused)
+//x_y to indicate position
+
+//Operators:
+//^say
+
+//Anomaly alerts:
+//is_in_danger
+//is_jaywalking
+
+

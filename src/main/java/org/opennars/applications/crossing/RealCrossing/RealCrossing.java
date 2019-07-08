@@ -23,7 +23,12 @@
  */
 package org.opennars.applications.crossing.RealCrossing;
 
+import java.io.File;
 import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import org.opennars.applications.crossing.NarListener.Prediction;
@@ -113,6 +118,16 @@ public class RealCrossing extends PApplet {
         }
     }
     
+        
+    public void loadOntology() throws URISyntaxException, IOException {
+        //String file = new String(Files.readAllBytes(Paths.get(new URI("./StreetScene/AnomalyOntology.nal"))));
+        String content = new String(Files.readAllBytes(new File("./StreetScene/AnomalyOntology.nal").toPath()),Charset.forName("UTF-8"));
+        String qapart = content.split(">>QANar:")[1].split(">>LocationNar:")[0].trim();
+        String locpart = content.split(">>LocationNar:")[1].split(">>General information:")[0].trim();
+        trafficMultiNar.informLocationNar.ontology = locpart;
+        trafficMultiNar.informQaNar.ontology = qapart;
+    }
+    
     public static TrafficMultiNar trafficMultiNar = null;
     OperatorPanel panel = null;
     public static boolean running = false;
@@ -121,16 +136,26 @@ public class RealCrossing extends PApplet {
         size(1280, 720);
         this.setSize(1280, 720);
         running = true;
-                 
+                   
         Camera cam = new Camera(500+streetWidth/2, 500+streetWidth/2);
         cam.radius = 600;
         cameras.add(cam);
-        
+
         trafficMultiNar = new TrafficMultiNar(new Say(), entities, cam);
+                
+        try {
+            //Load in ontology
+            loadOntology();
+        } catch (URISyntaxException ex) {
+            Logger.getLogger(RealCrossing.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (IOException ex) {
+            Logger.getLogger(RealCrossing.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        
         //attach a panel to the Qanar:
         panel = new OperatorPanel(trafficMultiNar.qanar);
         panel.show();
-
+        
         frameRate(fps);
         //optionally add simple GUI to the Nar instances of the TrafficMultiNar:
         //new NarSimpleGUI(nar);
@@ -283,6 +308,7 @@ public class RealCrossing extends PApplet {
         //System.out.println("Concepts: " + trafficMultiNar.nar.memory.concepts.size());
     }
 
+
     public static void main(String[] args) {
         /* Set the Nimbus look and feel */
         //<editor-fold defaultstate="collapsed" desc=" Look and feel setting code (optional) ">
@@ -314,7 +340,7 @@ public class RealCrossing extends PApplet {
             Util.discretization = Integer.valueOf(args[2]);
             RealCrossing.movementThresholdCar = Integer.valueOf(args[3]);
             
-        }
+        }  
         String[] args2 = {"Street Scene"};
         RealCrossing mp = new RealCrossing();
         PApplet.runSketch(args2, mp);

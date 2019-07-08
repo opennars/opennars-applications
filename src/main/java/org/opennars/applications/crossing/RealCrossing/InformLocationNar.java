@@ -113,10 +113,12 @@ public class InformLocationNar {
         }
     }
     
+    String ontology = "";
     public void inputOntology() {
-        locationNar.addInput("<(&|,<#1 --> pedestrian>,<(*,#1,$location) --> at>) =|> <$location --> [sidewalk]>>.");
-        locationNar.addInput("<(&|,<#1 --> car>,<(*,#1,$location) --> at>) =|> <$location --> [street]>>.");
-        locationNar.addInput("<(&|,<#1 --> bike>,<(*,#1,$location) --> at>) =|> <$location --> [street]>>.");
-        //locationNar.addInput("<(&|,<#1 --> bike>,<(*,#1,$location) --> at>) =|> <$location --> [bikelane]>>.");
+        locationNar.addInput(ontology);
+        //locationNar.addInput("<(&|,<#1 --> pedestrian>,<(*,#1,$location) --> at>) =|> <$location --> [sidewalk]>>.");
+        //locationNar.addInput("<(&|,<#1 --> car>,<(*,#1,$location) --> at>) =|> <$location --> [street]>>.");
+        //locationNar.addInput("<(&|,<#1 --> bike>,<(*,#1,$location) --> at>) =|> <$location --> [street]>>.");
+        ////locationNar.addInput("<(&|,<#1 --> bike>,<(*,#1,$location) --> at>) =|> <$location --> [bikelane]>>.");
     }
 }

@@ -51,6 +51,13 @@ public class OperatorPanel extends javax.swing.JFrame {
         this.nar = nar;
         OperatorPanel.NarListener handler = new OperatorPanel.NarListener();
         nar.on(Events.Answer.class, handler);
+        String ontology = RealCrossing.trafficMultiNar.informQaNar.ontology;
+        String knowledge = ontology.split("//Anomaly ontology:")[1].split("//Motivations:")[0].trim();
+        String motivations = ontology.split("//Motivations:")[1].split("//Questions:")[0].trim();
+        String questions = ontology.split("//Questions:")[1].split(">>LocationNar:")[0].trim();
+        jTextArea3.setText(knowledge);
+        jTextArea4.setText(motivations);
+        jTextArea1.setText(questions);
         KnowledgeToCrossing();
     }
     
@@ -93,6 +100,9 @@ public class OperatorPanel extends javax.swing.JFrame {
         if(!jTextArea1.getText().trim().isEmpty()) {
             String[] lines = jTextArea1.getText().split("\n");
             for(String l : lines) {
+                if(l.isEmpty()) {
+                    continue;
+                }
                 Task t = null;
                 try {
                     t = new Narsese(nar).parseTask(l);
@@ -104,7 +114,7 @@ public class OperatorPanel extends javax.swing.JFrame {
                 }
             }
         }
-        RealCrossing.trafficMultiNar.informQaNar.questionsAndKnowledge = narsese;
+        RealCrossing.trafficMultiNar.informQaNar.ontology = narsese;
         Crossing.questions = narsese; //will also work for crosssing
     }
 
@@ -166,7 +176,6 @@ public class OperatorPanel extends javax.swing.JFrame {
 
         jTextArea3.setColumns(20);
         jTextArea3.setRows(5);
-        jTextArea3.setText("<(&/,(&|,<#1 --> pedestrian>,<#2 --> car>,<(*,#1,#2) --> closeTo>),+1,<(*,{SELF},#1,is_in_danger) --> ^say>,+1) =/> <{SELF} --> [informative]>>.\n<(&/,(&|,<#1 --> car>,<#2 --> bike>,<(*,#2,#1) --> closeTo>),+1,<(*,{SELF},#2,is_in_danger) --> ^say>,+1) =/> <{SELF} --> [informative]>>.\n<(&/,(&|,<#1 --> pedestrian>,<(*,#1,street) --> at>),+1,<(*,{SELF},#1,is_jaywalking) --> ^say>,+1) =/> <{SELF} --> [informative]>>.");
         jTextArea3.setToolTipText("");
         jScrollPane3.setViewportView(jTextArea3);
 
