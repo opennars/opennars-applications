@@ -86,7 +86,8 @@ public class NarListener implements EventEmitter.EventObserver {
         }
         if (event == Events.TaskAdd.class) {
             Task t = (Task) args[0];
-            if(t.sentence.truth.getExpectation() > 0.8 && t.sentence.getOccurenceTime()-nar.time() < 100) {
+            if(t.sentence.isJudgment() && t.sentence.truth.getExpectation() > nar.narParameters.DEFAULT_CONFIRMATION_EXPECTATION && t.sentence.getOccurenceTime()-nar.time() < 200 &&
+                    t.sentence.getOccurenceTime() >= nar.time()) {
                 if (t.sentence.getOccurenceTime() >= nar.time() && t.sentence.isJudgment()) {
                     Prediction result = predictionFromTask(t);
                     if(result != null) {

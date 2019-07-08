@@ -26,7 +26,7 @@ package org.opennars.applications;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.opennars.applications.crossing.Crossing;
-import org.opennars.applications.crossing.RealCrossing;
+import org.opennars.applications.crossing.RealCrossing.RealCrossing;
 
 /**
  *

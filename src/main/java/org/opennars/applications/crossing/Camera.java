@@ -14,11 +14,11 @@ import processing.core.PApplet;
  * @author patha
  */
 public class Camera {
-    int posX;
-    int posY;
-    int radius=60;
-    int minX;
-    int minY;
+    public int posX;
+    public int posY;
+    public int radius=60;
+    public int minX;
+    public int minY;
     public Camera(int posX, int posY) {
         this.posX = posX;
         this.posY = posY;
@@ -26,8 +26,8 @@ public class Camera {
         this.minY = posY-radius*2;
     }
     
-    InformNARS informer = new InformNARS();
-    boolean see(Nar nar, List<Entity> entities, List<TrafficLight> trafficLights, final boolean force) {
+    InformPredictionNar informer = new InformPredictionNar();
+    public boolean see(Nar nar, List<Entity> entities, List<TrafficLight> trafficLights, final boolean force) {
         //InformNARS.informAboutEntity(nar, chosen);
         for (Entity ent : entities) {
             if (Util.distance(posX, posY, ent.posX, ent.posY) < radius) {

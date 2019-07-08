@@ -23,6 +23,7 @@
  */
 package org.opennars.applications.crossing;
 
+import org.opennars.applications.crossing.RealCrossing.RealCrossing;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
@@ -50,6 +51,13 @@ public class OperatorPanel extends javax.swing.JFrame {
         this.nar = nar;
         OperatorPanel.NarListener handler = new OperatorPanel.NarListener();
         nar.on(Events.Answer.class, handler);
+        String ontology = RealCrossing.trafficMultiNar.informQaNar.ontology;
+        String knowledge = ontology.split("//Anomaly ontology:")[1].split("//Motivations:")[0].trim();
+        String motivations = ontology.split("//Motivations:")[1].split("//Questions:")[0].trim();
+        String questions = ontology.split("//Questions:")[1].split(">>LocationNar:")[0].trim();
+        jTextArea3.setText(knowledge);
+        jTextArea4.setText(motivations);
+        jTextArea1.setText(questions);
         KnowledgeToCrossing();
     }
     
@@ -92,6 +100,9 @@ public class OperatorPanel extends javax.swing.JFrame {
         if(!jTextArea1.getText().trim().isEmpty()) {
             String[] lines = jTextArea1.getText().split("\n");
             for(String l : lines) {
+                if(l.isEmpty()) {
+                    continue;
+                }
                 Task t = null;
                 try {
                     t = new Narsese(nar).parseTask(l);
@@ -103,7 +114,7 @@ public class OperatorPanel extends javax.swing.JFrame {
                 }
             }
         }
-        RealCrossing.questionsAndKnowledge = narsese;
+        RealCrossing.trafficMultiNar.informQaNar.ontology = narsese;
         Crossing.questions = narsese; //will also work for crosssing
     }
 
@@ -165,10 +176,10 @@ public class OperatorPanel extends javax.swing.JFrame {
 
         jTextArea3.setColumns(20);
         jTextArea3.setRows(5);
-        jTextArea3.setText("<(&/,(&|,<#1 --> pedestrian>,<#2 --> car>,<(*,#1,#2) --> closeTo>),+1,<(*,{SELF},#1,is_in_danger) --> ^say>,+1) =/> <{SELF} --> [informative]>>.\n<(&/,(&|,<#1 --> car>,<#2 --> bike>,<(*,#2,#1) --> closeTo>),+1,<(*,{SELF},#2,is_in_danger) --> ^say>,+1) =/> <{SELF} --> [informative]>>.\n<(&/,(&|,<#1 --> pedestrian>,<(*,#1,street) --> at>),+1,<(*,{SELF},#1,is_jaywalking) --> ^say>,+1) =/> <{SELF} --> [informative]>>.");
         jTextArea3.setToolTipText("");
         jScrollPane3.setViewportView(jTextArea3);
 
+        jCheckBox1.setSelected(true);
         jCheckBox1.setText("Show predictions");
         jCheckBox1.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -277,15 +288,15 @@ public class OperatorPanel extends javax.swing.JFrame {
     private void jCheckBox1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBox1ActionPerformed
         RealCrossing.showPredictions = jCheckBox1.isSelected();
         if(jCheckBox1.isSelected()) {
-            RealCrossing.nar.narParameters.SEQUENCE_BAG_ATTEMPTS = RealCrossing.SEQUENCE_BAG_ATTEMPTS;
+            RealCrossing.trafficMultiNar.nar.narParameters.SEQUENCE_BAG_ATTEMPTS = RealCrossing.trafficMultiNar.SEQUENCE_BAG_ATTEMPTS;
         }
         if(!jCheckBox1.isSelected()) {
-            RealCrossing.nar.narParameters.SEQUENCE_BAG_ATTEMPTS = 0;
+            RealCrossing.trafficMultiNar.nar.narParameters.SEQUENCE_BAG_ATTEMPTS = 0;
         }
     }//GEN-LAST:event_jCheckBox1ActionPerformed
 
     private void jCheckBox2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBox2ActionPerformed
-        RealCrossing.RELATIVE_LOCATION_RELATIONS = jCheckBox2.isSelected();
+        RealCrossing.trafficMultiNar.informQaNar.RELATIVE_LOCATION_RELATIONS = jCheckBox2.isSelected();
     }//GEN-LAST:event_jCheckBox2ActionPerformed
 
     /**

@@ -23,6 +23,7 @@
  */
 package org.opennars.applications.crossing;
 
+import org.opennars.applications.crossing.RealCrossing.RealCrossing;
 import static java.lang.Math.PI;
 import java.util.List;
 import org.opennars.entity.TruthValue;
@@ -85,7 +86,7 @@ public class Entity {
 
     public static boolean DrawDirection = true;
     public static boolean DrawID = true;
-    public void draw(PApplet applet, List<Street> streets, List<TrafficLight> trafficLights, List<Entity> entities, TruthValue truth, long time) {
+    public void draw(PApplet applet, TruthValue truth, long time) {
         applet.pushMatrix();
         //float posXDiscrete = (((int) this.posX)/Util.discretization * Util.discretization);
         //float posYDiscrete = (((int) this.posY)/Util.discretization * Util.discretization);
@@ -128,22 +129,27 @@ public class Entity {
                 applet.fill(128,0,0,0);
             }
         }
-        applet.ellipse(2.5f, 2.5f, Util.discretization*scale, Util.discretization*scale);
+        if(!isPredicted) {
+            applet.ellipse(2.5f, 2.5f, Util.discretization*scale, Util.discretization*scale);
+        }
         
         if(RealCrossing.running) {
+            float mul = isPredicted ? Util.truthToValue(truth) * Util.timeToValue(time) : 1.0f;
+            int alpha = (int) (mul * 255);
+            
             if(this instanceof Car) {
-                applet.stroke(255,0,255);
+                applet.stroke(255,0,255, alpha);
             }
             if(this instanceof Pedestrian) {
-                applet.stroke(0,255,0);
+                applet.stroke(0,255,0, alpha);
             }
             if(this instanceof Bike) {
-                applet.stroke(0,0,255);
+                applet.stroke(0,0,255, alpha);
             }
             applet.fill(128,0,0,0);
         }
         
-        if(DrawID) {
+        if(DrawID && RealCrossing.running) {
             //applet.stroke(255,0,0);
             //applet.fill(255,0,0);
             applet.pushMatrix();
@@ -181,21 +187,30 @@ public class Entity {
         }
         
         applet.popMatrix();
-        
-        applet.fill(0,255,255);
+        if(!RealCrossing.running) {
+            applet.fill(0,0,0);
+        } else {
+            applet.fill(0,255,255);
+        }
         if(DrawID) {
-            applet.textSize(20);
+            if(RealCrossing.running) {
+                applet.textSize(20);
+            }
             if(label.isEmpty()) {
-                applet.text(String.valueOf(id), (float)posX, (float)posY - Util.discretization/2);
+                if(!isPredicted) {
+                    applet.text(String.valueOf(id), (float)posX, (float)posY - Util.discretization/2);
+                }
             } else {
-                applet.text(name, (float)posX- Util.discretization/2, (float)posY - Util.discretization/2);
+                if(RealCrossing.running) {
+                    applet.text(name, (float)posX- Util.discretization/2, (float)posY - Util.discretization/2);
+                } else {
+                    applet.text(name, (float)posX, (float)posY);
+                }
             }
         }
-        
-        if(truth != null) {
-            return;
-        }
+    }
 
+    public void simulate(List<TrafficLight> trafficLights, List<Entity> entities, List<Street> streets) {
         boolean accelerate = true;
         for (TrafficLight l : trafficLights) {
             if (Util.distance(posX, posY, l.posX, l.posY) < l.radius) {
@@ -221,16 +236,13 @@ public class Entity {
                 }
             }
         }
-
         if (accelerate && velocity < maxSpeed) {
             velocity += 0.02;
         }
-
         double aX = Math.cos(angle);
         double aY = Math.sin(angle);
         posX += aX * velocity;
         posY += aY * velocity;
-
         double epsilon = 1;
         if (posY < 0) {
             posY = 1000 - epsilon;

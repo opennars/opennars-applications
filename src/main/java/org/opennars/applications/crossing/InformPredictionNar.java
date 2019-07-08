@@ -27,7 +27,7 @@ import java.util.ArrayList;
 import java.util.List;
 import org.opennars.main.Nar;
 
-public class InformNARS {
+public class InformPredictionNar {
     String lastInput = "";
     String input = "";
     List<String> inputs = new ArrayList<String>();
@@ -39,14 +39,19 @@ public class InformNARS {
             id = "0";
         }
         String pos = Util.positionToTerm((int) ent.posX-minX, (int) ent.posY-minY);
+        if(ent instanceof Bike) {
+            inputs.add("<(*,bike" + id + ","+ pos + ") --> at>. :|:");
+            input += inputs.get(inputs.size()-1);
+        } else
         if (ent instanceof Car) {
             inputs.add("<(*,car" + id + ","+ pos + ") --> at>. :|:");
             input += inputs.get(inputs.size()-1);
         }
-        if (ent instanceof Pedestrian) {
-            inputs.add("<(*,pedestrian" + id + "," + pos + ") --> at>. :|:");
-            input += inputs.get(inputs.size()-1);
-        }
+        //prediction nar doesn't receive pedestrians for now as they behave too unpredictably
+        //if (ent instanceof Pedestrian) {
+        //    inputs.add("<(*,pedestrian" + id + "," + pos + ") --> at>. :|:");
+        //    input += inputs.get(inputs.size()-1);
+        //}
     }
 
     public void informAboutTrafficLight(Nar nar, TrafficLight light, int minX, int minY) {
