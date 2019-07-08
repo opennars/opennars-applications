@@ -23,10 +23,6 @@
  */
 package org.opennars.applications.crossing;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -42,7 +38,6 @@ import java.util.Random;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
-import javax.swing.JOptionPane;
 import org.opennars.entity.Sentence;
 import org.opennars.entity.Task;
 import org.opennars.entity.TruthValue;
@@ -68,11 +63,35 @@ public class RealCrossing extends PApplet {
     static Nar locationNar;
     int entityID = 1;
     
-    List<Prediction> predictions = new ArrayList<Prediction>();
-    List<Prediction> disappointments = new ArrayList<Prediction>();
+    List<Prediction> predictions = new ArrayList<>();
+    List<Prediction> disappointments = new ArrayList<>();
     final int streetWidth = 40;
     final int fps = 20;
     String[][] names = new String[30][30]; //make larger if needed :)
+    
+    public static HashMap<String,Integer> jaywalkers = new HashMap<String,Integer>();
+    public static HashMap<String,Integer> indangers = new HashMap<String,Integer>();
+    public void cleanupMarkers() {
+        int cleanup_timeout = 20;
+        List<String> cleanupJaywalkers = new ArrayList<String>();
+        for(String key : jaywalkers.keySet()) {
+            if(i - jaywalkers.get(key) > cleanup_timeout) {
+                cleanupJaywalkers.add(key);
+            }
+        }
+        for(String key : cleanupJaywalkers) {
+            jaywalkers.remove(key);
+        }
+        List<String> cleanupIndangers = new ArrayList<String>();
+        for(String key : indangers.keySet()) {
+            if(i - indangers.get(key) > cleanup_timeout) {
+                cleanupIndangers.add(key);
+            }
+        }
+        for(String key : cleanupIndangers) {
+            indangers.remove(key);
+        }
+    }
     
     public class Say extends Operator {
         public Say() {
@@ -81,6 +100,19 @@ public class RealCrossing extends PApplet {
         @Override
         public List<Task> execute(Operation operation, Term[] args, Memory memory, Timable time) {
             String s = "";
+            if(args.length > 2) { //{SELF} car3 message
+                if(args[2].toString().equals("is_jaywalking")) {
+                    synchronized(jaywalkers) {
+                        jaywalkers.put(args[1].toString(), i);
+                    }
+                }
+                else
+                if(args[2].toString().equals("is_in_danger")) {
+                    synchronized(indangers) {
+                        indangers.put(args[1].toString(), i);
+                    }
+                }
+            }
             for(int i=1;i<args.length;i++) {
                 s+=args[i].toString().replace("_", " ") + " ";
             }
@@ -183,6 +215,7 @@ public class RealCrossing extends PApplet {
         //viewport.Transform();
         background(64,128,64);
         fill(0);
+        cleanupMarkers();
         for (Street s : streets) {
             s.draw(this);
         }
@@ -460,33 +493,41 @@ public class RealCrossing extends PApplet {
                 for(Entity entity : entities) {
                     if(ent != entity && near(ent, entity)) {
                         ArrayList<String> QAInfo = new ArrayList<String>();
-                        if(ent.posX < entity.posX) {
-                            QAInfo.add("<(*," + name(ent) + "," + name(entity) + ") --> leftOf>. :|:");
-                            QAInfo.add("(&|," + informType(ent) + "," + informType(entity)+"). :|:");
-                            if(veryClose(ent, entity)) {
-                                if(ent instanceof Car) {
-                                    QAInfo.add("<(*," + name(entity) + "," + name(ent) + ") --> closeTo>. :|:");
-                                } else {
-                                    QAInfo.add("<(*," + name(ent) + "," + name(entity) + ") --> closeTo>. :|:");
+                        boolean enable_leftOf_aboveOf = false;
+                        boolean relate_pedestrians = false;
+                        if(relate_pedestrians || !(entity instanceof Pedestrian && ent instanceof Pedestrian)) {
+                            if(ent.posX < entity.posX) {
+                                if(enable_leftOf_aboveOf) {
+                                    QAInfo.add("<(*," + name(ent) + "," + name(entity) + ") --> leftOf>. :|:");
                                 }
-                            }
-                            QAinformation.add(QAInfo);
-                            relatedLeft.add(ent);
-                            relatedRight.add(entity);
-                        }
-                        if(ent.posY < entity.posY) {
-                            QAInfo.add("<(*," + name(ent) + "," + name(entity) + ") --> aboveOf>. :|:");
-                            QAInfo.add("(&|," + informType(ent) + "," + informType(entity)+"). :|:");
-                            if(veryClose(ent, entity)) {
-                                if(ent instanceof Car) {
-                                    QAInfo.add("<(*," + name(entity) + "," + name(ent) + ") --> closeTo>. :|:");
-                                } else {
-                                    QAInfo.add("<(*," + name(ent) + "," + name(entity) + ") --> closeTo>. :|:");
+                                QAInfo.add("(&|," + informType(ent) + "," + informType(entity)+"). :|:");
+                                if(veryClose(ent, entity)) {
+                                    if(ent instanceof Car) {
+                                        QAInfo.add("<(*," + name(entity) + "," + name(ent) + ") --> closeTo>. :|:");
+                                    } else {
+                                        QAInfo.add("<(*," + name(ent) + "," + name(entity) + ") --> closeTo>. :|:");
+                                    }
                                 }
+                                QAinformation.add(QAInfo);
+                                relatedLeft.add(ent);
+                                relatedRight.add(entity);
                             }
-                            QAinformation.add(QAInfo);
-                            relatedLeft.add(ent);
-                            relatedRight.add(entity);
+                            if(ent.posY < entity.posY) {
+                                if(enable_leftOf_aboveOf) {
+                                    QAInfo.add("<(*," + name(ent) + "," + name(entity) + ") --> aboveOf>. :|:");
+                                }
+                                QAInfo.add("(&|," + informType(ent) + "," + informType(entity)+"). :|:");
+                                if(veryClose(ent, entity)) {
+                                    if(ent instanceof Car) {
+                                        QAInfo.add("<(*," + name(entity) + "," + name(ent) + ") --> closeTo>. :|:");
+                                    } else {
+                                        QAInfo.add("<(*," + name(ent) + "," + name(entity) + ") --> closeTo>. :|:");
+                                    }
+                                }
+                                QAinformation.add(QAInfo);
+                                relatedLeft.add(ent);
+                                relatedRight.add(entity);
+                            }
                         }
                     }
                 }
