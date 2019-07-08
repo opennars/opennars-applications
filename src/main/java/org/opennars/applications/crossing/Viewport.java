@@ -29,7 +29,7 @@ import static processing.core.PConstants.LEFT;
 import static processing.core.PConstants.RIGHT;
 import static processing.core.PConstants.UP;
 
-class Viewport
+public class Viewport
 {
     PApplet applet;
     public Viewport(PApplet applet){ 
@@ -54,7 +54,7 @@ class Viewport
         return 1/zoom*(y-dify-applet.height/2);
     }
     boolean md=false;
-    void mousePressed()
+    public void mousePressed()
     {
         md=true;
         if(applet.mouseButton==RIGHT)
@@ -63,11 +63,11 @@ class Viewport
             savepy=applet.mouseY;
         }
     }
-    void mouseReleased()
+    public void mouseReleased()
     {
         md=false;
     }
-    void mouseDragged()
+    public void mouseDragged()
     {
         if(applet.mouseButton==RIGHT)
         {
@@ -80,7 +80,7 @@ class Viewport
     float camspeed=20.0f;
     float scrollcammult=0.92f;
     boolean keyToo=true;
-    void keyPressed()
+    public void keyPressed()
     {
         if((keyToo && applet.key=='w') || applet.keyCode==UP)
         {
@@ -122,7 +122,7 @@ class Viewport
         difx=-applet.width/2;
         dify=-applet.height/2;
     }
-    void mouseScrolled(float mouseScroll)
+    public void mouseScrolled(float mouseScroll)
     {
         if(!EnableZooming)
         {

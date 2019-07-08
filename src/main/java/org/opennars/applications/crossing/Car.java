@@ -23,6 +23,7 @@
  */
 package org.opennars.applications.crossing;
 
+import org.opennars.applications.crossing.RealCrossing.RealCrossing;
 import java.util.List;
 import org.opennars.entity.TruthValue;
 import processing.core.PApplet;
@@ -39,11 +40,11 @@ public class Car extends Entity {
         maxSpeed = 2;
     }
 
-    public void draw(PApplet applet, List<Street> streets, List<TrafficLight> trafficLights, List<Entity> entities, TruthValue truth, long time) {
+    public void draw(PApplet applet, TruthValue truth, long time) {
         float mul = Util.truthToValue(truth) * Util.timeToValue(time);
         applet.fill(255, 0, 255, mul*255.0f);
 
-        if(isPredicted && !RealCrossing.showPredictions) {
+        if(RealCrossing.running && isPredicted && !RealCrossing.showPredictions) {
             return;
         }
         if (!isPredicted && isAnomaly()) {
@@ -53,7 +54,7 @@ public class Car extends Entity {
             applet.stroke(127);
         }
 
-        super.draw(applet, streets, trafficLights, entities, truth, time);
+        super.draw(applet, truth, time);
 
         applet.stroke(127);
     }

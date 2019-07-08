@@ -23,6 +23,7 @@
  */
 package org.opennars.applications.crossing;
 
+import org.opennars.applications.crossing.RealCrossing.RealCrossing;
 import java.util.List;
 import org.opennars.entity.TruthValue;
 import processing.core.PApplet;
@@ -46,7 +47,7 @@ public class Pedestrian extends Entity {
         maxSpeed = 1;
     }
 
-    public void draw(PApplet applet, List<Street> streets, List<TrafficLight> trafficLights, List<Entity> entities, TruthValue truth, long time) {
+    public void draw(PApplet applet, TruthValue truth, long time) {
         prevX = posX;
         prevY = posY;
         if(isPredicted && !RealCrossing.showPredictions) {
@@ -54,7 +55,11 @@ public class Pedestrian extends Entity {
         }
         float mul = Util.truthToValue(truth) * Util.timeToValue(time);
         applet.fill(0, 255, 255, mul*255.0f);
-        super.draw(applet, streets, trafficLights, entities, truth, time);
+        super.draw(applet, truth, time);
+    }
+    
+    public void simulate(List<TrafficLight> trafficLights, List<Entity> entities, List<Street> streets) {
+        super.simulate(trafficLights, entities, streets);
         angle+=(Util.rnd.nextFloat()*0.1-0.05);
         //ok pedestrian, don't go on grass
         boolean forPedestrians = false;

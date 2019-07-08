@@ -23,6 +23,7 @@
  */
 package org.opennars.applications.crossing;
 
+import org.opennars.applications.crossing.RealCrossing.RealCrossing;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
@@ -103,7 +104,7 @@ public class OperatorPanel extends javax.swing.JFrame {
                 }
             }
         }
-        RealCrossing.questionsAndKnowledge = narsese;
+        RealCrossing.trafficMultiNar.informNARS.questionsAndKnowledge = narsese;
         Crossing.questions = narsese; //will also work for crosssing
     }
 
@@ -169,6 +170,7 @@ public class OperatorPanel extends javax.swing.JFrame {
         jTextArea3.setToolTipText("");
         jScrollPane3.setViewportView(jTextArea3);
 
+        jCheckBox1.setSelected(true);
         jCheckBox1.setText("Show predictions");
         jCheckBox1.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -277,15 +279,15 @@ public class OperatorPanel extends javax.swing.JFrame {
     private void jCheckBox1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBox1ActionPerformed
         RealCrossing.showPredictions = jCheckBox1.isSelected();
         if(jCheckBox1.isSelected()) {
-            RealCrossing.nar.narParameters.SEQUENCE_BAG_ATTEMPTS = RealCrossing.SEQUENCE_BAG_ATTEMPTS;
+            RealCrossing.trafficMultiNar.nar.narParameters.SEQUENCE_BAG_ATTEMPTS = RealCrossing.trafficMultiNar.SEQUENCE_BAG_ATTEMPTS;
         }
         if(!jCheckBox1.isSelected()) {
-            RealCrossing.nar.narParameters.SEQUENCE_BAG_ATTEMPTS = 0;
+            RealCrossing.trafficMultiNar.nar.narParameters.SEQUENCE_BAG_ATTEMPTS = 0;
         }
     }//GEN-LAST:event_jCheckBox1ActionPerformed
 
     private void jCheckBox2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBox2ActionPerformed
-        RealCrossing.RELATIVE_LOCATION_RELATIONS = jCheckBox2.isSelected();
+        RealCrossing.trafficMultiNar.informNARS.RELATIVE_LOCATION_RELATIONS = jCheckBox2.isSelected();
     }//GEN-LAST:event_jCheckBox2ActionPerformed
 
     /**
