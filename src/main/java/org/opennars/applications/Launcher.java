@@ -23,8 +23,10 @@
  */
 package org.opennars.applications;
 
+import java.io.File;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.swing.JFileChooser;
 import org.opennars.applications.crossing.Crossing;
 import org.opennars.applications.crossing.RealCrossing.RealCrossing;
 
@@ -137,9 +139,29 @@ public class Launcher extends javax.swing.JFrame {
         this.dispose();
     }//GEN-LAST:event_jButton3ActionPerformed
 
+    public File chooseFolder(String defaultFolder, String title) {
+        JFileChooser chooser = new JFileChooser(); 
+        File file = new File(defaultFolder);
+        if(file.exists()) {
+            chooser.setCurrentDirectory(file);
+        } else {
+            chooser.setCurrentDirectory(new java.io.File("."));
+        }
+        chooser.setDialogTitle(title);
+        chooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+        chooser.setAcceptAllFileFilterUsed(false);
+        if (chooser.showOpenDialog(this) == JFileChooser.APPROVE_OPTION) { 
+            return chooser.getSelectedFile();
+        } else {
+            return null;
+        }
+    }
+    
     private void jButton4ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton4ActionPerformed
-        RealCrossing.videopath = javax.swing.JOptionPane.showInputDialog("Enter path to video files", RealCrossing.videopath);
-        RealCrossing.trackletpath = javax.swing.JOptionPane.showInputDialog("Enter path to tracklet files", RealCrossing.trackletpath);
+        File videoFolder = chooseFolder(RealCrossing.videopath, "Select folder to video image files, for instance Test002");
+        File trackletFolder = chooseFolder(RealCrossing.trackletpath, "Select folder to tracklet text files, for instance Test002");
+        RealCrossing.videopath = videoFolder.toString()+"/";
+        RealCrossing.trackletpath = trackletFolder.toString()+"/";
         String ret = javax.swing.JOptionPane.showInputDialog("Enter frame offset", RealCrossing.i);
         RealCrossing.i = Math.max(2, Integer.valueOf(ret));
         try {

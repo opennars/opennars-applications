@@ -23,18 +23,29 @@
  */
 package org.opennars.applications.crossing;
 
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.nio.file.StandardOpenOption;
 import org.opennars.applications.crossing.RealCrossing.RealCrossing;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.swing.JFileChooser;
+import org.opennars.applications.crossing.RealCrossing.TrafficMultiNar;
 import org.opennars.entity.Task;
 import org.opennars.io.Narsese;
 import org.opennars.io.Parser;
 import org.opennars.io.events.EventEmitter;
 import org.opennars.io.events.Events;
+import org.opennars.io.events.Events.TaskAdd;
+import org.opennars.io.events.OutputHandler.IN;
 import org.opennars.language.Term;
 import org.opennars.main.Nar;
+import org.opennars.main.NarNode;
 
 /**
  *
@@ -145,13 +156,19 @@ public class OperatorPanel extends javax.swing.JFrame {
         jLabel5 = new javax.swing.JLabel();
         jScrollPane5 = new javax.swing.JScrollPane();
         jTextArea5 = new javax.swing.JTextArea();
+        saveQANarButton = new javax.swing.JButton();
+        stopSaveQANarButton = new javax.swing.JButton();
+        stopSaveLocationNarButton = new javax.swing.JButton();
+        saveLocationNarButton = new javax.swing.JButton();
+        stopSavePredictionNarButton = new javax.swing.JButton();
+        savePredictionNarButton = new javax.swing.JButton();
+        logOutputCheckBox = new javax.swing.JCheckBox();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         setTitle("Operator Panel");
 
         jTextArea1.setColumns(20);
         jTextArea1.setRows(5);
-        jTextArea1.setText("(&|,<?1 --> bike>,<(*,?1,street) --> at>)? :|:");
         jTextArea1.setToolTipText("");
         jScrollPane1.setViewportView(jTextArea1);
 
@@ -180,7 +197,7 @@ public class OperatorPanel extends javax.swing.JFrame {
         jScrollPane3.setViewportView(jTextArea3);
 
         jCheckBox1.setSelected(true);
-        jCheckBox1.setText("Show predictions");
+        jCheckBox1.setText("Learn&Show predictions");
         jCheckBox1.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 jCheckBox1ActionPerformed(evt);
@@ -191,7 +208,6 @@ public class OperatorPanel extends javax.swing.JFrame {
 
         jTextArea4.setColumns(20);
         jTextArea4.setRows(5);
-        jTextArea4.setText("<{SELF} --> [informative]>! :|:");
         jTextArea4.setToolTipText("");
         jScrollPane4.setViewportView(jTextArea4);
 
@@ -212,6 +228,51 @@ public class OperatorPanel extends javax.swing.JFrame {
         jTextArea5.setEnabled(false);
         jScrollPane5.setViewportView(jTextArea5);
 
+        saveQANarButton.setText("Save QANar experience");
+        saveQANarButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                saveQANarButtonActionPerformed(evt);
+            }
+        });
+
+        stopSaveQANarButton.setText("Stop");
+        stopSaveQANarButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                stopSaveQANarButtonActionPerformed(evt);
+            }
+        });
+
+        stopSaveLocationNarButton.setText("Stop");
+        stopSaveLocationNarButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                stopSaveLocationNarButtonActionPerformed(evt);
+            }
+        });
+
+        saveLocationNarButton.setText("Save LocationNar experience");
+        saveLocationNarButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                saveLocationNarButtonActionPerformed(evt);
+            }
+        });
+
+        stopSavePredictionNarButton.setText("Stop");
+        stopSavePredictionNarButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                stopSavePredictionNarButtonActionPerformed(evt);
+            }
+        });
+
+        savePredictionNarButton.setText("Save PredictionNar experience");
+        savePredictionNarButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                savePredictionNarButtonActionPerformed(evt);
+            }
+        });
+
+        logOutputCheckBox.setSelected(true);
+        logOutputCheckBox.setText("Log input only");
+
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
@@ -225,7 +286,7 @@ public class OperatorPanel extends javax.swing.JFrame {
                             .addComponent(jScrollPane3, javax.swing.GroupLayout.Alignment.TRAILING)
                             .addGroup(layout.createSequentialGroup()
                                 .addComponent(jLabel1)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 330, Short.MAX_VALUE)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 352, Short.MAX_VALUE)
                                 .addComponent(jCheckBox2)
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                                 .addComponent(jCheckBox1))
@@ -238,12 +299,26 @@ public class OperatorPanel extends javax.swing.JFrame {
                             .addComponent(jScrollPane4, javax.swing.GroupLayout.Alignment.TRAILING))
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(jButton1))
+                    .addComponent(jScrollPane5, javax.swing.GroupLayout.Alignment.TRAILING)
                     .addGroup(layout.createSequentialGroup()
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addComponent(jLabel2)
-                            .addComponent(jLabel5))
-                        .addGap(0, 0, Short.MAX_VALUE))
-                    .addComponent(jScrollPane5, javax.swing.GroupLayout.Alignment.TRAILING))
+                            .addComponent(jLabel5)
+                            .addGroup(layout.createSequentialGroup()
+                                .addComponent(saveQANarButton)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(stopSaveQANarButton)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(saveLocationNarButton)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(stopSaveLocationNarButton)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(savePredictionNarButton)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(stopSavePredictionNarButton)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                                .addComponent(logOutputCheckBox)))
+                        .addGap(0, 0, Short.MAX_VALUE)))
                 .addContainerGap())
         );
         layout.setVerticalGroup(
@@ -275,7 +350,18 @@ public class OperatorPanel extends javax.swing.JFrame {
                 .addComponent(jLabel5)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(jScrollPane5, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(saveQANarButton)
+                    .addComponent(stopSaveQANarButton)
+                    .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                        .addComponent(saveLocationNarButton)
+                        .addComponent(stopSaveLocationNarButton)
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                            .addComponent(savePredictionNarButton)
+                            .addComponent(stopSavePredictionNarButton)
+                            .addComponent(logOutputCheckBox))))
+                .addContainerGap(23, Short.MAX_VALUE))
         );
 
         pack();
@@ -298,6 +384,100 @@ public class OperatorPanel extends javax.swing.JFrame {
     private void jCheckBox2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBox2ActionPerformed
         RealCrossing.trafficMultiNar.informQaNar.RELATIVE_LOCATION_RELATIONS = jCheckBox2.isSelected();
     }//GEN-LAST:event_jCheckBox2ActionPerformed
+
+    JFileChooser chooser = new JFileChooser(); 
+    public File chooseFile() {
+        chooser.setDialogTitle("Select output file");
+        chooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
+        chooser.setAcceptAllFileFilterUsed(false);
+        if (chooser.showOpenDialog(this) == JFileChooser.APPROVE_OPTION) { 
+            return chooser.getSelectedFile();
+        } else {
+            return null;
+        }
+    }
+
+    boolean[] writeQANar = new boolean[] { false };
+    boolean[] writeLocationNar = new boolean[] { false };
+    boolean[] writePredictionNar = new boolean[] { false };
+    FileOutputStream[] qaNarStream = new FileOutputStream[] { null };
+    FileOutputStream[] locationNarStream = new FileOutputStream[] { null };
+    FileOutputStream[] predictionNarStream = new FileOutputStream[] { null };
+    private void saveQANarButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_saveQANarButtonActionPerformed
+        LogOutput(qaNarStream, writeQANar, RealCrossing.trafficMultiNar.qanar, "  QANAR");
+        writeQANar[0] = true;
+    }//GEN-LAST:event_saveQANarButtonActionPerformed
+
+    private void saveLocationNarButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_saveLocationNarButtonActionPerformed
+        LogOutput(locationNarStream, writeLocationNar, TrafficMultiNar.locationNar, " LocNAR");
+        writeLocationNar[0] = true;
+    }//GEN-LAST:event_saveLocationNarButtonActionPerformed
+
+    private void savePredictionNarButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_savePredictionNarButtonActionPerformed
+        LogOutput(predictionNarStream, writePredictionNar, RealCrossing.trafficMultiNar.nar, "PredNAR");
+        writePredictionNar[0] = true;
+    }//GEN-LAST:event_savePredictionNarButtonActionPerformed
+
+    private void stopSaveQANarButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_stopSaveQANarButtonActionPerformed
+        writeQANar[0] = false;
+        StopLogOutput(qaNarStream);
+    }//GEN-LAST:event_stopSaveQANarButtonActionPerformed
+
+    private void stopSaveLocationNarButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_stopSaveLocationNarButtonActionPerformed
+        writeLocationNar[0] = false;
+        StopLogOutput(locationNarStream);
+    }//GEN-LAST:event_stopSaveLocationNarButtonActionPerformed
+
+    private void stopSavePredictionNarButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_stopSavePredictionNarButtonActionPerformed
+        writePredictionNar[0] = false;
+        StopLogOutput(predictionNarStream);
+    }//GEN-LAST:event_stopSavePredictionNarButtonActionPerformed
+
+    private void StopLogOutput(final FileOutputStream[] fsl) {
+        synchronized(fsl) {
+            if(fsl[0] != null) {
+                try {
+                    fsl[0].close();
+                } catch (IOException ex) {
+                    Logger.getLogger(OperatorPanel.class.getName()).log(Level.SEVERE, null, ex);
+                }
+            }
+        }
+    }
+    
+    private void LogOutput(final FileOutputStream[] fsl, final boolean[] write, final Nar nar, String prefix) {
+        File saveFile = chooseFile();
+        try {
+            boolean attachEventHandler = fsl[0] == null;
+            synchronized(fsl) {
+                fsl[0] = new FileOutputStream(saveFile, true);
+            }
+            if(attachEventHandler) {
+                nar.on(TaskAdd.class, (event, args) -> {
+                    if(event == TaskAdd.class) {   
+                            Task task = (Task) args[0];
+                            if(!logOutputCheckBox.isSelected() || task.isInput()) {
+                                try {
+                                    synchronized(fsl) {
+                                        if(write[0]) {
+                                            String attachment = task.isInput() ? "IN:  " : "OUT: ";
+                                            fsl[0].write(("(frame="+RealCrossing.i+")"+prefix + "-" + attachment + task.toString()).getBytes("UTF8"));
+                                            fsl[0].write("\n".getBytes("UTF8"));
+                                        }
+                                    }
+                                } catch (UnsupportedEncodingException ex) {
+                                    Logger.getLogger(OperatorPanel.class.getName()).log(Level.SEVERE, null, ex);
+                                } catch (IOException ex) {
+                                    Logger.getLogger(OperatorPanel.class.getName()).log(Level.SEVERE, null, ex);
+                                }
+                        }
+                    }
+                });
+            }
+        } catch (FileNotFoundException ex) {
+            Logger.getLogger(OperatorPanel.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
 
     /**
      * @param args the command line arguments
@@ -357,5 +537,12 @@ public class OperatorPanel extends javax.swing.JFrame {
     private javax.swing.JTextArea jTextArea3;
     private javax.swing.JTextArea jTextArea4;
     public javax.swing.JTextArea jTextArea5;
+    private javax.swing.JCheckBox logOutputCheckBox;
+    private javax.swing.JButton saveLocationNarButton;
+    private javax.swing.JButton savePredictionNarButton;
+    private javax.swing.JButton saveQANarButton;
+    private javax.swing.JButton stopSaveLocationNarButton;
+    private javax.swing.JButton stopSavePredictionNarButton;
+    private javax.swing.JButton stopSaveQANarButton;
     // End of variables declaration//GEN-END:variables
 }
