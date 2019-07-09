@@ -218,6 +218,9 @@ public class RealCrossing extends PApplet {
             }
             Integer X = Integer.valueOf(unwrap(props[3]));
             Integer Y = Integer.valueOf(unwrap(props[4]));
+            
+            Integer width = Integer.valueOf(unwrap(props[5]));
+            Integer height = Integer.valueOf(unwrap(props[6]));
 
             Integer X2 = Integer.valueOf(unwrap(props[19])); //7 6
             Integer Y2 = Integer.valueOf(unwrap(props[20]));
@@ -229,26 +232,37 @@ public class RealCrossing extends PApplet {
             if(Y < Y2) {
                 id += 1;
             }
-
+            
+            double angle = Math.atan2(Y - Y2, X - X2);
+            
             double movement = Math.sqrt((X-X2)*(X-X2) + (Y - Y2)*(Y - Y2));
             if(props[0].equals("0")) { //person or vehicle for now
                 if(movement < (double)movementThresholdPedestrian) {
                     continue;
                 }
-                Pedestrian toAdd = new Pedestrian(id, X, Y, 0, 0, label);
+                Pedestrian toAdd = new Pedestrian(id, X2, Y2, 0, 0, label);
+                toAdd.width = width;
+                toAdd.height = height;
+                //toAdd.angle = angle;
                 entities.add(toAdd);
             } else {
                 if(!props[0].equals("1")) {
                     if(movement < (double)movementThresholdCar) {
                         continue;
                     }
-                    Car toAdd = new Car(id, X, Y, 0, 0, label);
+                    Car toAdd = new Car(id, X2, Y2, 0, 0, label);
+                    toAdd.width = width;
+                    toAdd.height = height;
+                    //toAdd.angle = angle;
                     entities.add(toAdd);
                 } else {
                     if(movement < (double)movementThresholdBike) {
                         continue;
                     }
-                    Bike toAdd = new Bike(id, X, Y, 0, 0, label);
+                    Bike toAdd = new Bike(id, X2, Y2, 0, 0, label);
+                    toAdd.width = width;
+                    toAdd.height = height;
+                    //toAdd.angle = angle;
                     entities.add(toAdd);
                 }
             }

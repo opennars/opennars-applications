@@ -34,6 +34,7 @@ public class Entity {
     public static int entityID = 0;
     public String label = "";
     public double posX, posY;
+    public double width, height;
     public double getPosX() {
         return posX;
     }
@@ -47,11 +48,8 @@ public class Entity {
     public float maxSpeed = 2.0f;
     public static boolean pedestrianIgnoreTrafficLight = false;
     public static boolean carIgnoreTrafficLight = false;
-
     public double normalness = 0.0;
-
     public boolean isPredicted = false;
-
     public double lastPosX = 0;
     public double lastPosY = 0;
 
@@ -130,7 +128,14 @@ public class Entity {
             }
         }
         if(!isPredicted) {
-            applet.ellipse(2.5f, 2.5f, Util.discretization*scale, Util.discretization*scale);
+            //applet.rect((float) (0.0f-width/2.0f), (float) (0.0f-height/2.0f), (float) width, (float) height);
+            float mul2 = 2.0f;
+            if(RealCrossing.running) {
+                applet.ellipse(2.5f, 2.5f, Util.discretization*scale*mul2, Util.discretization*scale*mul2);
+            } else {
+                applet.ellipse(2.5f, 2.5f, Util.discretization*scale, Util.discretization*scale);
+            }
+            
         }
         
         if(RealCrossing.running) {
