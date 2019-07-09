@@ -329,7 +329,7 @@ public class RealCrossing extends PApplet {
         //</editor-fold>
         System.out.println("args: videopath trackletpath [discretization movementThreshold]");
         System.out.println("example: java -cp \"*\" org.opennars.applications.crossing.RealCrossing /mnt/sda1/Users/patha/Downloads/Test/Test/Test001/ /home/tc/Dateien/CROSSING/Test001/ 100 10");
-        Util.discretization = 100;
+        Util.discretization = 50;
         if(args.length == 2) {
             RealCrossing.videopath = args[0];
             RealCrossing.trackletpath = args[1];
