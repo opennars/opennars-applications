@@ -55,9 +55,6 @@ public class InformLocationNar {
             info.add(typeInfo);
             locationNar.addInput(typeInfo);
             //also give info about position at labelled locations
-            int X = (int) (ent.posX / Util.discretization);
-            int Y = (int) (ent.posY / Util.discretization);
-            String subj = X + "_" + Y;
             String locationnarInput = "<(*,"+EntityToNarsese.name(ent)+","+Util.positionToTerm((int)ent.posX,(int)ent.posY)+") --> at>. :|:";
             locationNar.addInput(locationnarInput);
             System.out.println("location nar input: " + locationnarInput);
