@@ -47,7 +47,7 @@ import org.opennars.main.Nar;
  * @author tc
  */
 public class InformLocationNar {
-    void inform(Nar locationNar, List<Entity> entities) {
+    void inform(List<Entity> entities) {
         List<Entity> sortedEntX = entities.stream().sorted(Comparator.comparing(Entity::getPosX)).collect(Collectors.toList());
         for(Entity ent : sortedEntX) {
             String typeInfo = EntityToNarsese.informType(ent)+". :|:";
@@ -68,7 +68,7 @@ public class InformLocationNar {
     public void askForLabels(int t, int perception_update, List<Entity> entities) {
         if(t > 0 && t % (5*perception_update) == 0) {
             locationNar.reset();
-            inform(locationNar, entities); //input locations
+            inform(entities); //input locations
             try {
                 for(String s : new String[] {"street","sidewalk","bikelane"}) {
                     locationNar.askNow("<?what --> ["+s+"]>", new AnswerHandler() {

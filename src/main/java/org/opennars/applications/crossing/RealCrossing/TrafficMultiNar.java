@@ -29,7 +29,6 @@ import org.opennars.applications.crossing.Camera;
 import org.opennars.applications.crossing.Entity;
 import org.opennars.applications.crossing.NarListener;
 import org.opennars.applications.crossing.TrafficLight;
-import org.opennars.entity.TruthValue;
 import org.opennars.io.events.Events;
 import org.opennars.io.events.OutputHandler;
 import org.opennars.main.Nar;
@@ -48,7 +47,7 @@ public class TrafficMultiNar {
     //nar dedicated to user questions
     public Nar qanar;
     //nar dedicated to labelling locations
-    static Nar locationNar;
+    public static Nar locationNar;
       
     //saving away parameters
     public int SEQUENCE_BAG_ATTEMPTS = 0;
