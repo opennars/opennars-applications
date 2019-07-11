@@ -59,7 +59,7 @@ public class InformQaNar {
         return false;
     }
     
-    public double veryClosenessThreshold = 169; //1 times the discretization + 1 tolerance for the cell width
+    public static double veryClosenessThreshold = 169; //1 times the discretization + 1 tolerance for the cell width
     private boolean veryClose(Entity a, Entity b) {
         if(Math.sqrt(Math.pow(a.posX - b.posX, 2)+Math.pow(a.posY - b.posY, 2)) < veryClosenessThreshold) {
             return true;

@@ -24,11 +24,12 @@
 package org.opennars.applications.crossing.RealCrossing;
 
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
-import java.net.URI;
+import java.io.UnsupportedEncodingException;
 import java.net.URISyntaxException;
 import java.nio.charset.Charset;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import org.opennars.applications.crossing.NarListener.Prediction;
@@ -112,6 +113,25 @@ public class RealCrossing extends PApplet {
             for(int i=1;i<args.length;i++) {
                 s+=args[i].toString().replace("_", " ") + " ";
             }
+            if(outputFolder != null) {
+                try {
+                    String fname = String.format("%05d", i);
+                    String st = s;
+                    if(labelToLocation.containsKey(args[1].toString())) {
+                        st += " " + labelToLocation.get(args[1].toString());
+                    }
+                    FileOutputStream fs = new FileOutputStream(outputFolder+fname+".txt",true);
+                    fs.write(st.getBytes("UTF8"));
+                    fs.write("\n".getBytes("UTF8"));
+                    fs.close();
+                } catch (FileNotFoundException ex) {
+                    Logger.getLogger(RealCrossing.class.getName()).log(Level.SEVERE, null, ex);
+                } catch (UnsupportedEncodingException ex) {
+                    Logger.getLogger(RealCrossing.class.getName()).log(Level.SEVERE, null, ex);
+                } catch (IOException ex) {
+                    Logger.getLogger(RealCrossing.class.getName()).log(Level.SEVERE, null, ex);
+                }
+            }
             //JOptionPane.showMessageDialog(null, "Operator information: "+s);
             panel.jTextArea5.setText(s + " (frame=" + i + ")" + "\n" + panel.jTextArea5.getText());
             return null;
@@ -121,7 +141,8 @@ public class RealCrossing extends PApplet {
         
     public void loadOntology() throws URISyntaxException, IOException {
         //String file = new String(Files.readAllBytes(Paths.get(new URI("./StreetScene/AnomalyOntology.nal"))));
-        String content = new String(Files.readAllBytes(new File("./StreetScene/AnomalyOntology.nal").toPath()),Charset.forName("UTF-8"));
+        String ontPath = customOntologyPath == null ? "./StreetScene/AnomalyOntology.nal" : customOntologyPath;
+        String content = new String(Files.readAllBytes(new File(ontPath).toPath()),Charset.forName("UTF-8"));
         String qapart = content.split(">>QANar:")[1].split(">>LocationNar:")[0].trim();
         String locpart = content.split(">>LocationNar:")[1].split(">>General information:")[0].trim();
         trafficMultiNar.informLocationNar.ontology = locpart;
@@ -133,8 +154,8 @@ public class RealCrossing extends PApplet {
     public static boolean running = false;
     @Override
     public void setup() {
-        size(1280, 720);
-        this.setSize(1280, 720);
+        size(resX, resY);
+        this.setSize(resX, resY);
         running = true;
                    
         Camera cam = new Camera(500+streetWidth/2, 500+streetWidth/2);
@@ -185,6 +206,20 @@ public class RealCrossing extends PApplet {
     public static double movementThresholdBike = 5; //5
     public static double movementThresholdPedestrian = 5; //5
     
+    class Point {
+        int X;
+        int Y;
+        public Point(int X, int Y) {
+            this.X = X;
+            this.Y = Y;
+        }
+        @Override
+        public String toString() {
+            return "(location " + X + " " + Y + ")";
+        }
+    }
+    HashMap<String,Point> labelToLocation = new HashMap<String,Point>();
+    
     @Override
     public void draw() {
         frame.setTitle("RealCrossing (frame=" + i +")");
@@ -195,9 +230,30 @@ public class RealCrossing extends PApplet {
         for (Street s : streets) {
             s.draw(this);
         }
-        String nr = String.format("%05d", i);
-        PImage img = loadImage(videopath+nr+".jpg"); //1 2 3 7
-        image(img, 0, 0);
+        
+        PImage img = null;
+        String nr = "";
+        while(img == null) { //in case of lag between retrieving txt file and loading jpg, to recover
+            if(liveVideo) { //or when debugging
+                try {
+                    Object[] paths = Files.list(Paths.get(trackletpath)).sorted().toArray();
+                    String extractNumber = paths[paths.length-1].toString();
+                    String number = extractNumber.split("/TKL")[1].split(".txt")[0];
+                    i = Integer.valueOf(number);
+
+                    //System.out.println(paths[paths.length-1]);
+
+                            } catch (IOException ex) {
+                    Logger.getLogger(RealCrossing.class.getName()).log(Level.SEVERE, null, ex);
+                }
+            }
+        
+            nr = String.format("%05d", i);
+            img = loadImage(videopath+nr+".jpg"); //1 2 3 7
+            if(img != null) {
+                image(img, 0, 0);
+            }
+        }
         
         entities.clear(); //refresh
         String tracklets = "";
@@ -209,6 +265,9 @@ public class RealCrossing extends PApplet {
         }
         String[] lines = tracklets.replace("[ ","[").replace(" ]","]").replace("  "," ").replace("  "," ").split("\n");
         for(String s : lines) {
+            if(s.trim().isEmpty()) {
+                continue;
+            }
             //ClassID TrackID : [X5c Y5c W5 H5] 
             String[] props = s.split(" ");
             String label = props[1];
@@ -233,13 +292,14 @@ public class RealCrossing extends PApplet {
                 id += 1;
             }
             
-            double angle = Math.atan2(Y - Y2, X - X2);
+            //double angle = Math.atan2(Y - Y2, X - X2);
             
             double movement = Math.sqrt((X-X2)*(X-X2) + (Y - Y2)*(Y - Y2));
             if(props[0].equals("0")) { //person or vehicle for now
                 if(movement < (double)movementThresholdPedestrian) {
                     continue;
                 }
+                labelToLocation.put("pedestrian"+label, new Point(X2,Y2));
                 Pedestrian toAdd = new Pedestrian(id, X2, Y2, 0, 0, label);
                 toAdd.width = width;
                 toAdd.height = height;
@@ -250,6 +310,7 @@ public class RealCrossing extends PApplet {
                     if(movement < (double)movementThresholdCar) {
                         continue;
                     }
+                    labelToLocation.put("car"+label, new Point(X2,Y2));
                     Car toAdd = new Car(id, X2, Y2, 0, 0, label);
                     toAdd.width = width;
                     toAdd.height = height;
@@ -259,6 +320,7 @@ public class RealCrossing extends PApplet {
                     if(movement < (double)movementThresholdBike) {
                         continue;
                     }
+                    labelToLocation.put("bike"+label, new Point(X2,Y2));
                     Bike toAdd = new Bike(id, X2, Y2, 0, 0, label);
                     toAdd.width = width;
                     toAdd.height = height;
@@ -321,8 +383,13 @@ public class RealCrossing extends PApplet {
         stroke(128);
         //System.out.println("Concepts: " + trafficMultiNar.nar.memory.concepts.size());
     }
-
-
+    public static boolean liveVideo = false;
+    
+    public static int resX = 1280;
+    public static int resY = 720;
+    public static String outputFolder = null;
+    public static String customOntologyPath = null;
+    
     public static void main(String[] args) {
         /* Set the Nimbus look and feel */
         //<editor-fold defaultstate="collapsed" desc=" Look and feel setting code (optional) ">
@@ -341,20 +408,36 @@ public class RealCrossing extends PApplet {
         }
         //</editor-fold>
         //</editor-fold>
-        System.out.println("args: videopath trackletpath [discretization movementThreshold]");
-        System.out.println("example: java -cp \"*\" org.opennars.applications.crossing.RealCrossing /mnt/sda1/Users/patha/Downloads/Test/Test/Test001/ /home/tc/Dateien/CROSSING/Test001/ 100 10");
+        System.out.println("args: videopath trackletpath [discretization movementThreshold useLiveVideo resX resY outputFile veryClosenessThreshold]");
+        System.out.println("example: java -cp \"*\" org.opennars.applications.crossing.RealCrossing /home/tc/video/ /home/tc/tracklets/ 80 30 True 1280 720 /home/tc/output/ /home/tc/Dateien/CROSSING/StreetScene/AnomalyOntology.nal 169");
         Util.discretization = 80;
-        if(args.length == 2) {
+        if(args.length >= 2) {
             RealCrossing.videopath = args[0];
             RealCrossing.trackletpath = args[1];
         }
-        if(args.length == 4) {
-            RealCrossing.videopath = args[0];
-            RealCrossing.trackletpath = args[1];
+        if(args.length >= 4) {
             Util.discretization = Integer.valueOf(args[2]);
-            RealCrossing.movementThresholdCar = Integer.valueOf(args[3]);
-            
-        }  
+            RealCrossing.movementThresholdCar = Integer.valueOf(args[3]); 
+        }
+        if(args.length >= 5) {
+            if(args[4].equals("True")) {
+                liveVideo = true;
+            }
+        }
+        if(args.length >= 7) {
+            resX = Integer.valueOf(args[5]);
+            resY = Integer.valueOf(args[6]);
+        }
+        if(args.length >= 8) {
+            outputFolder = args[7];
+        }
+        if(args.length >= 9) {
+            customOntologyPath = args[8];
+        }
+        if(args.length >= 10) {
+            InformQaNar.veryClosenessThreshold = Integer.valueOf(args[9]);
+        }
+        //new FileOutputStream(saveFile, true);
         String[] args2 = {"Street Scene"};
         RealCrossing mp = new RealCrossing();
         PApplet.runSketch(args2, mp);
