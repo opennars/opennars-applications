@@ -31,6 +31,7 @@ import java.io.UnsupportedEncodingException;
 import java.net.URISyntaxException;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import org.opennars.applications.crossing.NarListener.Prediction;
 import java.util.ArrayList;
@@ -38,6 +39,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import org.opennars.applications.crossing.Bike;
 import org.opennars.applications.crossing.Camera;
 import org.opennars.applications.crossing.Car;
@@ -169,8 +172,6 @@ public class RealCrossing {
     List<TrafficLight> trafficLights = new ArrayList<TrafficLight>();
     List<Entity> entities = new ArrayList<Entity>();
     List<Camera> cameras = new ArrayList<Camera>();
-    int t = 0;
-
     
     int perception_update = 1;
     public static int i = 4100; //2
@@ -199,16 +200,26 @@ public class RealCrossing {
     }
     HashMap<String,Point> labelToLocation = new HashMap<String,Point>();
     
+    int lasti=-99;
     public void step() {
         cleanupMarkers();
         
         String nr = "";
         if(liveVideo) { //or when debugging
             try {
-                Object[] paths = Files.list(Paths.get(trackletpath)).sorted().toArray();
+                List<Path> result;
+                try(Stream<Path> stream = Files.list(Paths.get(trackletpath)).sorted()){
+                    result=stream.collect(Collectors.toList());
+                }
+                
+                Object[] paths = result.toArray();
                 String extractNumber = paths[paths.length-2].toString();
                 String number = extractNumber.split("/TKL")[1].split(".txt")[0];
                 i = Integer.valueOf(number);
+                if(i == lasti) {
+                    return;
+                }
+                lasti = i;
 
                 //System.out.println(paths[paths.length-1]);
 
@@ -292,11 +303,8 @@ public class RealCrossing {
                 }
             }
         }
-
-        i++;
         
-        trafficMultiNar.perceiveScene(t, perception_update);
-        t++;
+        trafficMultiNar.perceiveScene(i, perception_update);
         trafficMultiNar.reason();
         for (Prediction pred : trafficMultiNar.predictions) {
             Entity e = pred.ent;
@@ -305,9 +313,9 @@ public class RealCrossing {
         for(Camera c : cameras) {
             //c.draw(this);
         }
-        for(int i=0; i<trafficMultiNar.informQaNar.relatedLeft.size(); i++) {
-            Entity left = trafficMultiNar.informQaNar.relatedLeft.get(i);
-            Entity right = trafficMultiNar.informQaNar.relatedRight.get(i);
+        for(int k=0; k<trafficMultiNar.informQaNar.relatedLeft.size(); k++) {
+            Entity left = trafficMultiNar.informQaNar.relatedLeft.get(k);
+            Entity right = trafficMultiNar.informQaNar.relatedRight.get(k);
             //return spatially related entities?
         }
         //System.out.println("Concepts: " + trafficMultiNar.nar.memory.concepts.size());
@@ -372,7 +380,7 @@ public class RealCrossing {
         mp.setup();
         while(true) {
             mp.step();
-            Thread.sleep(1000/mp.fps);
+            //Thread.sleep(1000/mp.fps);
         }
     }
 }
