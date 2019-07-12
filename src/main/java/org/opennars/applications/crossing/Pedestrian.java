@@ -23,16 +23,9 @@
  */
 package org.opennars.applications.crossing;
 
-import org.opennars.applications.crossing.RealCrossing.RealCrossing;
-import java.util.List;
-import org.opennars.entity.TruthValue;
-import processing.core.PApplet;
-
 public class Pedestrian extends Entity {
 
     double initialAngle;
-    double prevX = 0;
-    double prevY = 0;
     public final static float pedestrianScale = 0.75f;
     
     public Pedestrian(int id, double posX, double posY, double velocity, double angle, String label) {
@@ -45,34 +38,5 @@ public class Pedestrian extends Entity {
         initialAngle = angle;
         scale = pedestrianScale;
         maxSpeed = 1;
-    }
-
-    public void draw(PApplet applet, TruthValue truth, long time) {
-        prevX = posX;
-        prevY = posY;
-        if(isPredicted && !RealCrossing.showPredictions) {
-            return;
-        }
-        float mul = Util.truthToValue(truth) * Util.timeToValue(time);
-        applet.fill(0, 255, 255, mul*255.0f);
-        super.draw(applet, truth, time);
-    }
-    
-    public void simulate(List<TrafficLight> trafficLights, List<Entity> entities, List<Street> streets) {
-        super.simulate(trafficLights, entities, streets);
-        angle+=(Util.rnd.nextFloat()*0.1-0.05);
-        //ok pedestrian, don't go on grass
-        boolean forPedestrians = false;
-        for(Street street : streets) {
-            if(!street.forCarsOnly && this.posX > street.startX && this.posX < street.endX && this.posY > street.startY && this.posY < street.endY) {
-                forPedestrians = true;
-                break;
-            }
-        }
-        if(!forPedestrians) {
-            this.angle = this.initialAngle;
-            this.posX = prevX;
-            this.posY = prevY;
-        }
     }
 }

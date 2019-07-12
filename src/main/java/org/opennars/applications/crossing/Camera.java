@@ -7,7 +7,6 @@ package org.opennars.applications.crossing;
 
 import java.util.List;
 import org.opennars.main.Nar;
-import processing.core.PApplet;
 
 /**
  *
@@ -41,10 +40,5 @@ public class Camera {
             }
         }
         return informer.Input(nar, force);
-    }
-    
-    public void draw(PApplet applet) {
-        applet.fill(0,0,255,20);
-        applet.ellipse(posX,posY,radius*2,radius*2);
     }
 }

@@ -23,8 +23,6 @@
  */
 package org.opennars.applications.crossing;
 
-import processing.core.PApplet;
-
 public class Street {
 
     public int startX, startY, endX, endY;
@@ -36,10 +34,5 @@ public class Street {
         this.endX = endX;
         this.endY = endY;
         this.forCarsOnly = forCarsOnly;
-    }
-
-    public void draw(PApplet applet) {
-        applet.fill(188);
-        applet.rect(startX, startY, endX - startX, endY - startY);
     }
 }

@@ -23,8 +23,6 @@
  */
 package org.opennars.applications.crossing;
 
-import processing.core.PApplet;
-
 public class TrafficLight {
 
     public int GREEN = 0, RED = 1;
@@ -39,15 +37,5 @@ public class TrafficLight {
         this.posX = positionX;
         this.posY = positionY;
         this.colour = colour;
-    }
-
-    public void draw(PApplet applet, int t) {
-        int g = colour == 0 ? 255 : 0;
-        int r = colour == 1 ? 255 : 0;
-        applet.fill(r, g, 0);
-        applet.ellipse(posX, posY, 10, 10);
-        if (t % 200 == 0) {
-            colour = (colour + 1) % 2;
-        }
     }
 }

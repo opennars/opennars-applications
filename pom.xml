@@ -33,11 +33,6 @@
             <artifactId>opennars</artifactId>
             <version>3.0.3-SNAPSHOT</version>
         </dependency>
-        <dependency>
-            <groupId>org.processing</groupId>
-            <artifactId>core</artifactId>
-            <version>2.2.1</version>
-        </dependency>
     </dependencies>
     
     <build>

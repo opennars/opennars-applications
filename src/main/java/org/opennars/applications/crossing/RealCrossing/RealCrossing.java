@@ -33,7 +33,6 @@ import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import org.opennars.applications.crossing.NarListener.Prediction;
-import org.opennars.applications.gui.NarSimpleGUI;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -43,7 +42,6 @@ import org.opennars.applications.crossing.Bike;
 import org.opennars.applications.crossing.Camera;
 import org.opennars.applications.crossing.Car;
 import org.opennars.applications.crossing.Entity;
-import org.opennars.applications.crossing.OperatorPanel;
 import org.opennars.applications.crossing.Pedestrian;
 import org.opennars.applications.crossing.Street;
 import org.opennars.applications.crossing.TrafficLight;
@@ -54,10 +52,8 @@ import org.opennars.language.Term;
 import org.opennars.operator.Operation;
 import org.opennars.operator.Operator;
 import org.opennars.storage.Memory;
-import processing.core.PApplet;
-import processing.core.PImage;
 
-public class RealCrossing extends PApplet {
+public class RealCrossing {
 
     int entityID = 1;
     
@@ -132,8 +128,6 @@ public class RealCrossing extends PApplet {
                     Logger.getLogger(RealCrossing.class.getName()).log(Level.SEVERE, null, ex);
                 }
             }
-            //JOptionPane.showMessageDialog(null, "Operator information: "+s);
-            panel.jTextArea5.setText(s + " (frame=" + i + ")" + "\n" + panel.jTextArea5.getText());
             return null;
         }
     }
@@ -150,12 +144,9 @@ public class RealCrossing extends PApplet {
     }
     
     public static TrafficMultiNar trafficMultiNar = null;
-    OperatorPanel panel = null;
     public static boolean running = false;
-    @Override
+
     public void setup() {
-        size(resX, resY);
-        this.setSize(resX, resY);
         running = true;
                    
         Camera cam = new Camera(500+streetWidth/2, 500+streetWidth/2);
@@ -172,16 +163,6 @@ public class RealCrossing extends PApplet {
         } catch (IOException ex) {
             Logger.getLogger(RealCrossing.class.getName()).log(Level.SEVERE, null, ex);
         }
-        
-        //attach a panel to the Qanar:
-        panel = new OperatorPanel(trafficMultiNar.qanar);
-        panel.show();
-        
-        frameRate(fps);
-        //optionally add simple GUI to the Nar instances of the TrafficMultiNar:
-        //new NarSimpleGUI(nar);
-        //new NarSimpleGUI(qanar);
-        //new NarSimpleGUI(locationNar);
     }
 
     List<Street> streets = new ArrayList<Street>();
@@ -189,8 +170,6 @@ public class RealCrossing extends PApplet {
     List<Entity> entities = new ArrayList<Entity>();
     List<Camera> cameras = new ArrayList<Camera>();
     int t = 0;
-    public static boolean showAnomalies = false;
-    public static boolean showPredictions = true;
 
     
     int perception_update = 1;
@@ -220,40 +199,24 @@ public class RealCrossing extends PApplet {
     }
     HashMap<String,Point> labelToLocation = new HashMap<String,Point>();
     
-    @Override
-    public void draw() {
-        frame.setTitle("RealCrossing (frame=" + i +")");
-        //viewport.Transform();
-        background(64,128,64);
-        fill(0);
+    public void step() {
         cleanupMarkers();
-        for (Street s : streets) {
-            s.draw(this);
-        }
         
-        PImage img = null;
         String nr = "";
-        while(img == null) { //in case of lag between retrieving txt file and loading jpg, to recover
-            if(liveVideo) { //or when debugging
-                try {
-                    Object[] paths = Files.list(Paths.get(trackletpath)).sorted().toArray();
-                    String extractNumber = paths[paths.length-1].toString();
-                    String number = extractNumber.split("/TKL")[1].split(".txt")[0];
-                    i = Integer.valueOf(number);
+        if(liveVideo) { //or when debugging
+            try {
+                Object[] paths = Files.list(Paths.get(trackletpath)).sorted().toArray();
+                String extractNumber = paths[paths.length-2].toString();
+                String number = extractNumber.split("/TKL")[1].split(".txt")[0];
+                i = Integer.valueOf(number);
 
-                    //System.out.println(paths[paths.length-1]);
+                //System.out.println(paths[paths.length-1]);
 
-                            } catch (IOException ex) {
-                    Logger.getLogger(RealCrossing.class.getName()).log(Level.SEVERE, null, ex);
-                }
-            }
-        
-            nr = String.format("%05d", i);
-            img = loadImage(videopath+nr+".jpg"); //1 2 3 7
-            if(img != null) {
-                image(img, 0, 0);
+                        } catch (IOException ex) {
+                Logger.getLogger(RealCrossing.class.getName()).log(Level.SEVERE, null, ex);
             }
         }
+        nr = String.format("%05d", i);
         
         entities.clear(); //refresh
         String tracklets = "";
@@ -333,43 +296,11 @@ public class RealCrossing extends PApplet {
         i++;
         
         trafficMultiNar.perceiveScene(t, perception_update);
-        
-        Entity.DrawDirection = false;
-        Entity.DrawID = true;
-        for (int i = 0; i < 3000; i += Util.discretization) {
-            stroke(128);
-            line(0, i, 3000, i);
-            line(i, 0, i, 3000);
-        }
-
-        for (Entity e : entities) {
-            e.draw(this, null, 0);
-        }
-        for (TrafficLight tl : trafficLights) {
-            tl.draw(this, t);
-        }
-
         t++;
         trafficMultiNar.reason();
         for (Prediction pred : trafficMultiNar.predictions) {
             Entity e = pred.ent;
-            pushMatrix();
-            translate(Util.discretization/2,Util.discretization/2);
-            e.draw(this, pred.truth, pred.time - trafficMultiNar.nar.time());
-            popMatrix();
-        }
-        if(showAnomalies) {
-            for (Prediction pred : trafficMultiNar.disappointments) {
-                Entity e = pred.ent;
-                if(e instanceof Car) {
-                    fill(255,0,0);
-                }
-                if(e instanceof Pedestrian) {
-                    fill(0,0,255);
-                }
-                this.text("ANOMALY", (float)e.posX, (float)e.posY);
-                e.draw(this, pred.truth, pred.time - trafficMultiNar.nar.time());
-            }
+            //return predictions too?
         }
         for(Camera c : cameras) {
             //c.draw(this);
@@ -377,10 +308,8 @@ public class RealCrossing extends PApplet {
         for(int i=0; i<trafficMultiNar.informQaNar.relatedLeft.size(); i++) {
             Entity left = trafficMultiNar.informQaNar.relatedLeft.get(i);
             Entity right = trafficMultiNar.informQaNar.relatedRight.get(i);
-            stroke(200,200,0);
-            line((float)left.posX, (float)left.posY, (float)right.posX, (float)right.posY);
+            //return spatially related entities?
         }
-        stroke(128);
         //System.out.println("Concepts: " + trafficMultiNar.nar.memory.concepts.size());
     }
     public static boolean liveVideo = false;
@@ -390,7 +319,7 @@ public class RealCrossing extends PApplet {
     public static String outputFolder = null;
     public static String customOntologyPath = null;
     
-    public static void main(String[] args) {
+    public static void main(String[] args) throws InterruptedException {
         /* Set the Nimbus look and feel */
         //<editor-fold defaultstate="collapsed" desc=" Look and feel setting code (optional) ">
         /* If Nimbus (introduced in Java SE 6) is not available, stay with the default look and feel.
@@ -404,7 +333,7 @@ public class RealCrossing extends PApplet {
                 }
             }
         } catch (ClassNotFoundException | InstantiationException | IllegalAccessException | javax.swing.UnsupportedLookAndFeelException ex) {
-            java.util.logging.Logger.getLogger(NarSimpleGUI.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+            java.util.logging.Logger.getLogger(RealCrossing.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
         }
         //</editor-fold>
         //</editor-fold>
@@ -440,6 +369,10 @@ public class RealCrossing extends PApplet {
         //new FileOutputStream(saveFile, true);
         String[] args2 = {"Street Scene"};
         RealCrossing mp = new RealCrossing();
-        PApplet.runSketch(args2, mp);
+        mp.setup();
+        while(true) {
+            mp.step();
+            Thread.sleep(1000/mp.fps);
+        }
     }
 }
