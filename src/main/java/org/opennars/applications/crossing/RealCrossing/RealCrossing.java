@@ -119,10 +119,7 @@ public class RealCrossing {
                     if(labelToLocation.containsKey(args[1].toString())) {
                         st += " " + labelToLocation.get(args[1].toString());
                     }
-                    FileOutputStream fs = new FileOutputStream(outputFolder+fname+".txt",true);
-                    fs.write(st.getBytes("UTF8"));
-                    fs.write("\n".getBytes("UTF8"));
-                    fs.close();
+                    MessageToScript(st);
                 } catch (FileNotFoundException ex) {
                     Logger.getLogger(RealCrossing.class.getName()).log(Level.SEVERE, null, ex);
                 } catch (UnsupportedEncodingException ex) {
@@ -201,7 +198,7 @@ public class RealCrossing {
     HashMap<String,Point> labelToLocation = new HashMap<String,Point>();
     
     int lasti=-99;
-    public void step() {
+    public void step() throws FileNotFoundException, UnsupportedEncodingException, IOException {
         cleanupMarkers();
         
         String nr = "";
@@ -210,6 +207,9 @@ public class RealCrossing {
                 List<Path> result;
                 try(Stream<Path> stream = Files.list(Paths.get(trackletpath)).sorted()){
                     result=stream.collect(Collectors.toList());
+                }
+                if(result.isEmpty()) {
+                    return;
                 }
                 
                 Object[] paths = result.toArray();
@@ -308,7 +308,11 @@ public class RealCrossing {
         trafficMultiNar.reason();
         for (Prediction pred : trafficMultiNar.predictions) {
             Entity e = pred.ent;
+            float value = Util.truthToValue(pred.truth);
+            long predictionTime = pred.time;
             //return predictions too?
+            String st = "predicted " + pred.type + " " + e.posX + " " + e.posY + " "+ e.id + " " + value + " " + predictionTime;
+            MessageToScript(st);
         }
         for(Camera c : cameras) {
             //c.draw(this);
@@ -317,9 +321,20 @@ public class RealCrossing {
             Entity left = trafficMultiNar.informQaNar.relatedLeft.get(k);
             Entity right = trafficMultiNar.informQaNar.relatedRight.get(k);
             //return spatially related entities?
+            String st = "related "+EntityToNarsese.name(left) + " " + EntityToNarsese.name(right);
+            MessageToScript(st);
         }
         //System.out.println("Concepts: " + trafficMultiNar.nar.memory.concepts.size());
     }
+
+    private void MessageToScript(String st) throws IOException, FileNotFoundException {
+        String fname = String.format("%05d", i);
+        FileOutputStream fs = new FileOutputStream(outputFolder+fname+".txt",true);
+        fs.write(st.getBytes("UTF8"));
+        fs.write("\n".getBytes("UTF8"));
+        fs.close();
+    }
+    
     public static boolean liveVideo = false;
     
     public static int resX = 1280;
@@ -327,7 +342,7 @@ public class RealCrossing {
     public static String outputFolder = null;
     public static String customOntologyPath = null;
     
-    public static void main(String[] args) throws InterruptedException {
+    public static void main(String[] args) throws InterruptedException, FileNotFoundException, IOException {
         /* Set the Nimbus look and feel */
         //<editor-fold defaultstate="collapsed" desc=" Look and feel setting code (optional) ">
         /* If Nimbus (introduced in Java SE 6) is not available, stay with the default look and feel.

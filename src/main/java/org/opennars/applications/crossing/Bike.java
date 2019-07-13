@@ -27,4 +27,8 @@ public class Bike extends Car {
     public Bike(int id, double posX, double posY, double velocity, double angle, String label) {
         super(id, posX, posY, velocity, angle, label);
     }
+    public Bike(int id, double posX, double posY, double velocity, double angle) {
+        super(id, posX, posY, velocity, angle);
+    }
+    
 }

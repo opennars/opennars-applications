@@ -66,6 +66,7 @@ public class NarListener implements EventEmitter.EventObserver {
         this.entities = entities;
     }
     Term pedestrian = Term.get("pedestrian");
+    Term bike = Term.get("bike");
     Term car = Term.get("car");
     Term at = Term.get("at");
     @Override
@@ -126,6 +127,13 @@ public class NarListener implements EventEmitter.EventObserver {
                                 pred.isPredicted = true;
                                 prediction = new Prediction(pred, t.sentence.truth, t.sentence.getOccurenceTime(), "pedestrian");
                             }
+                            else {
+                                String id = type.toString().substring(bike.toString().length(), type.toString().length());
+                                pred = new Bike(Integer.valueOf(id), posX, posY, 0, 0);
+                                pred.isPredicted = true;
+                                prediction = new Prediction(pred, t.sentence.truth, t.sentence.getOccurenceTime(), "bike");
+                            }
+                               
                         } catch(Exception ex) {} //wrong format, it's not such a type of prediction but something else
                     }
                 }
