@@ -23,6 +23,7 @@
  */
 package org.opennars.applications.crossing.RealCrossing;
 
+import com.jsoniter.JsonIterator;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -52,6 +53,7 @@ import org.opennars.operator.Operator;
 import org.opennars.storage.Memory;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
+
 
 public class RealCrossing {
 
@@ -180,34 +182,32 @@ public class RealCrossing {
         cleanupAnomalies();
         entities.clear(); //refresh detections
         //pop the newest, blocking if empty queue
-        /*String tracklets = r.blpop(0,QTrackletToNar).get(1);
+        /*String tkl_msg = r.blpop(0,QTrackletToNar).get(1);
         //trim everything except the latest
         long new_messages_amount = r.llen(QTrackletToNar);
         if(new_messages_amount > 0) {
             r.ltrim(QTrackletToNar,new_messages_amount-1,-1);
         }*/
-        String tracklets = r.brpop(0,QTrackletToNar).get(1);
+        String tkl_msg = r.brpop(0,QTrackletToNar).get(1);
+        long[][] tracklets = JsonIterator.deserialize(tkl_msg, long[][].class);
+        
         //process (TODO get rid of format)
-        String[] lines = tracklets.replace("[ ","[").replace(" ]","]").replace("  "," ").replace("  "," ").split("\n");
-        for(String s : lines) {
-            if(s.trim().isEmpty()) {
+        for(long[] props : tracklets) {
+            //ClassID TrackID X1 Y1 W1 H1 P1 X2 Y2 W2 H2 P2 X3 Y3 W3 H3 P3 X4 Y4 W4 H4 P4 X5 Y5 W5 H5 P5
+            String label = "" + props[1];
+            int id = 0; //treat them as same for now, but distinguished by type!
+            long probability = props[6];
+            if(probability == 0) {
                 continue;
             }
-            //ClassID TrackID : [X5c Y5c W5 H5] 
-            String[] props = s.split(" ");
-            String label = props[1];
-            int id = 0; //treat them as same for now, but distinguished by type!
-            if(unwrap(props[3]).equals("")) {
-                System.out.println(s);
-            }
-            Integer X = Integer.valueOf(unwrap(props[3]));
-            Integer Y = Integer.valueOf(unwrap(props[4]));
+            long X = props[2];
+            long Y = props[3];
             
-            Integer width = Integer.valueOf(unwrap(props[5]));
-            Integer height = Integer.valueOf(unwrap(props[6]));
+            long width = props[4];
+            long height = props[5];
 
-            Integer X2 = Integer.valueOf(unwrap(props[19])); //7 6
-            Integer Y2 = Integer.valueOf(unwrap(props[20]));
+            long X2 = props[22]; //7 6
+            long Y2 = props[23];
 
             //use an id according to movement direction
             if(X < X2) {
@@ -217,7 +217,7 @@ public class RealCrossing {
                 id += 1;
             }  
             double movement = Math.sqrt((X-X2)*(X-X2) + (Y - Y2)*(Y - Y2));
-            if(props[0].equals("0")) { //person or vehicle for now
+            if(props[0] == 0) { //person or vehicle for now
                 if(movement < (double)movementThresholdPedestrian) {
                     continue;
                 }
@@ -227,7 +227,7 @@ public class RealCrossing {
                 //toAdd.angle = angle;
                 entities.add(toAdd);
             } else {
-                if(!props[0].equals("1")) {
+                if(props[0] == 2) {
                     if(movement < (double)movementThresholdCar) {
                         continue;
                     }
@@ -327,8 +327,8 @@ public class RealCrossing {
         }
         //</editor-fold>
         //</editor-fold>
-        System.out.println("args: discretization movementThresholdCar movementThresholdPedestrian movementThresholdBike veryClosenessThreshold resX resY OntologyNalFile AnomalyRetrieveDuration redisHost redisPort QTrackletToNar QInfoFromNar");
-        System.out.println("example: java -cp \"*\" org.opennars.applications.crossing.RealCrossing 80 30 5 5 169 1280 720 /home/tc/Dateien/CROSSING/StreetScene/AnomalyOntology.nal 30 locahost 6379 Q_Tracklet_To_Nar Q_Info_From_Nar");
+        System.out.println("args: discretization movementThresholdCar movementThresholdPedestrian movementThresholdBike veryClosenessThreshold resX resY OntologyNalFile AnomalyRetrieveDuration redisHost redisPort redisPassword QTrackletToNar QInfoFromNar");
+        System.out.println("example: java -cp \"*\" org.opennars.applications.crossing.RealCrossing 80 30 5 5 169 1280 720 /home/tc/Dateien/CROSSING/StreetScene/AnomalyOntology.nal 30 locahost 6379 pwd Q_Tracklet_To_Nar Q_Info_From_Nar");
         Util.discretization = Integer.valueOf(args[0]);
         RealCrossing.movementThresholdCar = Integer.valueOf(args[1]); 
         RealCrossing.movementThresholdPedestrian = Integer.valueOf(args[2]); 
@@ -340,8 +340,9 @@ public class RealCrossing {
         anomalyRetrieveDuration = Integer.valueOf(args[8]);
         String redishost = args[9];
         int redisport = Integer.valueOf(args[10]);
-        QTrackletToNar = args[11];
-        QInfoFromNar = args[12];
+        String redispwd = args[11];
+        QTrackletToNar = args[12];
+        QInfoFromNar = args[13];
         r = new JedisPool(redishost, redisport).getResource();
         RealCrossing mp = new RealCrossing();
         mp.setup();

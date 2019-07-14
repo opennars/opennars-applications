@@ -25,6 +25,9 @@ package org.opennars.applications.crossing.RealCrossing;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.locks.Condition;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.opennars.applications.crossing.Camera;
@@ -97,30 +100,21 @@ public class TrafficMultiNar {
             System.out.println(ex);
             System.exit(1);
         }
-        
     }
     
-    public Boolean QAWork = false; 
+    final Lock lock = new ReentrantLock();
+    final Condition doWork  = lock.newCondition(); 
     public class QANarThread extends Thread {
-
         public void run(){
             while(true) {
-                boolean DoWork = false;
-                synchronized(QAWork) {
-                    if(QAWork) {
-                        QAWork = false;
-                        DoWork = true;
-                    }
+                lock.lock();
+                try {
+                    doWork.await();
+                } catch (InterruptedException ex) {
+                    Logger.getLogger(TrafficMultiNar.class.getName()).log(Level.SEVERE, null, ex);
                 }
-                if(DoWork) {
-                    informQaNar.inform(qanar, entities, informLocationNar.locationToLabel);
-                } else {
-                    try {
-                        Thread.sleep(0);
-                    } catch (InterruptedException ex) {
-                        Logger.getLogger(TrafficMultiNar.class.getName()).log(Level.SEVERE, null, ex);
-                    }
-                }
+                lock.unlock();
+                informQaNar.inform(qanar, entities, informLocationNar.locationToLabel);
             }
         }
     }
@@ -129,9 +123,9 @@ public class TrafficMultiNar {
     public void perceiveScene(int t, int perception_update) {
         if(t > 0 && t % (5*perception_update) == 0) {
             System.out.println("TICK spatial");
-            synchronized(QAWork) {
-                QAWork = true;
-            }
+            lock.lock();
+            doWork.signal();
+            lock.unlock();
         }
 
         if (t % perception_update == 0) {
