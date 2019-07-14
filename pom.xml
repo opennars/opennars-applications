@@ -33,6 +33,13 @@
             <artifactId>opennars</artifactId>
             <version>3.0.3-SNAPSHOT</version>
         </dependency>
+        <dependency>
+            <groupId>redis.clients</groupId>
+            <artifactId>jedis</artifactId>
+            <version>3.0.1</version>
+            <type>jar</type>
+            <scope>compile</scope>
+        </dependency>
     </dependencies>
     
     <build>

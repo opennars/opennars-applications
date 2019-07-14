@@ -68,13 +68,15 @@ public class InformQaNar {
     }
     
     ArrayList<ArrayList<String>> QAinformation = new ArrayList<>();
-    List<Entity> relatedLeft = new ArrayList<>(); //just to visualize the entities that have been spatially related
-    List<Entity> relatedRight = new ArrayList<>(); //just to visualize the entities that have been spatially related
+    final List<Entity> relatedLeft = new ArrayList<>(); //just to visualize the entities that have been spatially related
+    final List<Entity> relatedRight = new ArrayList<>(); //just to visualize the entities that have been spatially related
     Random rnd = new Random(1337);
     public void inform(Nar qanar, List<Entity> entities, Map<String,MapEvidence> locationToLabel) {
         QAinformation.clear();
-        relatedLeft.clear();
-        relatedRight.clear();
+        synchronized(relatedLeft) {
+            relatedLeft.clear();
+            relatedRight.clear();
+        }
         qanar.reset();
         //inform NARS about the spatial relationships between objects and which categories they belong to according to the Tracker
         List<Entity> sortedEntX = entities.stream().sorted(Comparator.comparing(Entity::getPosX)).collect(Collectors.toList());
@@ -99,8 +101,10 @@ public class InformQaNar {
                                     }
                                 }
                                 QAinformation.add(QAInfo);
-                                relatedLeft.add(ent);
-                                relatedRight.add(entity);
+                                synchronized(relatedLeft) {
+                                    relatedLeft.add(ent);
+                                    relatedRight.add(entity);
+                                }
                             }
                             if(ent.posY < entity.posY) {
                                 if(enable_leftOf_aboveOf) {
@@ -115,8 +119,10 @@ public class InformQaNar {
                                     }
                                 }
                                 QAinformation.add(QAInfo);
-                                relatedLeft.add(ent);
-                                relatedRight.add(entity);
+                                synchronized(relatedLeft) {
+                                    relatedLeft.add(ent);
+                                    relatedRight.add(entity);
+                                }
                             }
                         }
                     }

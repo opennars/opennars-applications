@@ -23,11 +23,6 @@
  */
 package org.opennars.applications.crossing;
 
-import org.opennars.applications.crossing.RealCrossing.RealCrossing;
-import static java.lang.Math.PI;
-import java.util.List;
-import org.opennars.entity.TruthValue;
-
 public class Entity {
 
     public static int entityID = 0;
@@ -47,7 +42,6 @@ public class Entity {
     public float maxSpeed = 2.0f;
     public static boolean pedestrianIgnoreTrafficLight = false;
     public static boolean carIgnoreTrafficLight = false;
-    public double normalness = 0.0;
     public boolean isPredicted = false;
     public double lastPosX = 0;
     public double lastPosY = 0;
@@ -61,23 +55,5 @@ public class Entity {
         this.posY = posY;
         this.velocity = velocity;
         this.angle = angle;
-    }
-
-    public void tick() {
-        // decay normalness
-
-        // 0.96 is to slow
-        //normalness *= 0.8; is to fast
-        normalness *= 0.91;
-    }
-
-    boolean hasMoved() {
-        double dist = velocity;
-        return dist >= 0.1;
-    }
-
-    public boolean isAnomaly() {
-        // exception: is not a anomaly if it hasn't moved
-        return normalness < 0.3 && hasMoved();
     }
 }

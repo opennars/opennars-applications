@@ -90,8 +90,6 @@ public class NarListener implements EventEmitter.EventObserver {
                     Prediction result = predictionFromTask(t);
                     if(result != null) {
                         predictions.add(result);
-
-                        broadcastPrediction(result);
                     }
                 }
             }
@@ -140,24 +138,5 @@ public class NarListener implements EventEmitter.EventObserver {
             }
         }
         return prediction;
-    }
-
-    public void broadcastPrediction(Prediction prediction) {
-        for (final Entity iEntity: entities) {
-            if (prediction.ent.id != iEntity.id) {
-                continue;
-            }
-
-            // distance of prediction
-            final double dist = Util.distance(iEntity.posX, iEntity.posY, prediction.ent.posX, prediction.ent.posY);
-            if (dist > 17) {
-                continue;
-            }
-
-            iEntity.normalness += 0.03;
-
-            // we found one - done
-            return;
-        }
     }
 }

@@ -25,6 +25,8 @@ package org.opennars.applications.crossing.RealCrossing;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import org.opennars.applications.crossing.Camera;
 import org.opennars.applications.crossing.Entity;
 import org.opennars.applications.crossing.NarListener;
@@ -112,6 +114,12 @@ public class TrafficMultiNar {
                 }
                 if(DoWork) {
                     informQaNar.inform(qanar, entities, informLocationNar.locationToLabel);
+                } else {
+                    try {
+                        Thread.sleep(0);
+                    } catch (InterruptedException ex) {
+                        Logger.getLogger(TrafficMultiNar.class.getName()).log(Level.SEVERE, null, ex);
+                    }
                 }
             }
         }
