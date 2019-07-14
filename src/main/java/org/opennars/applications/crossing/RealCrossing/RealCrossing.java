@@ -53,6 +53,7 @@ import org.opennars.operator.Operator;
 import org.opennars.storage.Memory;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
+import static redis.clients.jedis.Protocol.Keyword.OK;
 
 
 public class RealCrossing {
@@ -309,7 +310,7 @@ public class RealCrossing {
     public static String QTrackletToNar = null;
     public static String QInfoFromNar = null;
     
-    public static void main(String[] args) throws InterruptedException, FileNotFoundException, IOException {
+    public static void main(String[] args) throws FileNotFoundException, IOException {
         /* Set the Nimbus look and feel */
         //<editor-fold defaultstate="collapsed" desc=" Look and feel setting code (optional) ">
         /* If Nimbus (introduced in Java SE 6) is not available, stay with the default look and feel.
@@ -343,12 +344,21 @@ public class RealCrossing {
         String redispwd = args[11];
         QTrackletToNar = args[12];
         QInfoFromNar = args[13];
-        r = new JedisPool(redishost, redisport).getResource();
+        JedisPool pool = new JedisPool(redishost, redisport);
+        r = pool.getResource();
+        if(!redispwd.isEmpty()) {
+            try {
+                r.auth(redispwd);
+                r.connect();
+            } catch(Exception ex) {
+                System.out.println("Invalid password " + ex.toString());
+                return;
+            }
+        }
         RealCrossing mp = new RealCrossing();
         mp.setup();
         while(true) {
             mp.step();
-            Thread.sleep(0);
         }
     }
 }
