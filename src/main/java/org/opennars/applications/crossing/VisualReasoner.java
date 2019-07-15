@@ -137,8 +137,9 @@ public class VisualReasoner {
         List<String> msgs = new ArrayList<>();
         for (Prediction pred : trafficMultiNar.predictions) {
             Entity e = pred.ent;
-            float value = pred.truth.getExpectation() * Util.timeToValue(pred.time - trafficMultiNar.predictionNar.time());
-            String st = "predicted " + pred.type + " " + e.posX + " " + e.posY + " "+ e.angle + " " + value;
+            long timeDistance = pred.time - trafficMultiNar.predictionNar.time();
+            float value = pred.truth.getExpectation();
+            String st = "predicted " + pred.type + " " + e.posX + " " + e.posY + " "+ e.angle + " " + value + " " + timeDistance;
             msgs.add(st);
         }
         synchronized(trafficMultiNar.informQaNar.relatedLeft) {

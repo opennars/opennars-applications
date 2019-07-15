@@ -38,8 +38,4 @@ public class Util {
         int posY = Y / discretization;
         return posX + "_" + posY;
     }
-    
-    public static float timeToValue(long time) {
-        return 10f/(1f+((float)time));
-    }
 }
