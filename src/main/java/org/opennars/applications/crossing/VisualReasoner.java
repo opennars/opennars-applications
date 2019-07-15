@@ -53,6 +53,7 @@ import redis.clients.jedis.JedisPool;
 public class VisualReasoner {
 
     //Detected anomalies and spatial relations
+    public final static HashMap<String,Integer> crosswalkers = new HashMap<String,Integer>();
     public final static HashMap<String,Integer> jaywalkers = new HashMap<String,Integer>();
     public final static HashMap<String,Integer> indangers = new HashMap<String,Integer>();
     public final static HashMap<String,Integer> relations = new HashMap<String,Integer>();
@@ -117,6 +118,12 @@ public class VisualReasoner {
                     }
                 }
                 else
+                if(args[2].toString().equals("is_crosswalking")) {
+                synchronized(crosswalkers) {
+                    crosswalkers.put(args[1].toString(), i);
+                }
+                }
+                else
                 if(args[2].toString().equals("is_in_danger")) {
                     synchronized(indangers) {
                         indangers.put(args[1].toString(), i);
@@ -128,6 +135,7 @@ public class VisualReasoner {
     }
 
     public void step() throws FileNotFoundException, UnsupportedEncodingException, IOException {
+        cleanupAnomalies(crosswalkers);
         cleanupAnomalies(jaywalkers);
         cleanupAnomalies(indangers);
         cleanupAnomalies(relations);
@@ -162,6 +170,11 @@ public class VisualReasoner {
         synchronized(jaywalkers) {
             for(String ent : jaywalkers.keySet()) {
                 msgs.add("is_jaywalking "+ent);
+            }
+        }
+        synchronized(crosswalkers) {
+            for(String ent : crosswalkers.keySet()) {
+                msgs.add("is_crosswalking "+ent);
             }
         }
         MessagesToRedis(msgs);
