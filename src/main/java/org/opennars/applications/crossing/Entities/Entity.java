@@ -27,6 +27,7 @@ public class Entity {
 
     public String id = "";
     public double posX, posY;
+    public double speed;
     public int angle; //currently either 0, 1, 11 or 00 as described in the paper
 
     public Entity() {}

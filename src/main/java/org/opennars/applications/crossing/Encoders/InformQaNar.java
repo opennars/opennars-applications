@@ -36,6 +36,7 @@ import org.opennars.applications.crossing.Entities.Pedestrian;
 import static org.opennars.applications.crossing.Encoders.EntityToNarsese.informType;
 import static org.opennars.applications.crossing.Encoders.EntityToNarsese.name;
 import org.opennars.applications.crossing.Util;
+import static org.opennars.applications.crossing.VisualReasoner.fastThreshold;
 import org.opennars.main.Nar;
 
 public class InformQaNar {
@@ -92,6 +93,9 @@ public class InformQaNar {
                             if(veryClose(ent, entity)) {
                                 if(ent instanceof Car) {
                                     QAInfo.add("<(*," + name(entity) + "," + name(ent) + ") --> closeTo>. :|:");
+                                    if(((Car) ent).speed > fastThreshold) {
+                                        QAInfo.add("<"+name(ent) + " --> [fast]>. :|:");
+                                    }
                                 } else {
                                     QAInfo.add("<(*," + name(ent) + "," + name(entity) + ") --> closeTo>. :|:");
                                 }
@@ -110,6 +114,9 @@ public class InformQaNar {
                             if(veryClose(ent, entity)) {
                                 if(ent instanceof Car) {
                                     QAInfo.add("<(*," + name(entity) + "," + name(ent) + ") --> closeTo>. :|:");
+                                    if(((Car) ent).speed > fastThreshold) {
+                                        QAInfo.add("<"+name(ent) + " --> [fast]>. :|:");
+                                    }
                                 } else {
                                     QAInfo.add("<(*," + name(ent) + "," + name(entity) + ") --> closeTo>. :|:");
                                 }

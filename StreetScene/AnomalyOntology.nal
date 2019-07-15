@@ -1,8 +1,8 @@
 >>QANar:
 
 //Anomaly ontology:
-<(&/,(&|,<#1 --> pedestrian>,<#2 --> car>,<(*,#1,#2) --> closeTo>),+1,<(*,{SELF},#1,is_in_danger) --> ^say>,+1) =/> <{SELF} --> [informative]>>.
-<(&/,(&|,<#1 --> car>,<#2 --> bike>,<(*,#2,#1) --> closeTo>),+1,<(*,{SELF},#2,is_in_danger) --> ^say>,+1) =/> <{SELF} --> [informative]>>.
+<(&/,(&|,<#1 --> pedestrian>,<#2 --> car>,<#2 --> [fast]>,<(*,#1,#2) --> closeTo>),+1,<(*,{SELF},#1,is_in_danger) --> ^say>,+1) =/> <{SELF} --> [informative]>>.
+<(&/,(&|,<#1 --> car>,<#1 --> [fast]>,<#2 --> bike>,<(*,#2,#1) --> closeTo>),+1,<(*,{SELF},#2,is_in_danger) --> ^say>,+1) =/> <{SELF} --> [informative]>>.
 <(&/,(&|,<#1 --> pedestrian>,<(*,#1,street) --> at>),+1,<(*,{SELF},#1,is_jaywalking) --> ^say>,+1) =/> <{SELF} --> [informative]>>.
 
 //Motivations:
@@ -17,6 +17,7 @@
 <(&|,<#1 --> car>,<(*,#1,$location) --> at>) =|> <$location --> [street]>>.
 <(&|,<#1 --> bike>,<(*,#1,$location) --> at>) =|> <$location --> [street]>>.
 //<(&|,<#1 --> bike>,<(*,#1,$location) --> at>) =|> <$location --> [bikelane]>>.
+<<$location --> [sidewalk,street]> =|> <$location --> [crosswalk]>>.
 
 >>General information:
 
@@ -28,9 +29,10 @@
 //Atoms:
 //bikeID, carID, pedestrianID
 //Annotation classes:
-//street, sidewalk
+//street, sidewalk, crosswalk
 //bikelane (currently unused)
 //x_y to indicate position
+//fast to indicate fast speed
 
 //Operators:
 //^say

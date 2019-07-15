@@ -24,27 +24,56 @@
 package org.opennars.applications.crossing.Encoders;
 
 import org.opennars.entity.TruthValue;
+import org.opennars.inference.TruthFunctions;
 import org.opennars.main.Nar;
 
 public class MapEvidence {
 
-    public TruthValue car;
+    public TruthValue street;
     public TruthValue pedestrian;
-    public TruthValue bike;
+    public TruthValue bikelane;
+    public TruthValue crosswalk;
     
     public MapEvidence(Nar locationNar) {
-        car = new TruthValue(1.0f, 0.001f,locationNar.narParameters);
+        street = new TruthValue(1.0f, 0.001f,locationNar.narParameters);
         pedestrian = new TruthValue(1.0f, 0.001f,locationNar.narParameters);
-        bike = new TruthValue(1.0f, 0.001f,locationNar.narParameters);
+        bikelane = new TruthValue(1.0f, 0.001f,locationNar.narParameters);
+        crosswalk = new TruthValue(1.0f, 0.001f,locationNar.narParameters);
     }
 
     public String choice() {
-        if(bike.getExpectation() > pedestrian.getExpectation() && bike.getExpectation() > car.getExpectation()) {
-            return "street"; //TODO bikelane
+        if(bikelane.getExpectation() > pedestrian.getExpectation() && bikelane.getExpectation() > street.getExpectation() && bikelane.getExpectation() > crosswalk.getExpectation()) {
+            return "bikelane"; //TODO bikelane
         }
-        if(pedestrian.getExpectation() > bike.getExpectation() && pedestrian.getExpectation() > car.getExpectation()) {
+        if(pedestrian.getExpectation() > bikelane.getExpectation() && pedestrian.getExpectation() > street.getExpectation() && pedestrian.getExpectation() > crosswalk.getExpectation()) {
             return "sidewalk";
         }
+        if(crosswalk.getExpectation() > bikelane.getExpectation() && crosswalk.getExpectation() > street.getExpectation() && crosswalk.getExpectation() > pedestrian.getExpectation()) {
+            return "crosswalk";
+        }
         return "street";
+    }
+    
+    public void collect(Nar locationNar, String type, TruthValue beliefTruth) {
+        if(type.equals("street")) {
+            TruthValue truth = street;
+            TruthValue revised = TruthFunctions.revision(beliefTruth, truth, locationNar.narParameters);
+            street = revised;
+        }
+        if(type.equals("sidewalk")) {
+            TruthValue truth = pedestrian;
+            TruthValue revised = TruthFunctions.revision(beliefTruth, truth, locationNar.narParameters);
+            pedestrian = revised;
+        }
+        if(type.equals("bikelane")) {
+            TruthValue truth = bikelane;
+            TruthValue revised = TruthFunctions.revision(beliefTruth, truth, locationNar.narParameters);
+            bikelane = revised;
+        }
+        if(type.equals("crosswalk")) {
+            TruthValue truth = crosswalk;
+            TruthValue revised = TruthFunctions.revision(beliefTruth, truth, locationNar.narParameters);
+            crosswalk = revised;
+        }
     }
 }

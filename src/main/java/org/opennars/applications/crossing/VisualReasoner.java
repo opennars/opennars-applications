@@ -65,6 +65,7 @@ public class VisualReasoner {
     int perception_update = 1;
     int relation_update = 5;
     //Movement thresholds for the entity classes
+    public static double fastThreshold = 50;
     public static double movementThresholdCar = 30;
     public static double movementThresholdBike = 5;
     public static double movementThresholdPedestrian = 5;
@@ -207,28 +208,33 @@ public class VisualReasoner {
             if(Y < Y2) {
                 angle += 1;
             }
-            double movement = distanceSum(XAll, YAll);
+            double speed = distanceSum(XAll, YAll);
+            Entity added = null;
             if(props[0] == 0) { //person or vehicle for now
-                if(movement < (double)movementThresholdPedestrian) {
+                if(speed < (double)movementThresholdPedestrian) {
                     continue;
                 }
                 Pedestrian toAdd = new Pedestrian(angle, X2, Y2, label);
                 entities.add(toAdd);
+                added = toAdd;
             } else {
                 if(props[0] == 2) {
-                    if(movement < (double)movementThresholdCar) {
+                    if(speed < (double)movementThresholdCar) {
                         continue;
                     }
                     Car toAdd = new Car(angle, X2, Y2, label);
                     entities.add(toAdd);
+                    added = toAdd;
                 } else {
-                    if(movement < (double)movementThresholdBike) {
+                    if(speed < (double)movementThresholdBike) {
                         continue;
                     }
                     Bike toAdd = new Bike(angle, X2, Y2, label);
                     entities.add(toAdd);
+                    added = toAdd;
                 }
             }
+            added.speed = speed;
         }
     }
     
@@ -260,20 +266,21 @@ public class VisualReasoner {
         }
         //</editor-fold>
         //</editor-fold>
-        System.out.println("args: discretization movementThresholdCar movementThresholdPedestrian movementThresholdBike veryClosenessThreshold OntologyNalFile AnomalyRetrieveDuration redisHost redisPort redisPassword QTrackletToNar QInfoFromNar");
+        System.out.println("args: discretization movementThresholdCar movementThresholdPedestrian movementThresholdBike fastThreshold veryClosenessThreshold OntologyNalFile AnomalyRetrieveDuration redisHost redisPort redisPassword QTrackletToNar QInfoFromNar");
         System.out.println("example: java -cp \"*\" org.opennars.applications.crossing.RealCrossing 80 30 5 5 169 /home/tc/Dateien/CROSSING/StreetScene/AnomalyOntology.nal 30 locahost 6379 pwd Q_Tracklet_To_Nar Q_Info_From_Nar");
         Util.discretization = Integer.valueOf(args[0]);
         VisualReasoner.movementThresholdCar = Integer.valueOf(args[1]); 
         VisualReasoner.movementThresholdPedestrian = Integer.valueOf(args[2]); 
         VisualReasoner.movementThresholdBike = Integer.valueOf(args[3]); 
-        InformQaNar.veryClosenessThreshold = Integer.valueOf(args[4]);
-        customOntologyPath = args[5];
-        anomalyRetrieveDuration = Integer.valueOf(args[6]);
-        String redishost = args[7];
-        int redisport = Integer.valueOf(args[8]);
-        String redispwd = args[9];
-        QTrackletToNar = args[10];
-        QInfoFromNar = args[11];
+        VisualReasoner.fastThreshold = Integer.valueOf(args[4]);
+        InformQaNar.veryClosenessThreshold = Integer.valueOf(args[5]);
+        customOntologyPath = args[6];
+        anomalyRetrieveDuration = Integer.valueOf(args[7]);
+        String redishost = args[8];
+        int redisport = Integer.valueOf(args[9]);
+        String redispwd = args[10];
+        QTrackletToNar = args[11];
+        QInfoFromNar = args[12];
         JedisPool pool = new JedisPool(redishost, redisport);
         r = pool.getResource();
         if(!redispwd.isEmpty()) {

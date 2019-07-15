@@ -68,8 +68,8 @@ public class InformLocationNar {
             locationNar.reset();
             inform(locationNar, entities); //input locations
             try {
-                for(String s : new String[] {"street","sidewalk","bikelane"}) {
-                    locationNar.askNow("<?what --> ["+s+"]>", new AnswerHandler() {
+                for(String type : new String[] {"street","sidewalk","bikelane","crosswalk"}) {
+                    locationNar.askNow("<?what --> ["+type+"]>", new AnswerHandler() {
                         @Override
                         public void onSolution(Sentence belief) {
                             //eternal or outdated
@@ -82,21 +82,7 @@ public class InformLocationNar {
                                     locationToLabel.put(subj, new MapEvidence(locationNar));
                                 }
                                 MapEvidence mapval = locationToLabel.get(subj);
-                                if(s.equals("street")) {
-                                   TruthValue truth = mapval.car;
-                                   TruthValue revised = TruthFunctions.revision(belief.truth, truth, locationNar.narParameters);
-                                   mapval.car = revised;
-                                }
-                                if(s.equals("sidewalk")) {
-                                    TruthValue truth = mapval.pedestrian;
-                                    TruthValue revised = TruthFunctions.revision(belief.truth, truth, locationNar.narParameters);
-                                    mapval.pedestrian = revised;
-                                }
-                                if(s.equals("bikelane")) {
-                                    TruthValue truth = mapval.bike;
-                                    TruthValue revised = TruthFunctions.revision(belief.truth, truth, locationNar.narParameters);
-                                    mapval.bike = revised;
-                                }
+                                mapval.collect(locationNar, type, belief.truth);
                             }
                         }
                     });
