@@ -21,24 +21,20 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package org.opennars.applications.crossing.RealCrossing;
+package org.opennars.applications.crossing;
 
-import static org.opennars.applications.crossing.RealCrossing.TrafficMultiNar.locationNar;
 import org.opennars.entity.TruthValue;
 
-public class MapEvidence {
-
-    public TruthValue car = new TruthValue(1.0f, 0.001f,locationNar.narParameters);
-    public TruthValue pedestrian = new TruthValue(1.0f, 0.001f,locationNar.narParameters);
-    public TruthValue bike = new TruthValue(1.0f, 0.001f,locationNar.narParameters);
-
-    public String choice() {
-        if(bike.getExpectation() > pedestrian.getExpectation() && bike.getExpectation() > car.getExpectation()) {
-            return "street"; //TODO bikelane
-        }
-        if(pedestrian.getExpectation() > bike.getExpectation() && pedestrian.getExpectation() > car.getExpectation()) {
-            return "sidewalk";
-        }
-        return "street";
+public class Prediction
+{
+    public Entity ent;
+    public long time;
+    public TruthValue truth;
+    public String type;
+    public Prediction(Entity ent, TruthValue truth, long time, String type) {
+        this.ent = ent;
+        this.time = time;
+        this.truth = truth;
+        this.type = type;
     }
 }

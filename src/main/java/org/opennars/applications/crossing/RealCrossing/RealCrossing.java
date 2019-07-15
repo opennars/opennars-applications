@@ -28,22 +28,18 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
-import java.net.URISyntaxException;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
-import org.opennars.applications.crossing.NarListener.Prediction;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.opennars.applications.crossing.Bike;
-import org.opennars.applications.crossing.Camera;
 import org.opennars.applications.crossing.Car;
 import org.opennars.applications.crossing.Entity;
 import org.opennars.applications.crossing.Pedestrian;
-import org.opennars.applications.crossing.Street;
-import org.opennars.applications.crossing.TrafficLight;
+import org.opennars.applications.crossing.Prediction;
 import org.opennars.applications.crossing.Util;
 import org.opennars.entity.Task;
 import org.opennars.interfaces.Timable;
@@ -53,44 +49,57 @@ import org.opennars.operator.Operator;
 import org.opennars.storage.Memory;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
-import static redis.clients.jedis.Protocol.Keyword.OK;
-
 
 public class RealCrossing {
 
-    int entityID = 1;
-    final int streetWidth = 40;
+    //Detected anomalies and spatial relations
+    public final static HashMap<String,Integer> jaywalkers = new HashMap<String,Integer>();
+    public final static HashMap<String,Integer> indangers = new HashMap<String,Integer>();
+    public final static HashMap<String,Integer> relations = new HashMap<String,Integer>();
+    //The MultiNar setup
+    public static TrafficMultiNar trafficMultiNar = null;
+    //The entities detected
+    List<Entity> entities = new ArrayList<>();
+    //Perception&relation update with related counter
+    public static int i = 0;
+    int perception_update = 1;
+    int relation_update = 5;
+    //Movement thresholds for the entity classes
+    public static double movementThresholdCar = 30;
+    public static double movementThresholdBike = 5;
+    public static double movementThresholdPedestrian = 5;
+    //The path to the ontology
+    public static String customOntologyPath = "";
+    //How long anomalies persist
+    public static int anomalyRetrieveDuration = 30;
+    //Instance to use Redis
+    static Jedis r = null;
+    //The related queue names for communication
+    public static String QTrackletToNar = null;
+    public static String QInfoFromNar = null;
     
-    public static HashMap<String,Integer> jaywalkers = new HashMap<String,Integer>();
-    public static HashMap<String,Integer> indangers = new HashMap<String,Integer>();
-    public static HashMap<String,Integer> relations = new HashMap<String,Integer>();
-    public void cleanupAnomalies() {
-        List<String> cleanupJaywalkers = new ArrayList<String>();
-        for(String key : jaywalkers.keySet()) {
-            if(i - jaywalkers.get(key) > anomalyRetrieveDuration) {
-                cleanupJaywalkers.add(key);
+    public RealCrossing() {
+        trafficMultiNar = new TrafficMultiNar(new Say(), entities);    
+        try {
+            String content = new String(Files.readAllBytes(new File(customOntologyPath).toPath()),Charset.forName("UTF-8"));
+            String qapart = content.split(">>QANar:")[1].split(">>LocationNar:")[0].trim();
+            String locpart = content.split(">>LocationNar:")[1].split(">>General information:")[0].trim();
+            trafficMultiNar.informLocationNar.ontology = locpart;
+            trafficMultiNar.informQaNar.ontology = qapart;
+        } catch (IOException ex) {
+            Logger.getLogger(RealCrossing.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+
+    private void cleanupAnomalies(HashMap<String,Integer> hashmap) {
+        List<String> cleanups = new ArrayList<String>();
+        for(String key : hashmap.keySet()) {
+            if(i - hashmap.get(key) > anomalyRetrieveDuration) {
+                cleanups.add(key);
             }
         }
-        for(String key : cleanupJaywalkers) {
-            jaywalkers.remove(key);
-        }
-        List<String> cleanupIndangers = new ArrayList<String>();
-        for(String key : indangers.keySet()) {
-            if(i - indangers.get(key) > anomalyRetrieveDuration) {
-                cleanupIndangers.add(key);
-            }
-        }
-        for(String key : cleanupIndangers) {
-            indangers.remove(key);
-        }
-        List<String> cleanupRelations = new ArrayList<String>();
-        for(String key : relations.keySet()) {
-            if(i - relations.get(key) > anomalyRetrieveDuration) {
-                cleanupRelations.add(key);
-            }
-        }
-        for(String key : cleanupRelations) {
-            relations.remove(key);
+        for(String key : cleanups) {
+            hashmap.remove(key);
         }
     }
     
@@ -116,160 +125,28 @@ public class RealCrossing {
             return null;
         }
     }
-    
-        
-    public void loadOntology() throws URISyntaxException, IOException {
-        //String file = new String(Files.readAllBytes(Paths.get(new URI("./StreetScene/AnomalyOntology.nal"))));
-        String ontPath = customOntologyPath == null ? "./StreetScene/AnomalyOntology.nal" : customOntologyPath;
-        String content = new String(Files.readAllBytes(new File(ontPath).toPath()),Charset.forName("UTF-8"));
-        String qapart = content.split(">>QANar:")[1].split(">>LocationNar:")[0].trim();
-        String locpart = content.split(">>LocationNar:")[1].split(">>General information:")[0].trim();
-        trafficMultiNar.informLocationNar.ontology = locpart;
-        trafficMultiNar.informQaNar.ontology = qapart;
-    }
-    
-    public static TrafficMultiNar trafficMultiNar = null;
-    public static boolean running = false;
 
-    public void setup() {
-        running = true;
-                   
-        Camera cam = new Camera(500+streetWidth/2, 500+streetWidth/2);
-        cam.radius = 600;
-        cameras.add(cam);
-
-        trafficMultiNar = new TrafficMultiNar(new Say(), entities, cam);
-                
-        try {
-            //Load in ontology
-            loadOntology();
-        } catch (URISyntaxException ex) {
-            Logger.getLogger(RealCrossing.class.getName()).log(Level.SEVERE, null, ex);
-        } catch (IOException ex) {
-            Logger.getLogger(RealCrossing.class.getName()).log(Level.SEVERE, null, ex);
-        }
-    }
-
-    List<Street> streets = new ArrayList<Street>();
-    List<TrafficLight> trafficLights = new ArrayList<TrafficLight>();
-    List<Entity> entities = new ArrayList<Entity>();
-    List<Camera> cameras = new ArrayList<Camera>();
-    
-    int perception_update = 1;
-    public static int i = 0;
-    
-    public String unwrap(String s) {
-        return s.replace("[", "").replace("]", "");
-    }
-    
-    public static double movementThresholdCar = 30; //23
-    public static double movementThresholdBike = 5; //5
-    public static double movementThresholdPedestrian = 5; //5
-    
-    class Point {
-        int X;
-        int Y;
-        public Point(int X, int Y) {
-            this.X = X;
-            this.Y = Y;
-        }
-        @Override
-        public String toString() {
-            return "(location " + X + " " + Y + ")";
-        }
-    }
-    
     public void step() throws FileNotFoundException, UnsupportedEncodingException, IOException {
-        cleanupAnomalies();
+        cleanupAnomalies(jaywalkers);
+        cleanupAnomalies(indangers);
+        cleanupAnomalies(relations);
         entities.clear(); //refresh detections
-        //pop the newest, blocking if empty queue
-        /*String tkl_msg = r.blpop(0,QTrackletToNar).get(1);
-        //trim everything except the latest
-        long new_messages_amount = r.llen(QTrackletToNar);
-        if(new_messages_amount > 0) {
-            r.ltrim(QTrackletToNar,new_messages_amount-1,-1);
-        }*/
-        String tkl_msg = r.brpop(0,QTrackletToNar).get(1);
-        long[][] tracklets = JsonIterator.deserialize(tkl_msg, long[][].class);
-        
-        //process (TODO get rid of format)
-        for(long[] props : tracklets) {
-            //ClassID TrackID X1 Y1 W1 H1 P1 X2 Y2 W2 H2 P2 X3 Y3 W3 H3 P3 X4 Y4 W4 H4 P4 X5 Y5 W5 H5 P5
-            String label = "" + props[1];
-            int id = 0; //treat them as same for now, but distinguished by type!
-            long probability = props[6];
-            if(probability == 0) {
-                continue;
-            }
-            long X = props[2];
-            long Y = props[3];
-            
-            long width = props[4];
-            long height = props[5];
-
-            long X2 = props[22]; //7 6
-            long Y2 = props[23];
-
-            //use an id according to movement direction
-            if(X < X2) {
-                id += 10;
-            }
-            if(Y < Y2) {
-                id += 1;
-            }  
-            double movement = Math.sqrt((X-X2)*(X-X2) + (Y - Y2)*(Y - Y2));
-            if(props[0] == 0) { //person or vehicle for now
-                if(movement < (double)movementThresholdPedestrian) {
-                    continue;
-                }
-                Pedestrian toAdd = new Pedestrian(id, X2, Y2, 0, 0, label);
-                toAdd.width = width;
-                toAdd.height = height;
-                //toAdd.angle = angle;
-                entities.add(toAdd);
-            } else {
-                if(props[0] == 2) {
-                    if(movement < (double)movementThresholdCar) {
-                        continue;
-                    }
-                    Car toAdd = new Car(id, X2, Y2, 0, 0, label);
-                    toAdd.width = width;
-                    toAdd.height = height;
-                    //toAdd.angle = angle;
-                    entities.add(toAdd);
-                } else {
-                    if(movement < (double)movementThresholdBike) {
-                        continue;
-                    }
-                    Bike toAdd = new Bike(id, X2, Y2, 0, 0, label);
-                    toAdd.width = width;
-                    toAdd.height = height;
-                    //toAdd.angle = angle;
-                    entities.add(toAdd);
-                }
-            }
-        }
-        
-        trafficMultiNar.perceiveScene(i, perception_update);
+        AddEntitiesFromTracklets();
+        trafficMultiNar.perceiveScene(i, perception_update, relation_update);
         trafficMultiNar.reason();
+        List<String> msgs = new ArrayList<>();
         for (Prediction pred : trafficMultiNar.predictions) {
             Entity e = pred.ent;
-            float value = Util.truthToValue(pred.truth);
-            long predictionTime = pred.time;
-            //return predictions too?
-            String st = "predicted " + pred.type + " " + e.posX + " " + e.posY + " "+ e.id + " " + value + " " + predictionTime;
-            //System.out.println(st);
+            float value = Util.truthToValue(pred.truth) * Util.timeToValue(pred.time - trafficMultiNar.predictionNar.time());
+            String st = "predicted " + pred.type + " " + e.posX + " " + e.posY + " "+ e.angle + " " + value;
             msgs.add(st);
         }
         synchronized(trafficMultiNar.informQaNar.relatedLeft) {
             for(int k=0; k<trafficMultiNar.informQaNar.relatedLeft.size(); k++) {
                 Entity left = trafficMultiNar.informQaNar.relatedLeft.get(k);
                 Entity right = trafficMultiNar.informQaNar.relatedRight.get(k);
-                //return spatially related entities?
                 String st = "related "+EntityToNarsese.name(left) + " " + EntityToNarsese.name(right);
                 relations.put(st, i);
-                //System.out.println(st);
-                //msgs.add(st);
             }
         }
         for(String ent : relations.keySet()) {
@@ -285,12 +162,65 @@ public class RealCrossing {
                 msgs.add("is_jaywalking "+ent);
             }
         }
-        //send info packet to redis
-        MessagesToScript();
+        MessagesToRedis(msgs);
+        msgs.clear();
         i++;
     }
+
+    private void AddEntitiesFromTracklets() {
+        /*String tkl_msg = r.blpop(0,QTrackletToNar).get(1);
+        //trim everything except the latest
+        long new_messages_amount = r.llen(QTrackletToNar);
+        if(new_messages_amount > 0) {
+            r.ltrim(QTrackletToNar,new_messages_amount-1,-1);
+        }*/
+        //pop the newest, blocking if empty queue
+        String tkl_msg = r.brpop(0,QTrackletToNar).get(1);
+        long[][] tracklets = JsonIterator.deserialize(tkl_msg, long[][].class);
+        for(long[] props : tracklets) {
+            //ClassID TrackID X1 Y1 W1 H1 P1 X2 Y2 W2 H2 P2 X3 Y3 W3 H3 P3 X4 Y4 W4 H4 P4 X5 Y5 W5 H5 P5
+            String label = "" + props[1];
+            long probability = props[6];
+            if(probability == 0) {
+                continue;
+            }
+            long X = props[2];
+            long Y = props[3];
+            long X2 = props[22]; //7 6
+            long Y2 = props[23];
+            int angle = 0; //id according to movement direction
+            if(X < X2) {
+                angle += 10;
+            }
+            if(Y < Y2) {
+                angle += 1;
+            }  
+            double movement = Math.sqrt((X-X2)*(X-X2) + (Y - Y2)*(Y - Y2));
+            if(props[0] == 0) { //person or vehicle for now
+                if(movement < (double)movementThresholdPedestrian) {
+                    continue;
+                }
+                Pedestrian toAdd = new Pedestrian(angle, X2, Y2, label);
+                entities.add(toAdd);
+            } else {
+                if(props[0] == 2) {
+                    if(movement < (double)movementThresholdCar) {
+                        continue;
+                    }
+                    Car toAdd = new Car(angle, X2, Y2, label);
+                    entities.add(toAdd);
+                } else {
+                    if(movement < (double)movementThresholdBike) {
+                        continue;
+                    }
+                    Bike toAdd = new Bike(angle, X2, Y2, label);
+                    entities.add(toAdd);
+                }
+            }
+        }
+    }
     
-    public void MessagesToScript() {
+    public void MessagesToRedis(List<String> msgs) {
         String s = "";
         for(String msg : msgs) {
             s += msg + "\n";
@@ -299,16 +229,6 @@ public class RealCrossing {
         r.rpush(QInfoFromNar, s);
         msgs.clear();
     }
-
-    List<String> msgs = new ArrayList<String>();
-    
-    public static int resX = 1280;
-    public static int resY = 720;
-    public static String customOntologyPath = null;
-    public static int anomalyRetrieveDuration = 30;
-    static Jedis r = null;
-    public static String QTrackletToNar = null;
-    public static String QInfoFromNar = null;
     
     public static void main(String[] args) throws FileNotFoundException, IOException {
         /* Set the Nimbus look and feel */
@@ -328,15 +248,13 @@ public class RealCrossing {
         }
         //</editor-fold>
         //</editor-fold>
-        System.out.println("args: discretization movementThresholdCar movementThresholdPedestrian movementThresholdBike veryClosenessThreshold resX resY OntologyNalFile AnomalyRetrieveDuration redisHost redisPort redisPassword QTrackletToNar QInfoFromNar");
-        System.out.println("example: java -cp \"*\" org.opennars.applications.crossing.RealCrossing 80 30 5 5 169 1280 720 /home/tc/Dateien/CROSSING/StreetScene/AnomalyOntology.nal 30 locahost 6379 pwd Q_Tracklet_To_Nar Q_Info_From_Nar");
+        System.out.println("args: discretization movementThresholdCar movementThresholdPedestrian movementThresholdBike veryClosenessThreshold OntologyNalFile AnomalyRetrieveDuration redisHost redisPort redisPassword QTrackletToNar QInfoFromNar");
+        System.out.println("example: java -cp \"*\" org.opennars.applications.crossing.RealCrossing 80 30 5 5 169 /home/tc/Dateien/CROSSING/StreetScene/AnomalyOntology.nal 30 locahost 6379 pwd Q_Tracklet_To_Nar Q_Info_From_Nar");
         Util.discretization = Integer.valueOf(args[0]);
         RealCrossing.movementThresholdCar = Integer.valueOf(args[1]); 
         RealCrossing.movementThresholdPedestrian = Integer.valueOf(args[2]); 
         RealCrossing.movementThresholdBike = Integer.valueOf(args[3]); 
         InformQaNar.veryClosenessThreshold = Integer.valueOf(args[4]);
-        resX = Integer.valueOf(args[5]);
-        resY = Integer.valueOf(args[6]);
         customOntologyPath = args[7];
         anomalyRetrieveDuration = Integer.valueOf(args[8]);
         String redishost = args[9];
@@ -356,7 +274,6 @@ public class RealCrossing {
             }
         }
         RealCrossing mp = new RealCrossing();
-        mp.setup();
         while(true) {
             mp.step();
         }

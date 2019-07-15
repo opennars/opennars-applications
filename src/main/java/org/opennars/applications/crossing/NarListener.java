@@ -38,37 +38,23 @@ import org.opennars.language.Term;
 import org.opennars.main.Nar;
 
 public class NarListener implements EventEmitter.EventObserver {
-    public class Prediction
-    {
-        public Entity ent;
-        public long time;
-        public TruthValue truth;
-        public String type;
-        public Prediction(Entity ent, TruthValue truth, long time, String type) {
-            this.ent = ent;
-            this.time = time;
-            this.truth = truth;
-            this.type = type;
-        }
-    }
 
-    List<Entity> entities;
-
-    List<NarListener.Prediction> predictions;
-    List<NarListener.Prediction> disappointments;
-    Nar nar;
-    Camera camera;
-    public NarListener(Camera camera, Nar nar, List<NarListener.Prediction> predictions, List<NarListener.Prediction> disappointments, List<Entity> entities) {
-        this.predictions = predictions;
-        this.disappointments = disappointments;
-        this.nar = nar;
-        this.camera = camera;
-        this.entities = entities;
-    }
     Term pedestrian = Term.get("pedestrian");
     Term bike = Term.get("bike");
     Term car = Term.get("car");
     Term at = Term.get("at");
+    List<Entity> entities;
+    List<Prediction> predictions;
+    List<Prediction> disappointments;
+    Nar nar;
+    
+    public NarListener(Nar nar, List<Prediction> predictions, List<Prediction> disappointments, List<Entity> entities) {
+        this.predictions = predictions;
+        this.disappointments = disappointments;
+        this.nar = nar;
+        this.entities = entities;
+    }
+    
     @Override
     public void event(Class event, Object[] args) {
         if(event == OutputHandler.DISAPPOINT.class) {
@@ -108,30 +94,24 @@ public class NarListener implements EventEmitter.EventObserver {
                     String position = prod.term[1].toString();
                     if(position.contains("_")) {
                         try {
-                            int posX = camera.minX + Util.discretization * Integer.valueOf(position.split("_")[0]);
-                            int posY = camera.minY + Util.discretization * Integer.valueOf(position.split("_")[1]);
-                            //int id = 0; //Integer.valueOf(idStr.toString()); often a dep var
-                            Entity pred;
+                            int posX = Util.discretization * Integer.valueOf(position.split("_")[0]);
+                            int posY = Util.discretization * Integer.valueOf(position.split("_")[1]);
                             if(type.toString().startsWith(car.toString())) {
                                 String id = type.toString().substring(car.toString().length(), type.toString().length());
-                                pred = new Car(Integer.valueOf(id), posX, posY, 0, 0);
-                                pred.isPredicted = true;
+                                Entity pred = new Car(Integer.valueOf(id), posX, posY, "");
                                 prediction = new Prediction(pred, t.sentence.truth, t.sentence.getOccurenceTime(), "car");
                             }
                             else  
                             if(type.toString().startsWith(pedestrian.toString())) {
                                 String id = type.toString().substring(pedestrian.toString().length(), type.toString().length());
-                                pred = new Pedestrian(Integer.valueOf(id), posX, posY, 0, 0);
-                                pred.isPredicted = true;
+                                Entity pred = new Pedestrian(Integer.valueOf(id), posX, posY, "");
                                 prediction = new Prediction(pred, t.sentence.truth, t.sentence.getOccurenceTime(), "pedestrian");
                             }
                             else {
                                 String id = type.toString().substring(bike.toString().length(), type.toString().length());
-                                pred = new Bike(Integer.valueOf(id), posX, posY, 0, 0);
-                                pred.isPredicted = true;
+                                Entity pred = new Bike(Integer.valueOf(id), posX, posY, "");
                                 prediction = new Prediction(pred, t.sentence.truth, t.sentence.getOccurenceTime(), "bike");
-                            }
-                               
+                            } 
                         } catch(Exception ex) {} //wrong format, it's not such a type of prediction but something else
                     }
                 }

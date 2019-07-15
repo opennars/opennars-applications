@@ -23,17 +23,11 @@
  */
 package org.opennars.applications.crossing;
 
-import java.util.Random;
 import org.opennars.entity.TruthValue;
 
-/**
- *
- * @author patha
- */
 public class Util {
 
-    public static Random rnd = new Random();
-    public static int discretization =10;
+    public static int discretization = 10;
     
     public static double distance(double posX, double posY, double posX2, double posY2) {
         double dx = posX - posX2;

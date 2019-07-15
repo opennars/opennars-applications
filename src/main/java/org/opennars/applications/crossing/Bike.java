@@ -24,11 +24,8 @@
 package org.opennars.applications.crossing;
 
 public class Bike extends Car {
-    public Bike(int id, double posX, double posY, double velocity, double angle, String label) {
-        super(id, posX, posY, velocity, angle, label);
+
+    public Bike(int angle, double posX, double posY, String id) {
+        super(angle, posX, posY, id);
     }
-    public Bike(int id, double posX, double posY, double velocity, double angle) {
-        super(id, posX, posY, velocity, angle);
-    }
-    
 }

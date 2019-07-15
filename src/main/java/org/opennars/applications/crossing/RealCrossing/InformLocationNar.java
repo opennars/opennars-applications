@@ -40,13 +40,12 @@ import org.opennars.inference.TruthFunctions;
 import org.opennars.io.Parser;
 import org.opennars.io.events.AnswerHandler;
 import org.opennars.language.Inheritance;
-import org.opennars.main.Nar;
 
-/**
- *
- * @author tc
- */
 public class InformLocationNar {
+
+    //user-given background knowledge
+    String ontology = "";
+    
     void inform(List<Entity> entities) {
         List<Entity> sortedEntX = entities.stream().sorted(Comparator.comparing(Entity::getPosX)).collect(Collectors.toList());
         for(Entity ent : sortedEntX) {
@@ -103,19 +102,10 @@ public class InformLocationNar {
             } catch (Parser.InvalidInputException ex) {
                 Logger.getLogger(RealCrossing.class.getName()).log(Level.SEVERE, null, ex);
             }
-            inputOntology();
+            locationNar.addInput(ontology);
         }
         if(t > 0 && t % (1*perception_update) == 0) {
             locationNar.cycles(300);
         }
-    }
-    
-    String ontology = "";
-    public void inputOntology() {
-        locationNar.addInput(ontology);
-        //locationNar.addInput("<(&|,<#1 --> pedestrian>,<(*,#1,$location) --> at>) =|> <$location --> [sidewalk]>>.");
-        //locationNar.addInput("<(&|,<#1 --> car>,<(*,#1,$location) --> at>) =|> <$location --> [street]>>.");
-        //locationNar.addInput("<(&|,<#1 --> bike>,<(*,#1,$location) --> at>) =|> <$location --> [street]>>.");
-        ////locationNar.addInput("<(&|,<#1 --> bike>,<(*,#1,$location) --> at>) =|> <$location --> [bikelane]>>.");
     }
 }

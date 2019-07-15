@@ -7,7 +7,7 @@
     <conf name="CONCEPT_BAG_SIZE" value="80000"/>
     <conf name="CONCEPT_BAG_LEVELS" value="1000"/>
     
-    <conf name="DURATION" value="5"/>
+    <conf name="DURATION" value="50"/>
     <conf name="HORIZON" value="1"/>
     
     <conf name="TRUTH_EPSILON" value="0.01"/>

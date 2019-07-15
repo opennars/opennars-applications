@@ -38,28 +38,31 @@ import static org.opennars.applications.crossing.RealCrossing.EntityToNarsese.na
 import org.opennars.applications.crossing.Util;
 import org.opennars.main.Nar;
 
-/**
- *
- * @author tc
- */
 public class InformQaNar {
     
     //knowledge, user questions, motivations
-    public String ontology = ""; //currently loaded from operator panel
-    
-    //allow relative location relations
-    public boolean RELATIVE_LOCATION_RELATIONS = true;
-    
+    public String ontology = "";
+    //how close things must be to trigger closeTo relation (2x times it will trigger leftOf, aboveOf)
+    public static double veryClosenessThreshold = 169;
+    //Batches of information, take_k pieces randomly sampled if too much, misses may be catched up in the next frame
+    Random rnd = new Random(1337);
+    ArrayList<ArrayList<String>> QAinformation = new ArrayList<>();
+    int take_k = 8;
+    //just to visualize the entities that have been spatially related
+    final List<Entity> relatedLeft = new ArrayList<>(); 
+    final List<Entity> relatedRight = new ArrayList<>();
+    //Whether leftOf and aboveOf is enabled
+    boolean enable_leftOf_aboveOf = false;
+    //Whether pedestrians are also related to each other
+    boolean relate_pedestrians = false;
 
-    public double nearnessThreshold = 399; //3 times the discretization + 1 tolerance for the cell width
     private boolean near(Entity a, Entity b) {
-        if(Math.sqrt(Math.pow(a.posX - b.posX, 2)+Math.pow(a.posY - b.posY, 2)) < nearnessThreshold) {
+        if(Math.sqrt(Math.pow(a.posX - b.posX, 2)+Math.pow(a.posY - b.posY, 2)) < veryClosenessThreshold*2) {
             return true;
         }
         return false;
     }
     
-    public static double veryClosenessThreshold = 169; //1 times the discretization + 1 tolerance for the cell width
     private boolean veryClose(Entity a, Entity b) {
         if(Math.sqrt(Math.pow(a.posX - b.posX, 2)+Math.pow(a.posY - b.posY, 2)) < veryClosenessThreshold) {
             return true;
@@ -67,10 +70,6 @@ public class InformQaNar {
         return false;
     }
     
-    ArrayList<ArrayList<String>> QAinformation = new ArrayList<>();
-    final List<Entity> relatedLeft = new ArrayList<>(); //just to visualize the entities that have been spatially related
-    final List<Entity> relatedRight = new ArrayList<>(); //just to visualize the entities that have been spatially related
-    Random rnd = new Random(1337);
     public void inform(Nar qanar, List<Entity> entities, Map<String,MapEvidence> locationToLabel) {
         QAinformation.clear();
         synchronized(relatedLeft) {
@@ -81,48 +80,44 @@ public class InformQaNar {
         //inform NARS about the spatial relationships between objects and which categories they belong to according to the Tracker
         List<Entity> sortedEntX = entities.stream().sorted(Comparator.comparing(Entity::getPosX)).collect(Collectors.toList());
         for(Entity ent : sortedEntX) {
-            if(RELATIVE_LOCATION_RELATIONS) {
-                for(Entity entity : entities) {
-                    if(ent != entity && near(ent, entity)) {
-                        ArrayList<String> QAInfo = new ArrayList<String>();
-                        boolean enable_leftOf_aboveOf = false;
-                        boolean relate_pedestrians = false;
-                        if(relate_pedestrians || !(entity instanceof Pedestrian && ent instanceof Pedestrian)) {
-                            if(ent.posX < entity.posX) {
-                                if(enable_leftOf_aboveOf) {
-                                    QAInfo.add("<(*," + name(ent) + "," + name(entity) + ") --> leftOf>. :|:");
-                                }
-                                QAInfo.add("(&|," + informType(ent) + "," + informType(entity)+"). :|:");
-                                if(veryClose(ent, entity)) {
-                                    if(ent instanceof Car) {
-                                        QAInfo.add("<(*," + name(entity) + "," + name(ent) + ") --> closeTo>. :|:");
-                                    } else {
-                                        QAInfo.add("<(*," + name(ent) + "," + name(entity) + ") --> closeTo>. :|:");
-                                    }
-                                }
-                                QAinformation.add(QAInfo);
-                                synchronized(relatedLeft) {
-                                    relatedLeft.add(ent);
-                                    relatedRight.add(entity);
+            for(Entity entity : entities) {
+                if(ent != entity && near(ent, entity)) {
+                    ArrayList<String> QAInfo = new ArrayList<String>();
+                    if(relate_pedestrians || !(entity instanceof Pedestrian && ent instanceof Pedestrian)) {
+                        if(ent.posX < entity.posX) {
+                            if(enable_leftOf_aboveOf) {
+                                QAInfo.add("<(*," + name(ent) + "," + name(entity) + ") --> leftOf>. :|:");
+                            }
+                            QAInfo.add("(&|," + informType(ent) + "," + informType(entity)+"). :|:");
+                            if(veryClose(ent, entity)) {
+                                if(ent instanceof Car) {
+                                    QAInfo.add("<(*," + name(entity) + "," + name(ent) + ") --> closeTo>. :|:");
+                                } else {
+                                    QAInfo.add("<(*," + name(ent) + "," + name(entity) + ") --> closeTo>. :|:");
                                 }
                             }
-                            if(ent.posY < entity.posY) {
-                                if(enable_leftOf_aboveOf) {
-                                    QAInfo.add("<(*," + name(ent) + "," + name(entity) + ") --> aboveOf>. :|:");
+                            QAinformation.add(QAInfo);
+                            synchronized(relatedLeft) {
+                                relatedLeft.add(ent);
+                                relatedRight.add(entity);
+                            }
+                        }
+                        if(ent.posY < entity.posY) {
+                            if(enable_leftOf_aboveOf) {
+                                QAInfo.add("<(*," + name(ent) + "," + name(entity) + ") --> aboveOf>. :|:");
+                            }
+                            QAInfo.add("(&|," + informType(ent) + "," + informType(entity)+"). :|:");
+                            if(veryClose(ent, entity)) {
+                                if(ent instanceof Car) {
+                                    QAInfo.add("<(*," + name(entity) + "," + name(ent) + ") --> closeTo>. :|:");
+                                } else {
+                                    QAInfo.add("<(*," + name(ent) + "," + name(entity) + ") --> closeTo>. :|:");
                                 }
-                                QAInfo.add("(&|," + informType(ent) + "," + informType(entity)+"). :|:");
-                                if(veryClose(ent, entity)) {
-                                    if(ent instanceof Car) {
-                                        QAInfo.add("<(*," + name(entity) + "," + name(ent) + ") --> closeTo>. :|:");
-                                    } else {
-                                        QAInfo.add("<(*," + name(ent) + "," + name(entity) + ") --> closeTo>. :|:");
-                                    }
-                                }
-                                QAinformation.add(QAInfo);
-                                synchronized(relatedLeft) {
-                                    relatedLeft.add(ent);
-                                    relatedRight.add(entity);
-                                }
+                            }
+                            QAinformation.add(QAInfo);
+                            synchronized(relatedLeft) {
+                                relatedLeft.add(ent);
+                                relatedRight.add(entity);
                             }
                         }
                     }
@@ -143,9 +138,7 @@ public class InformQaNar {
                 QAinformation.add(Atinfo);
             }
         }
-        
         Collections.shuffle(QAinformation, rnd);
-        int take_k = 8;
         int k = 0;
         for(ArrayList<String> info : QAinformation) {
             for(String s : info) {

@@ -30,10 +30,10 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import org.opennars.applications.crossing.Camera;
 import org.opennars.applications.crossing.Entity;
+import org.opennars.applications.crossing.InformPredictionNar;
 import org.opennars.applications.crossing.NarListener;
-import org.opennars.applications.crossing.TrafficLight;
+import org.opennars.applications.crossing.Prediction;
 import org.opennars.io.events.Events;
 import org.opennars.io.events.OutputHandler;
 import org.opennars.main.Nar;
@@ -46,37 +46,32 @@ import org.opennars.operator.Operator;
 public class TrafficMultiNar {
     
     //prediction nar
-    public Nar nar;
-    public List<NarListener.Prediction> predictions = new ArrayList<>();
-    public List<NarListener.Prediction> disappointments = new ArrayList<>();
+    public Nar predictionNar;
+    public List<Prediction> predictions = new ArrayList<>();
+    public List<Prediction> disappointments = new ArrayList<>();
     //nar dedicated to user questions
     public Nar qanar;
     //nar dedicated to labelling locations
     public static Nar locationNar;
-      
-    //saving away parameters
-    public int SEQUENCE_BAG_ATTEMPTS = 0;
-    
     //objects the traffic multinar needs to be aware of
     List<Entity> entities;
-    Camera camera;
-    
+    //Encoder classes mapping entities to Narsese for the Nar instances
     public InformQaNar informQaNar = new InformQaNar();
     public InformLocationNar informLocationNar = new InformLocationNar();
+    public InformPredictionNar informer = new InformPredictionNar();
+    //Lock&Condition for QANar thread
+    final Lock lock = new ReentrantLock();
+    final Condition doWork  = lock.newCondition(); 
     
     public void reason() {
-        qanar.cycles(10); //for now its a seperate nar but can be merged potentially
-                    //but this way we make sure predictions don't get worse when
-                    //questions are given and vice versa
-        nar.cycles(10); //only doing prediction so no need
+        qanar.cycles(10);
+        predictionNar.cycles(10);
         removeOutdatedPredictions(predictions);
         removeOutdatedPredictions(disappointments);
     }
     
-    
-    public TrafficMultiNar(Operator infoOp, List<Entity> entities, Camera camera) {
+    public TrafficMultiNar(Operator infoOp, List<Entity> entities) {
         this.entities = entities;
-        this.camera = camera;
         QANarThread qaThread = new QANarThread();
         qaThread.start();
         try {
@@ -84,26 +79,17 @@ public class TrafficMultiNar {
             qanar.addPlugin(infoOp);
             qanar.narParameters.VOLUME = 0;
             locationNar = new Nar();
-            nar = new Nar();
-            
-            SEQUENCE_BAG_ATTEMPTS = nar.narParameters.SEQUENCE_BAG_ATTEMPTS;
             locationNar.narParameters.SEQUENCE_BAG_ATTEMPTS=0;
-            //nar.narParameters.SEQUENCE_BAG_ATTEMPTS=0;
-            //qanar.narParameters.SEQUENCE_BAG_ATTEMPTS *= 2;
-            
-            nar.narParameters.VOLUME = 0;
-            nar.narParameters.DURATION*=10;
-            NarListener listener = new NarListener(camera, nar, predictions, disappointments, entities);
-            nar.on(Events.TaskAdd.class, listener);
-            nar.on(OutputHandler.DISAPPOINT.class, listener);
+            predictionNar = new Nar();
+            NarListener listener = new NarListener(predictionNar, predictions, disappointments, entities);
+            predictionNar.on(Events.TaskAdd.class, listener);
+            predictionNar.on(OutputHandler.DISAPPOINT.class, listener);
         } catch (Exception ex) {
             System.out.println(ex);
             System.exit(1);
         }
     }
     
-    final Lock lock = new ReentrantLock();
-    final Condition doWork  = lock.newCondition(); 
     public class QANarThread extends Thread {
         public void run(){
             while(true) {
@@ -119,25 +105,26 @@ public class TrafficMultiNar {
         }
     }
 
-    
-    public void perceiveScene(int t, int perception_update) {
-        if(t > 0 && t % (5*perception_update) == 0) {
+    public void perceiveScene(int t, int perception_update, int relation_update) {
+        if(t % relation_update == 0) {
             System.out.println("TICK spatial");
             lock.lock();
             doWork.signal();
             lock.unlock();
         }
-
         if (t % perception_update == 0) {
             this.informLocationNar.askForLabels(t, perception_update, entities);
-            camera.see(nar, entities, new ArrayList<TrafficLight>(), false);
+            for (Entity ent : entities) {
+                informer.informAboutEntity(predictionNar, ent);
+            }
+            informer.Input(predictionNar);
         }
     }
     
-    public void removeOutdatedPredictions(List<NarListener.Prediction> predictions) {
-        List<NarListener.Prediction> toDelete = new ArrayList<NarListener.Prediction>();
-        for(NarListener.Prediction pred : predictions) {
-            if(pred.time <= nar.time()) {
+    public void removeOutdatedPredictions(List<Prediction> predictions) {
+        List<Prediction> toDelete = new ArrayList<Prediction>();
+        for(Prediction pred : predictions) {
+            if(pred.time <= predictionNar.time()) {
                 toDelete.add(pred);
             }
         }

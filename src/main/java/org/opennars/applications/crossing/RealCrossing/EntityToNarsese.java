@@ -28,11 +28,8 @@ import org.opennars.applications.crossing.Car;
 import org.opennars.applications.crossing.Entity;
 import org.opennars.applications.crossing.Pedestrian;
 
-/**
- *
- * @author tc
- */
 public class EntityToNarsese {
+    
     public static String informType(Entity entity) {
         if(entity instanceof Bike) {
             return "<" + name(entity) + " --> bike>";
@@ -48,14 +45,15 @@ public class EntityToNarsese {
     
     public static String name(Entity entity) { //TODO put in class
         if(entity instanceof Bike) {
-            return "bike" + entity.label;
+            return "bike" + entity.id;
         }
         if(entity instanceof Car) {
-            return "car" + entity.label;
+            return "car" + entity.id;
         }
         if(entity instanceof Pedestrian) {
-            return "pedestrian" + entity.label;
+            return "pedestrian" + entity.id;
         }
         return "entity";
     }
+    
 }

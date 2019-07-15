@@ -25,35 +25,24 @@ package org.opennars.applications.crossing;
 
 public class Entity {
 
-    public static int entityID = 0;
-    public String label = "";
+    public String id = "";
     public double posX, posY;
-    public double width, height;
+    public int angle; //currently either 0, 1, 11 or 00 as described in the paper
+
+    public Entity() {}
+
+    public Entity(int angle, double posX, double posY, String id) {
+        this.angle = angle;
+        this.posX = posX;
+        this.posY = posY;
+        this.id = id;
+    }
+    
     public double getPosX() {
         return posX;
     }
+    
     public double getPosY() {
         return posY;
-    }
-    public double velocity;
-    public double angle;
-    public int id;
-    public float scale = 1.0f;
-    public float maxSpeed = 2.0f;
-    public static boolean pedestrianIgnoreTrafficLight = false;
-    public static boolean carIgnoreTrafficLight = false;
-    public boolean isPredicted = false;
-    public double lastPosX = 0;
-    public double lastPosY = 0;
-
-    public Entity() {
-    }
-
-    public Entity(int id, double posX, double posY, double velocity, double angle) {
-        this.id = id;
-        this.posX = posX;
-        this.posY = posY;
-        this.velocity = velocity;
-        this.angle = angle;
     }
 }

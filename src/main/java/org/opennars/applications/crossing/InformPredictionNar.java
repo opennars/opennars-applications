@@ -28,17 +28,14 @@ import java.util.List;
 import org.opennars.main.Nar;
 
 public class InformPredictionNar {
+    
     String lastInput = "";
     String input = "";
-    List<String> inputs = new ArrayList<String>();
-    //minX and minY define the lower end of the relative coordinate system
-    public void informAboutEntity(Nar nar, Entity ent, int minX, int minY) {
-        String id = String.valueOf(ent.id);
-        boolean useMultipleIDs = true;
-        if(!useMultipleIDs) {
-            id = "0";
-        }
-        String pos = Util.positionToTerm((int) ent.posX-minX, (int) ent.posY-minY);
+    List<String> inputs = new ArrayList<>();
+    
+    public void informAboutEntity(Nar nar, Entity ent) {
+        String id = String.valueOf(ent.angle);
+        String pos = Util.positionToTerm((int) ent.posX, (int) ent.posY);
         if(ent instanceof Bike) {
             inputs.add("<(*,bike" + id + ","+ pos + ") --> at>. :|:");
             input += inputs.get(inputs.size()-1);
@@ -54,18 +51,9 @@ public class InformPredictionNar {
         //}
     }
 
-    public void informAboutTrafficLight(Nar nar, TrafficLight light, int minX, int minY) {
-        //String id = String.valueOf(light.id);
-        String colour = light.colour == 0 ? "green" : "red";
-        String narsese = "<trafficLight --> ["+colour+"]>. :|:";
-        inputs.add(narsese);
-        input+=narsese;
-    }
-
-    // /param force are the inputs forced to be fed into the reasoner
-    public boolean Input(Nar nar, final boolean force) {
+    public boolean Input(Nar nar) {
         boolean hadInput = false;
-        if(!input.equals(lastInput)||force) {
+        if(!input.equals(lastInput)) {
             for(String inp : inputs) {
                 nar.addInput(inp);
                 hadInput = true;

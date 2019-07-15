@@ -23,20 +23,9 @@
  */
 package org.opennars.applications.crossing;
 
-public class Pedestrian extends Entity {
-
-    double initialAngle;
-    public final static float pedestrianScale = 0.75f;
+public class Pedestrian extends Entity { 
     
-    public Pedestrian(int id, double posX, double posY, double velocity, double angle, String label) {
-        this(id, posX, posY, velocity, angle);
-        this.label = label;
-    }
-    
-    public Pedestrian(int id, double posX, double posY, double velocity, double angle) {
-        super(id, posX, posY, velocity, angle);
-        initialAngle = angle;
-        scale = pedestrianScale;
-        maxSpeed = 1;
+    public Pedestrian(int id, double posX, double posY, String label) {
+        super(id, posX, posY, label);
     }
 }
