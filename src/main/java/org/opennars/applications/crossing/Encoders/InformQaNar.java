@@ -21,7 +21,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package org.opennars.applications.crossing.RealCrossing;
+package org.opennars.applications.crossing.Encoders;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -33,8 +33,8 @@ import java.util.stream.Collectors;
 import org.opennars.applications.crossing.Car;
 import org.opennars.applications.crossing.Entity;
 import org.opennars.applications.crossing.Pedestrian;
-import static org.opennars.applications.crossing.RealCrossing.EntityToNarsese.informType;
-import static org.opennars.applications.crossing.RealCrossing.EntityToNarsese.name;
+import static org.opennars.applications.crossing.Encoders.EntityToNarsese.informType;
+import static org.opennars.applications.crossing.Encoders.EntityToNarsese.name;
 import org.opennars.applications.crossing.Util;
 import org.opennars.main.Nar;
 
@@ -49,8 +49,8 @@ public class InformQaNar {
     ArrayList<ArrayList<String>> QAinformation = new ArrayList<>();
     int take_k = 8;
     //just to visualize the entities that have been spatially related
-    final List<Entity> relatedLeft = new ArrayList<>(); 
-    final List<Entity> relatedRight = new ArrayList<>();
+    public final List<Entity> relatedLeft = new ArrayList<>(); 
+    public final List<Entity> relatedRight = new ArrayList<>();
     //Whether leftOf and aboveOf is enabled
     boolean enable_leftOf_aboveOf = false;
     //Whether pedestrians are also related to each other

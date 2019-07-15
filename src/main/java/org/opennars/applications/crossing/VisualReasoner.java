@@ -21,8 +21,10 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package org.opennars.applications.crossing.RealCrossing;
+package org.opennars.applications.crossing;
 
+import org.opennars.applications.crossing.Encoders.InformQaNar;
+import org.opennars.applications.crossing.Encoders.EntityToNarsese;
 import com.jsoniter.JsonIterator;
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -35,12 +37,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import org.opennars.applications.crossing.Bike;
-import org.opennars.applications.crossing.Car;
-import org.opennars.applications.crossing.Entity;
-import org.opennars.applications.crossing.Pedestrian;
-import org.opennars.applications.crossing.Prediction;
-import org.opennars.applications.crossing.Util;
 import org.opennars.entity.Task;
 import org.opennars.interfaces.Timable;
 import org.opennars.language.Term;
@@ -50,7 +46,7 @@ import org.opennars.storage.Memory;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
 
-public class RealCrossing {
+public class VisualReasoner {
 
     //Detected anomalies and spatial relations
     public final static HashMap<String,Integer> jaywalkers = new HashMap<String,Integer>();
@@ -78,7 +74,7 @@ public class RealCrossing {
     public static String QTrackletToNar = null;
     public static String QInfoFromNar = null;
     
-    public RealCrossing() {
+    public VisualReasoner() {
         trafficMultiNar = new TrafficMultiNar(new Say(), entities);    
         try {
             String content = new String(Files.readAllBytes(new File(customOntologyPath).toPath()),Charset.forName("UTF-8"));
@@ -87,7 +83,7 @@ public class RealCrossing {
             trafficMultiNar.informLocationNar.ontology = locpart;
             trafficMultiNar.informQaNar.ontology = qapart;
         } catch (IOException ex) {
-            Logger.getLogger(RealCrossing.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(VisualReasoner.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
 
@@ -244,16 +240,16 @@ public class RealCrossing {
                 }
             }
         } catch (ClassNotFoundException | InstantiationException | IllegalAccessException | javax.swing.UnsupportedLookAndFeelException ex) {
-            java.util.logging.Logger.getLogger(RealCrossing.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+            java.util.logging.Logger.getLogger(VisualReasoner.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
         }
         //</editor-fold>
         //</editor-fold>
         System.out.println("args: discretization movementThresholdCar movementThresholdPedestrian movementThresholdBike veryClosenessThreshold OntologyNalFile AnomalyRetrieveDuration redisHost redisPort redisPassword QTrackletToNar QInfoFromNar");
         System.out.println("example: java -cp \"*\" org.opennars.applications.crossing.RealCrossing 80 30 5 5 169 /home/tc/Dateien/CROSSING/StreetScene/AnomalyOntology.nal 30 locahost 6379 pwd Q_Tracklet_To_Nar Q_Info_From_Nar");
         Util.discretization = Integer.valueOf(args[0]);
-        RealCrossing.movementThresholdCar = Integer.valueOf(args[1]); 
-        RealCrossing.movementThresholdPedestrian = Integer.valueOf(args[2]); 
-        RealCrossing.movementThresholdBike = Integer.valueOf(args[3]); 
+        VisualReasoner.movementThresholdCar = Integer.valueOf(args[1]); 
+        VisualReasoner.movementThresholdPedestrian = Integer.valueOf(args[2]); 
+        VisualReasoner.movementThresholdBike = Integer.valueOf(args[3]); 
         InformQaNar.veryClosenessThreshold = Integer.valueOf(args[4]);
         customOntologyPath = args[7];
         anomalyRetrieveDuration = Integer.valueOf(args[8]);
@@ -273,7 +269,7 @@ public class RealCrossing {
                 return;
             }
         }
-        RealCrossing mp = new RealCrossing();
+        VisualReasoner mp = new VisualReasoner();
         while(true) {
             mp.step();
         }

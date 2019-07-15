@@ -21,8 +21,10 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package org.opennars.applications.crossing.RealCrossing;
+package org.opennars.applications.crossing;
 
+import org.opennars.applications.crossing.Encoders.InformQaNar;
+import org.opennars.applications.crossing.Encoders.InformLocationNar;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.locks.Condition;
@@ -30,10 +32,6 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import org.opennars.applications.crossing.Entity;
-import org.opennars.applications.crossing.InformPredictionNar;
-import org.opennars.applications.crossing.NarListener;
-import org.opennars.applications.crossing.Prediction;
 import org.opennars.io.events.Events;
 import org.opennars.io.events.OutputHandler;
 import org.opennars.main.Nar;
@@ -52,7 +50,7 @@ public class TrafficMultiNar {
     //nar dedicated to user questions
     public Nar qanar;
     //nar dedicated to labelling locations
-    public static Nar locationNar;
+    public Nar locationNar;
     //objects the traffic multinar needs to be aware of
     List<Entity> entities;
     //Encoder classes mapping entities to Narsese for the Nar instances
@@ -113,7 +111,7 @@ public class TrafficMultiNar {
             lock.unlock();
         }
         if (t % perception_update == 0) {
-            this.informLocationNar.askForLabels(t, perception_update, entities);
+            this.informLocationNar.askForLabels(locationNar, t, perception_update, entities);
             for (Entity ent : entities) {
                 informer.informAboutEntity(predictionNar, ent);
             }

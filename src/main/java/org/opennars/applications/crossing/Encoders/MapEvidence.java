@@ -21,39 +21,30 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package org.opennars.applications.crossing.RealCrossing;
+package org.opennars.applications.crossing.Encoders;
 
-import org.opennars.applications.crossing.Bike;
-import org.opennars.applications.crossing.Car;
-import org.opennars.applications.crossing.Entity;
-import org.opennars.applications.crossing.Pedestrian;
+import org.opennars.entity.TruthValue;
+import org.opennars.main.Nar;
 
-public class EntityToNarsese {
+public class MapEvidence {
+
+    public TruthValue car;
+    public TruthValue pedestrian;
+    public TruthValue bike;
     
-    public static String informType(Entity entity) {
-        if(entity instanceof Bike) {
-            return "<" + name(entity) + " --> bike>";
-        }
-        if(entity instanceof Car) {
-            return "<" + name(entity) + " --> car>";
-        }
-        if(entity instanceof Pedestrian) {
-            return "<" +name(entity) + " --> pedestrian>";
-        }
-        return "<" +name(entity) + " --> entity>";
+    public MapEvidence(Nar locationNar) {
+        car = new TruthValue(1.0f, 0.001f,locationNar.narParameters);
+        pedestrian = new TruthValue(1.0f, 0.001f,locationNar.narParameters);
+        bike = new TruthValue(1.0f, 0.001f,locationNar.narParameters);
     }
-    
-    public static String name(Entity entity) { //TODO put in class
-        if(entity instanceof Bike) {
-            return "bike" + entity.id;
+
+    public String choice() {
+        if(bike.getExpectation() > pedestrian.getExpectation() && bike.getExpectation() > car.getExpectation()) {
+            return "street"; //TODO bikelane
         }
-        if(entity instanceof Car) {
-            return "car" + entity.id;
+        if(pedestrian.getExpectation() > bike.getExpectation() && pedestrian.getExpectation() > car.getExpectation()) {
+            return "sidewalk";
         }
-        if(entity instanceof Pedestrian) {
-            return "pedestrian" + entity.id;
-        }
-        return "entity";
+        return "street";
     }
-    
 }

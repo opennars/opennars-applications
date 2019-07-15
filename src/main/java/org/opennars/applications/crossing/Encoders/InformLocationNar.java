@@ -21,7 +21,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package org.opennars.applications.crossing.RealCrossing;
+package org.opennars.applications.crossing.Encoders;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -32,7 +32,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import org.opennars.applications.crossing.Entity;
-import static org.opennars.applications.crossing.RealCrossing.TrafficMultiNar.locationNar;
+import org.opennars.applications.crossing.VisualReasoner;
 import org.opennars.applications.crossing.Util;
 import org.opennars.entity.Sentence;
 import org.opennars.entity.TruthValue;
@@ -40,13 +40,16 @@ import org.opennars.inference.TruthFunctions;
 import org.opennars.io.Parser;
 import org.opennars.io.events.AnswerHandler;
 import org.opennars.language.Inheritance;
+import org.opennars.main.Nar;
 
 public class InformLocationNar {
 
     //user-given background knowledge
-    String ontology = "";
+    public String ontology = "";
+    //Location labels estimated by reasoning
+    public Map<String,MapEvidence> locationToLabel = new HashMap<String,MapEvidence>();
     
-    void inform(List<Entity> entities) {
+    void inform(Nar locationNar, List<Entity> entities) {
         List<Entity> sortedEntX = entities.stream().sorted(Comparator.comparing(Entity::getPosX)).collect(Collectors.toList());
         for(Entity ent : sortedEntX) {
             String typeInfo = EntityToNarsese.informType(ent)+". :|:";
@@ -60,11 +63,10 @@ public class InformLocationNar {
         }
     }
     
-    Map<String,MapEvidence> locationToLabel = new HashMap<String,MapEvidence>();
-    public void askForLabels(int t, int perception_update, List<Entity> entities) {
+    public void askForLabels(Nar locationNar, int t, int perception_update, List<Entity> entities) {
         if(t > 0 && t % (5*perception_update) == 0) {
             locationNar.reset();
-            inform(entities); //input locations
+            inform(locationNar, entities); //input locations
             try {
                 for(String s : new String[] {"street","sidewalk","bikelane"}) {
                     locationNar.askNow("<?what --> ["+s+"]>", new AnswerHandler() {
@@ -77,7 +79,7 @@ public class InformLocationNar {
                             String subj = ((Inheritance) belief.getTerm()).getSubject().toString();
                             if(subj.contains("_")) {
                                 if(!locationToLabel.containsKey(subj)) {
-                                    locationToLabel.put(subj, new MapEvidence());
+                                    locationToLabel.put(subj, new MapEvidence(locationNar));
                                 }
                                 MapEvidence mapval = locationToLabel.get(subj);
                                 if(s.equals("street")) {
@@ -100,7 +102,7 @@ public class InformLocationNar {
                     });
                 }
             } catch (Parser.InvalidInputException ex) {
-                Logger.getLogger(RealCrossing.class.getName()).log(Level.SEVERE, null, ex);
+                Logger.getLogger(VisualReasoner.class.getName()).log(Level.SEVERE, null, ex);
             }
             locationNar.addInput(ontology);
         }
