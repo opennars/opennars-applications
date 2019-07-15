@@ -167,6 +167,15 @@ public class VisualReasoner {
         msgs.clear();
         i++;
     }
+    
+    public double distanceSum(double[] X, double[] Y) {
+        double SX = 0.0f, SY = 0.0f;
+        for(int i=1; i<X.length; i++) { //same length as Y
+            SX += X[i] - X[i-1];
+            SY += Y[i] - Y[i-1];
+        }
+        return Math.sqrt(SX*SX + SY*SY);
+    }
 
     private void AddEntitiesFromTracklets() {
         /*String tkl_msg = r.blpop(0,QTrackletToNar).get(1);
@@ -185,6 +194,8 @@ public class VisualReasoner {
             if(probability == 0) {
                 continue;
             }
+            double[] XAll = new double[]{ props[2], props[7], props[12], props[17], props[22] };
+            double[] YAll = new double[]{ props[3], props[8], props[13], props[18], props[23] };
             long X = props[2];
             long Y = props[3];
             long X2 = props[22]; //7 6
@@ -195,8 +206,8 @@ public class VisualReasoner {
             }
             if(Y < Y2) {
                 angle += 1;
-            }  
-            double movement = Math.sqrt((X-X2)*(X-X2) + (Y - Y2)*(Y - Y2));
+            }
+            double movement = distanceSum(XAll, YAll);
             if(props[0] == 0) { //person or vehicle for now
                 if(movement < (double)movementThresholdPedestrian) {
                     continue;
