@@ -53,7 +53,7 @@ public class VisualReasoner {
     public final static HashMap<String,Integer> indangers = new HashMap<String,Integer>();
     public final static HashMap<String,Integer> relations = new HashMap<String,Integer>();
     //The MultiNar setup
-    public static TrafficMultiNar trafficMultiNar = null;
+    public static MultiNarSetup trafficMultiNar = null;
     //The entities detected
     List<Entity> entities = new ArrayList<>();
     //Perception&relation update with related counter
@@ -75,7 +75,7 @@ public class VisualReasoner {
     public static String QInfoFromNar = null;
     
     public VisualReasoner() {
-        trafficMultiNar = new TrafficMultiNar(new Say(), entities);    
+        trafficMultiNar = new MultiNarSetup(new Say(), entities);    
         try {
             String content = new String(Files.readAllBytes(new File(customOntologyPath).toPath()),Charset.forName("UTF-8"));
             String qapart = content.split(">>QANar:")[1].split(">>LocationNar:")[0].trim();

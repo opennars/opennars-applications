@@ -41,7 +41,7 @@ import org.opennars.operator.Operator;
  *
  * @author tc
  */
-public class TrafficMultiNar {
+public class MultiNarSetup {
     
     //prediction nar
     public Nar predictionNar;
@@ -68,7 +68,7 @@ public class TrafficMultiNar {
         removeOutdatedPredictions(disappointments);
     }
     
-    public TrafficMultiNar(Operator infoOp, List<Entity> entities) {
+    public MultiNarSetup(Operator infoOp, List<Entity> entities) {
         this.entities = entities;
         QANarThread qaThread = new QANarThread();
         qaThread.start();
@@ -95,7 +95,7 @@ public class TrafficMultiNar {
                 try {
                     doWork.await();
                 } catch (InterruptedException ex) {
-                    Logger.getLogger(TrafficMultiNar.class.getName()).log(Level.SEVERE, null, ex);
+                    Logger.getLogger(MultiNarSetup.class.getName()).log(Level.SEVERE, null, ex);
                 }
                 lock.unlock();
                 informQaNar.inform(qanar, entities, informLocationNar.locationToLabel);
