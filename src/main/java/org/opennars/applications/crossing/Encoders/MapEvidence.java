@@ -58,27 +58,15 @@ public class MapEvidence {
         TruthValue neg = TruthFunctions.negation(beliefTruth, locationNar.narParameters);
         if(type.equals("street")) {
             street = TruthFunctions.revision(street, beliefTruth, locationNar.narParameters);
-            bikelane = TruthFunctions.revision(bikelane, neg, locationNar.narParameters);
-            sidewalk = TruthFunctions.revision(sidewalk, neg, locationNar.narParameters);
-            crosswalk = TruthFunctions.revision(crosswalk, neg, locationNar.narParameters);
         }
         if(type.equals("sidewalk")) {
             sidewalk = TruthFunctions.revision(sidewalk, beliefTruth, locationNar.narParameters);
-            bikelane = TruthFunctions.revision(bikelane, neg, locationNar.narParameters);
-            street = TruthFunctions.revision(street, neg, locationNar.narParameters);
-            crosswalk = TruthFunctions.revision(crosswalk, neg, locationNar.narParameters);
         }
         if(type.equals("bikelane")) {
             bikelane = TruthFunctions.revision(bikelane, beliefTruth, locationNar.narParameters);
-            sidewalk = TruthFunctions.revision(sidewalk, neg, locationNar.narParameters);
-            street = TruthFunctions.revision(street, neg, locationNar.narParameters);
-            crosswalk = TruthFunctions.revision(crosswalk, neg, locationNar.narParameters);
         }
         if(type.equals("crosswalk")) {
             crosswalk = TruthFunctions.revision(crosswalk, beliefTruth, locationNar.narParameters);
-            sidewalk = TruthFunctions.revision(sidewalk, neg, locationNar.narParameters);
-            street = TruthFunctions.revision(street, neg, locationNar.narParameters);
-            bikelane = TruthFunctions.revision(bikelane, neg, locationNar.narParameters);
         }
     }
 }

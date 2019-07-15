@@ -18,7 +18,9 @@
 <(&|,<#1 --> car>,<(*,#1,$location) --> at>) =|> <$location --> [street]>>.
 <(&|,<#1 --> bike>,<(*,#1,$location) --> at>) =|> <$location --> [street]>>.
 //<(&|,<#1 --> bike>,<(*,#1,$location) --> at>) =|> <$location --> [bikelane]>>.
-<<$location --> [sidewalk,street]> =|> <$location --> [crosswalk]>>.
+<(&|,<#1 --> car>,<(*,#1,$location) --> at>) =|> <$location --> [crosswalk]>>. %0.9%
+<(&|,<#1 --> pedestrian>,<(*,#1,$location) --> at>) =|> <$location --> [crosswalk]>>. %0.9%
+<(&|,<#1 --> bike>,<(*,#1,$location) --> at>) =|> <$location --> [crosswalk]>>. %0.9%
 
 >>General information:
 
