@@ -81,6 +81,7 @@ public class MultiNarSetup {
             locationNar = new Nar();
             locationNar.narParameters.SEQUENCE_BAG_ATTEMPTS=0;
             predictionNar = new Nar();
+            predictionNar.narParameters.DURATION*=10;
             NarListener listener = new NarListener(predictionNar, predictions, disappointments, entities);
             predictionNar.on(Events.TaskAdd.class, listener);
             predictionNar.on(OutputHandler.DISAPPOINT.class, listener);
