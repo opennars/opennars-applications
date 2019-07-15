@@ -23,10 +23,10 @@
  */
 package org.opennars.applications.crossing.Encoders;
 
-import org.opennars.applications.crossing.Bike;
-import org.opennars.applications.crossing.Car;
-import org.opennars.applications.crossing.Entity;
-import org.opennars.applications.crossing.Pedestrian;
+import org.opennars.applications.crossing.Entities.Bike;
+import org.opennars.applications.crossing.Entities.Car;
+import org.opennars.applications.crossing.Entities.Entity;
+import org.opennars.applications.crossing.Entities.Pedestrian;
 
 public class EntityToNarsese {
     

@@ -23,6 +23,10 @@
  */
 package org.opennars.applications.crossing;
 
+import org.opennars.applications.crossing.Entities.Pedestrian;
+import org.opennars.applications.crossing.Entities.Entity;
+import org.opennars.applications.crossing.Entities.Car;
+import org.opennars.applications.crossing.Entities.Bike;
 import java.util.List;
 import org.opennars.entity.Sentence;
 import org.opennars.entity.Stamp;

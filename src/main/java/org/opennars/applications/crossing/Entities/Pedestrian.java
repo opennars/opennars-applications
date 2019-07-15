@@ -21,28 +21,13 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package org.opennars.applications.crossing;
+package org.opennars.applications.crossing.Entities;
 
-public class Entity {
+import org.opennars.applications.crossing.Entities.Entity;
 
-    public String id = "";
-    public double posX, posY;
-    public int angle; //currently either 0, 1, 11 or 00 as described in the paper
-
-    public Entity() {}
-
-    public Entity(int angle, double posX, double posY, String id) {
-        this.angle = angle;
-        this.posX = posX;
-        this.posY = posY;
-        this.id = id;
-    }
+public class Pedestrian extends Entity { 
     
-    public double getPosX() {
-        return posX;
-    }
-    
-    public double getPosY() {
-        return posY;
+    public Pedestrian(int id, double posX, double posY, String label) {
+        super(id, posX, posY, label);
     }
 }

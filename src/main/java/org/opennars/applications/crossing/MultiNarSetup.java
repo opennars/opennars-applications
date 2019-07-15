@@ -23,6 +23,8 @@
  */
 package org.opennars.applications.crossing;
 
+import org.opennars.applications.crossing.Entities.Entity;
+import org.opennars.applications.crossing.Encoders.InformPredictionNar;
 import org.opennars.applications.crossing.Encoders.InformQaNar;
 import org.opennars.applications.crossing.Encoders.InformLocationNar;
 import java.util.ArrayList;

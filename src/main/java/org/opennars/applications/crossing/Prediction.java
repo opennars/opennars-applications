@@ -23,6 +23,7 @@
  */
 package org.opennars.applications.crossing;
 
+import org.opennars.applications.crossing.Entities.Entity;
 import org.opennars.entity.TruthValue;
 
 public class Prediction

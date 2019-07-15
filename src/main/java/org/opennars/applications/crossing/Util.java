@@ -23,8 +23,6 @@
  */
 package org.opennars.applications.crossing;
 
-import org.opennars.entity.TruthValue;
-
 public class Util {
 
     public static int discretization = 10;
@@ -39,13 +37,6 @@ public class Util {
         int posX = X / discretization;
         int posY = Y / discretization;
         return posX + "_" + posY;
-    }
-    
-    public static float truthToValue(TruthValue truth) {
-        if(truth == null) {
-            return 1.0f;
-        }
-        return truth.getExpectation();
     }
     
     public static float timeToValue(long time) {

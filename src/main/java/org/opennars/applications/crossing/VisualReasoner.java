@@ -23,6 +23,10 @@
  */
 package org.opennars.applications.crossing;
 
+import org.opennars.applications.crossing.Entities.Pedestrian;
+import org.opennars.applications.crossing.Entities.Entity;
+import org.opennars.applications.crossing.Entities.Car;
+import org.opennars.applications.crossing.Entities.Bike;
 import org.opennars.applications.crossing.Encoders.InformQaNar;
 import org.opennars.applications.crossing.Encoders.EntityToNarsese;
 import com.jsoniter.JsonIterator;
@@ -133,7 +137,7 @@ public class VisualReasoner {
         List<String> msgs = new ArrayList<>();
         for (Prediction pred : trafficMultiNar.predictions) {
             Entity e = pred.ent;
-            float value = Util.truthToValue(pred.truth) * Util.timeToValue(pred.time - trafficMultiNar.predictionNar.time());
+            float value = pred.truth.getExpectation() * Util.timeToValue(pred.time - trafficMultiNar.predictionNar.time());
             String st = "predicted " + pred.type + " " + e.posX + " " + e.posY + " "+ e.angle + " " + value;
             msgs.add(st);
         }
@@ -251,13 +255,13 @@ public class VisualReasoner {
         VisualReasoner.movementThresholdPedestrian = Integer.valueOf(args[2]); 
         VisualReasoner.movementThresholdBike = Integer.valueOf(args[3]); 
         InformQaNar.veryClosenessThreshold = Integer.valueOf(args[4]);
-        customOntologyPath = args[7];
-        anomalyRetrieveDuration = Integer.valueOf(args[8]);
-        String redishost = args[9];
-        int redisport = Integer.valueOf(args[10]);
-        String redispwd = args[11];
-        QTrackletToNar = args[12];
-        QInfoFromNar = args[13];
+        customOntologyPath = args[5];
+        anomalyRetrieveDuration = Integer.valueOf(args[6]);
+        String redishost = args[7];
+        int redisport = Integer.valueOf(args[8]);
+        String redispwd = args[9];
+        QTrackletToNar = args[10];
+        QInfoFromNar = args[11];
         JedisPool pool = new JedisPool(redishost, redisport);
         r = pool.getResource();
         if(!redispwd.isEmpty()) {

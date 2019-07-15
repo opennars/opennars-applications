@@ -21,10 +21,14 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package org.opennars.applications.crossing;
+package org.opennars.applications.crossing.Encoders;
 
 import java.util.ArrayList;
 import java.util.List;
+import org.opennars.applications.crossing.Entities.Bike;
+import org.opennars.applications.crossing.Entities.Car;
+import org.opennars.applications.crossing.Entities.Entity;
+import org.opennars.applications.crossing.Util;
 import org.opennars.main.Nar;
 
 public class InformPredictionNar {
