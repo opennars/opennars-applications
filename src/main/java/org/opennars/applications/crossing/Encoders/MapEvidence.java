@@ -30,50 +30,55 @@ import org.opennars.main.Nar;
 public class MapEvidence {
 
     public TruthValue street;
-    public TruthValue pedestrian;
+    public TruthValue sidewalk;
     public TruthValue bikelane;
     public TruthValue crosswalk;
     
     public MapEvidence(Nar locationNar) {
         street = new TruthValue(1.0f, 0.001f,locationNar.narParameters);
-        pedestrian = new TruthValue(1.0f, 0.001f,locationNar.narParameters);
+        sidewalk = new TruthValue(1.0f, 0.001f,locationNar.narParameters);
         bikelane = new TruthValue(1.0f, 0.001f,locationNar.narParameters);
         crosswalk = new TruthValue(1.0f, 0.001f,locationNar.narParameters);
     }
 
     public String choice() {
-        if(bikelane.getExpectation() > pedestrian.getExpectation() && bikelane.getExpectation() > street.getExpectation() && bikelane.getExpectation() > crosswalk.getExpectation()) {
+        if(bikelane.getExpectation() > sidewalk.getExpectation() && bikelane.getExpectation() > street.getExpectation() && bikelane.getExpectation() > crosswalk.getExpectation()) {
             return "bikelane"; //TODO bikelane
         }
-        if(pedestrian.getExpectation() > bikelane.getExpectation() && pedestrian.getExpectation() > street.getExpectation() && pedestrian.getExpectation() > crosswalk.getExpectation()) {
+        if(sidewalk.getExpectation() > bikelane.getExpectation() && sidewalk.getExpectation() > street.getExpectation() && sidewalk.getExpectation() > crosswalk.getExpectation()) {
             return "sidewalk";
         }
-        if(crosswalk.getExpectation() > bikelane.getExpectation() && crosswalk.getExpectation() > street.getExpectation() && crosswalk.getExpectation() > pedestrian.getExpectation()) {
+        if(crosswalk.getExpectation() > bikelane.getExpectation() && crosswalk.getExpectation() > street.getExpectation() && crosswalk.getExpectation() > sidewalk.getExpectation()) {
             return "crosswalk";
         }
         return "street";
     }
     
     public void collect(Nar locationNar, String type, TruthValue beliefTruth) {
+        TruthValue neg = TruthFunctions.negation(beliefTruth, locationNar.narParameters);
         if(type.equals("street")) {
-            TruthValue truth = street;
-            TruthValue revised = TruthFunctions.revision(beliefTruth, truth, locationNar.narParameters);
-            street = revised;
+            street = TruthFunctions.revision(street, beliefTruth, locationNar.narParameters);
+            bikelane = TruthFunctions.revision(bikelane, neg, locationNar.narParameters);
+            sidewalk = TruthFunctions.revision(sidewalk, neg, locationNar.narParameters);
+            crosswalk = TruthFunctions.revision(crosswalk, neg, locationNar.narParameters);
         }
         if(type.equals("sidewalk")) {
-            TruthValue truth = pedestrian;
-            TruthValue revised = TruthFunctions.revision(beliefTruth, truth, locationNar.narParameters);
-            pedestrian = revised;
+            sidewalk = TruthFunctions.revision(sidewalk, beliefTruth, locationNar.narParameters);
+            bikelane = TruthFunctions.revision(bikelane, neg, locationNar.narParameters);
+            street = TruthFunctions.revision(street, neg, locationNar.narParameters);
+            crosswalk = TruthFunctions.revision(crosswalk, neg, locationNar.narParameters);
         }
         if(type.equals("bikelane")) {
-            TruthValue truth = bikelane;
-            TruthValue revised = TruthFunctions.revision(beliefTruth, truth, locationNar.narParameters);
-            bikelane = revised;
+            bikelane = TruthFunctions.revision(bikelane, beliefTruth, locationNar.narParameters);
+            sidewalk = TruthFunctions.revision(sidewalk, neg, locationNar.narParameters);
+            street = TruthFunctions.revision(street, neg, locationNar.narParameters);
+            crosswalk = TruthFunctions.revision(crosswalk, neg, locationNar.narParameters);
         }
         if(type.equals("crosswalk")) {
-            TruthValue truth = crosswalk;
-            TruthValue revised = TruthFunctions.revision(beliefTruth, truth, locationNar.narParameters);
-            crosswalk = revised;
+            crosswalk = TruthFunctions.revision(crosswalk, beliefTruth, locationNar.narParameters);
+            sidewalk = TruthFunctions.revision(sidewalk, neg, locationNar.narParameters);
+            street = TruthFunctions.revision(street, neg, locationNar.narParameters);
+            bikelane = TruthFunctions.revision(bikelane, neg, locationNar.narParameters);
         }
     }
 }
