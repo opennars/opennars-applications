@@ -133,8 +133,6 @@ public class InformQaNar {
                 }
             }
             String typeInfo = informType(ent)+". :|:";
-            ArrayList<String> info = new ArrayList<String>();
-            info.add(typeInfo);
             //also give info about position at labelled locations
             int X = (int) (ent.posX / Util.discretization);
             int Y = (int) (ent.posY / Util.discretization);
