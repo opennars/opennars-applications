@@ -70,7 +70,7 @@ public class InformLocationNar {
                         || ent.angle == 10 && "11".equals(carAngle)
                         || ent.angle == 11 && "10".equals(carAngle));
                 if (carAngle != null && orthogonal) {
-                    locationNarInput = "<" + EntityToNarsese.name(ent) + " --> [crossing]>). :|:";
+                    locationNarInput = "<" + EntityToNarsese.name(ent) + " --> [crossing]>. :|:";
                 }
             }
             locationNar.addInput(locationNarInput);
@@ -89,7 +89,7 @@ public class InformLocationNar {
             locationNar.reset();
             inform(locationNar, entities); //input locations
             try {
-                String[] labels = new String[] {"street","sidewalk","bikelane","crosswalk"};
+                String[] labels = new String[] {"sidewalk","street","bikelane","crosswalk"};
                 for(String type : labels) {
                     locationNar.askNow("<?what --> ["+type+"]>", new AnswerHandler() {
                         @Override
