@@ -14,7 +14,7 @@
 
 >>LocationNar:
 
-<(&|,<#1 --> pedestrian>,(--,<#1 --> [crossing]>),<(*,#1,$location) --> at>) =|> <$location --> [sidewalk]>>.
+<(&|,<#1 --> pedestrian>,<#1 --> [aligned]>,<(*,#1,$location) --> at>) =|> <$location --> [sidewalk]>>.
 <(&|,<#1 --> pedestrian>,<#1 --> [crossing]>,<(*,#1,$location) --> at>) =|> <$location --> [crosswalk]>>.
 <(&|,<#1 --> car>,<(*,#1,$location) --> at>) =|> <$location --> [street]>>.
 <(&|,<#1 --> bike>,<(*,#1,$location) --> at>) =|> <$location --> [street]>>.
@@ -34,7 +34,8 @@
 //bikelane (currently unused)
 //x_y to indicate position
 //[fast] to indicate fast speed
-//[crossing] indicating moving orthogonal to street
+//[crossing] indicating moving orthogonal to the street
+//[aligned] indicating moving aligned to the street
 
 //Operators:
 //^say

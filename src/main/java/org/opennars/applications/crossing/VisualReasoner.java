@@ -177,6 +177,18 @@ public class VisualReasoner {
                 msgs.add("is_crosswalking "+ent);
             }
         }
+        for(String key : trafficMultiNar.informLocationNar.locationToLabel.keySet()) {
+            String choice = trafficMultiNar.informLocationNar.locationToLabel.get(key).choice();
+            if(choice != null) {
+                msgs.add("location " + key + " " + choice);
+            }
+        }
+        for(String key : trafficMultiNar.informLocationNar.locationToCarAngle.keySet()) {
+            String choice = trafficMultiNar.informLocationNar.locationToCarAngle.get(key).choice();
+            if(choice != null) {
+                msgs.add("carDirection " + key + " " + choice);
+            }
+        }
         MessagesToRedis(msgs);
         msgs.clear();
         i++;

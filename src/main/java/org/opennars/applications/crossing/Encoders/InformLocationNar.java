@@ -58,7 +58,7 @@ public class InformLocationNar {
             //also give info about position at labelled locations
             String position = Util.positionToTerm((int)ent.posX,(int)ent.posY);
             locationNar.addInput("(&|,<(*,"+EntityToNarsese.name(ent)+","+position+") --> at>,"+typeInfo+"). :|:");
-            String locationNarInput = "(--,<" + EntityToNarsese.name(ent) + " --> [crossing]>). :|:";
+            String locationNarInput = "<" + EntityToNarsese.name(ent) + " --> [aligned]>. :|:";
             if (ent instanceof Pedestrian && locationToCarAngle.containsKey(position)) {
                 String carAngle = locationToCarAngle.get(position).choice();
                 boolean orthogonal = (ent.angle == 0 && "10".equals(carAngle)
