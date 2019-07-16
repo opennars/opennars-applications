@@ -35,8 +35,6 @@ import org.opennars.applications.crossing.Entities.Entity;
 import org.opennars.applications.crossing.VisualReasoner;
 import org.opennars.applications.crossing.Util;
 import org.opennars.entity.Sentence;
-import org.opennars.entity.TruthValue;
-import org.opennars.inference.TruthFunctions;
 import org.opennars.io.Parser;
 import org.opennars.io.events.AnswerHandler;
 import org.opennars.language.Inheritance;

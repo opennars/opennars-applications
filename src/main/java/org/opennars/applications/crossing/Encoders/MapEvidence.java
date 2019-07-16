@@ -23,50 +23,37 @@
  */
 package org.opennars.applications.crossing.Encoders;
 
+import java.util.HashMap;
+import java.util.Map;
 import org.opennars.entity.TruthValue;
 import org.opennars.inference.TruthFunctions;
 import org.opennars.main.Nar;
 
 public class MapEvidence {
 
-    public TruthValue street;
-    public TruthValue sidewalk;
-    public TruthValue bikelane;
-    public TruthValue crosswalk;
+    String[] labels = new String[] { "street, bikelane", "sidewalk", "crosswalk" };
+    Map<String,TruthValue> ev = new HashMap<>();
     
     public MapEvidence(Nar locationNar) {
-        street = new TruthValue(1.0f, 0.001f,locationNar.narParameters);
-        sidewalk = new TruthValue(1.0f, 0.001f,locationNar.narParameters);
-        bikelane = new TruthValue(1.0f, 0.001f,locationNar.narParameters);
-        crosswalk = new TruthValue(1.0f, 0.001f,locationNar.narParameters);
+        for(String s : labels) {
+            ev.put(s, new TruthValue(1.0f, 0.001f,locationNar.narParameters));
+        }
     }
 
     public String choice() {
-        if(bikelane.getExpectation() > sidewalk.getExpectation() && bikelane.getExpectation() > street.getExpectation() && bikelane.getExpectation() > crosswalk.getExpectation()) {
-            return "bikelane"; //TODO bikelane
+        String maxKey = "street";
+        double maxExpectation = 0;
+        for(String s : ev.keySet()) {
+            double curExpectation = ev.get(s).getExpectation();
+            if(curExpectation >= maxExpectation) {
+                maxKey = s;
+                maxExpectation = curExpectation;
+            }
         }
-        if(sidewalk.getExpectation() > bikelane.getExpectation() && sidewalk.getExpectation() > street.getExpectation() && sidewalk.getExpectation() > crosswalk.getExpectation()) {
-            return "sidewalk";
-        }
-        if(crosswalk.getExpectation() > bikelane.getExpectation() && crosswalk.getExpectation() > street.getExpectation() && crosswalk.getExpectation() > sidewalk.getExpectation()) {
-            return "crosswalk";
-        }
-        return "street";
+        return maxKey;
     }
     
     public void collect(Nar locationNar, String type, TruthValue beliefTruth) {
-        TruthValue neg = TruthFunctions.negation(beliefTruth, locationNar.narParameters);
-        if(type.equals("street")) {
-            street = TruthFunctions.revision(street, beliefTruth, locationNar.narParameters);
-        }
-        if(type.equals("sidewalk")) {
-            sidewalk = TruthFunctions.revision(sidewalk, beliefTruth, locationNar.narParameters);
-        }
-        if(type.equals("bikelane")) {
-            bikelane = TruthFunctions.revision(bikelane, beliefTruth, locationNar.narParameters);
-        }
-        if(type.equals("crosswalk")) {
-            crosswalk = TruthFunctions.revision(crosswalk, beliefTruth, locationNar.narParameters);
-        }
+        ev.put(type, TruthFunctions.revision(ev.get(type), beliefTruth, locationNar.narParameters));
     }
 }
