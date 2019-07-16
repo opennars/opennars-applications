@@ -66,7 +66,8 @@ public class InformLocationNar {
             locationNar.reset();
             inform(locationNar, entities); //input locations
             try {
-                for(String type : new String[] {"street","sidewalk","bikelane","crosswalk"}) {
+                String[] labels = new String[] {"street","sidewalk","bikelane","crosswalk"};
+                for(String type : labels) {
                     locationNar.askNow("<?what --> ["+type+"]>", new AnswerHandler() {
                         @Override
                         public void onSolution(Sentence belief) {
@@ -77,7 +78,7 @@ public class InformLocationNar {
                             String subj = ((Inheritance) belief.getTerm()).getSubject().toString();
                             if(subj.contains("_")) {
                                 if(!locationToLabel.containsKey(subj)) {
-                                    locationToLabel.put(subj, new MapEvidence(locationNar));
+                                    locationToLabel.put(subj, new MapEvidence(locationNar, labels));
                                 }
                                 MapEvidence mapval = locationToLabel.get(subj);
                                 mapval.collect(locationNar, type, belief.truth);

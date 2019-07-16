@@ -31,17 +31,18 @@ import org.opennars.main.Nar;
 
 public class MapEvidence {
 
-    String[] labels = new String[] { "street, bikelane", "sidewalk", "crosswalk" };
+    String[] labels;
     Map<String,TruthValue> ev = new HashMap<>();
     
-    public MapEvidence(Nar locationNar) {
+    public MapEvidence(Nar locationNar, String[] labels) {
+        this.labels = labels;
         for(String s : labels) {
             ev.put(s, new TruthValue(1.0f, 0.001f,locationNar.narParameters));
         }
     }
 
     public String choice() {
-        String maxKey = "street";
+        String maxKey = labels[0];
         double maxExpectation = 0;
         for(String s : ev.keySet()) {
             double curExpectation = ev.get(s).getExpectation();
