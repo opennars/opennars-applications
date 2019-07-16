@@ -51,8 +51,6 @@ public class InformLocationNar {
         List<Entity> sortedEntX = entities.stream().sorted(Comparator.comparing(Entity::getPosX)).collect(Collectors.toList());
         for(Entity ent : sortedEntX) {
             String typeInfo = EntityToNarsese.informType(ent)+". :|:";
-            ArrayList<String> info = new ArrayList<String>();
-            info.add(typeInfo);
             locationNar.addInput(typeInfo);
             //also give info about position at labelled locations
             String locationnarInput = "<(*,"+EntityToNarsese.name(ent)+","+Util.positionToTerm((int)ent.posX,(int)ent.posY)+") --> at>. :|:";
