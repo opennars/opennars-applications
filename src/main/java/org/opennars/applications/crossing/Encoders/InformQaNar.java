@@ -92,9 +92,10 @@ public class InformQaNar {
                             QAInfo.add("(&|," + informType(ent) + "," + informType(entity)+"). :|:");
                             if(veryClose(ent, entity)) {
                                 if(ent instanceof Car) {
-                                    QAInfo.add("<(*," + name(entity) + "," + name(ent) + ") --> closeTo>. :|:");
                                     if(((Car) ent).speed > fastThreshold) {
-                                        QAInfo.add("<"+name(ent) + " --> [fast]>. :|:");
+                                        QAInfo.add("(&|,<(*," + name(entity) + "," + name(ent) + ") --> closeTo>,"+"<"+name(ent) + " --> [fast]>). :|:");
+                                    } else {
+                                        QAInfo.add("<(*," + name(entity) + "," + name(ent) + ") --> closeTo>. :|:");
                                     }
                                 } else {
                                     QAInfo.add("<(*," + name(ent) + "," + name(entity) + ") --> closeTo>. :|:");
@@ -113,9 +114,10 @@ public class InformQaNar {
                             QAInfo.add("(&|," + informType(ent) + "," + informType(entity)+"). :|:");
                             if(veryClose(ent, entity)) {
                                 if(ent instanceof Car) {
-                                    QAInfo.add("<(*," + name(entity) + "," + name(ent) + ") --> closeTo>. :|:");
                                     if(((Car) ent).speed > fastThreshold) {
-                                        QAInfo.add("<"+name(ent) + " --> [fast]>. :|:");
+                                        QAInfo.add("(&|,<(*," + name(entity) + "," + name(ent) + ") --> closeTo>,"+"<"+name(ent) + " --> [fast]>). :|:");
+                                    } else {
+                                        QAInfo.add("<(*," + name(entity) + "," + name(ent) + ") --> closeTo>. :|:");
                                     }
                                 } else {
                                     QAInfo.add("<(*," + name(ent) + "," + name(entity) + ") --> closeTo>. :|:");

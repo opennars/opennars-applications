@@ -1,13 +1,15 @@
 >>QANar:
 
 //Anomaly ontology:
-<(&/,(&|,<#1 --> pedestrian>,<#2 --> car>,<#2 --> [fast]>,<(*,#1,#2) --> closeTo>),+1,<(*,{SELF},#1,is_in_danger) --> ^say>,+1) =/> <{SELF} --> [informative]>>.
-<(&/,(&|,<#1 --> car>,<#1 --> [fast]>,<#2 --> bike>,<(*,#2,#1) --> closeTo>),+1,<(*,{SELF},#2,is_in_danger) --> ^say>,+1) =/> <{SELF} --> [informative]>>.
-<(&/,(&|,<#1 --> pedestrian>,<(*,#1,street) --> at>),+1,<(*,{SELF},#1,is_jaywalking) --> ^say>,+1) =/> <{SELF} --> [informative]>>.
-<(&/,(&|,<#1 --> pedestrian>,<(*,#1,crosswalk) --> at>),+1,<(*,{SELF},#1,is_crosswalking) --> ^say>,+1) =/> <{SELF} --> [informative]>>.
+<(&/,(&|,<#1 --> pedestrian>,<#2 --> car>,<#2 --> [fast]>,<(*,#1,#2) --> closeTo>),+1,<(*,{SELF},#1,is_in_danger) --> ^say>,+1) =/> <{SELF} --> [danger_informative]>>.
+<(&/,(&|,<#1 --> car>,<#1 --> [fast]>,<#2 --> bike>,<(*,#2,#1) --> closeTo>),+1,<(*,{SELF},#2,is_in_danger) --> ^say>,+1) =/> <{SELF} --> [danger_informative]>>.
+<(&/,(&|,<#1 --> pedestrian>,<(*,#1,street) --> at>),+1,<(*,{SELF},#1,is_jaywalking) --> ^say>,+1) =/> <{SELF} --> [jaywalking_informative]>>.
+<(&/,(&|,<#1 --> pedestrian>,<(*,#1,crosswalk) --> at>),+1,<(*,{SELF},#1,is_crosswalking) --> ^say>,+1) =/> <{SELF} --> [crosswalking_informative]>>.
 
 //Motivations:
-<{SELF} --> [informative]>! :|:
+<{SELF} --> [danger_informative]>! :|:
+<{SELF} --> [jaywalking_informative]>! :|:
+<{SELF} --> [crosswalking_informative]>! :|:
 
 //Questions:
 (&|,<?1 --> bike>,<(*,?1,street) --> at>)? :|:
@@ -16,11 +18,11 @@
 
 <(&|,<#1 --> pedestrian>,<(*,#1,$location) --> at>) =|> <$location --> [sidewalk]>>.
 <(&|,<#1 --> car>,<(*,#1,$location) --> at>) =|> <$location --> [street]>>.
-<(&|,<#1 --> bike>,<(*,#1,$location) --> at>) =|> <$location --> [street]>>.
+//<(&|,<#1 --> bike>,<(*,#1,$location) --> at>) =|> <$location --> [street]>>.
 //<(&|,<#1 --> bike>,<(*,#1,$location) --> at>) =|> <$location --> [bikelane]>>.
-<(&|,<#1 --> car>,<(*,#1,$location) --> at>) =|> <$location --> [crosswalk]>>. %0.9%
-<(&|,<#1 --> pedestrian>,<(*,#1,$location) --> at>) =|> <$location --> [crosswalk]>>. %0.9%
-<(&|,<#1 --> bike>,<(*,#1,$location) --> at>) =|> <$location --> [crosswalk]>>. %0.9%
+<(&|,<#1 --> car>,<(*,#1,$location) --> at>) =|> <$location --> [crosswalk]>>. %0.55%
+<(&|,<#1 --> pedestrian>,<(*,#1,$location) --> at>) =|> <$location --> [crosswalk]>>. %0.55%
+//<(&|,<#1 --> bike>,<(*,#1,$location) --> at>) =|> <$location --> [crosswalk]>>. %0.55%
 
 >>General information:
 
