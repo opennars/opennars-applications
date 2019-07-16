@@ -138,13 +138,16 @@ public class InformQaNar {
             //also give info about position at labelled locations
             int X = (int) (ent.posX / Util.discretization);
             int Y = (int) (ent.posY / Util.discretization);
-            String subj = X + "_" + Y;
-            if(locationToLabel.containsKey(subj)) {
-                System.out.println("QA INFO: <(*,"+name(ent)+","+locationToLabel.get(subj).choice()+") --> at>. :|:");
-                ArrayList<String> Atinfo = new ArrayList<String>();
-                Atinfo.add(typeInfo);
-                Atinfo.add("<(*,"+name(ent)+","+locationToLabel.get(subj).choice()+") --> at>. :|:");
-                QAinformation.add(Atinfo);
+            String position = X + "_" + Y;
+            if(locationToLabel.containsKey(position)) {
+                String label = locationToLabel.get(position).choice();
+                if(label != null) {
+                    System.out.println("QA INFO: <(*,"+name(ent)+","+label+") --> at>. :|:");
+                    ArrayList<String> Atinfo = new ArrayList<>();
+                    Atinfo.add(typeInfo);
+                    Atinfo.add("<(*,"+name(ent)+","+locationToLabel.get(position).choice()+") --> at>. :|:");
+                    QAinformation.add(Atinfo);
+                }
             }
         }
         Collections.shuffle(QAinformation, rnd);

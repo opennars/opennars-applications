@@ -31,8 +31,12 @@ import org.opennars.main.Nar;
 
 public class MapEvidence {
 
-    String[] labels;
-    Map<String,TruthValue> ev = new HashMap<>();
+    //The labels
+    private String[] labels;
+    //The mapping from label to truth
+    private Map<String,TruthValue> ev = new HashMap<>();
+    //Acceptance evidence
+    public float minExpectation = 0.55f;
     
     public MapEvidence(Nar locationNar, String[] labels) {
         this.labels = labels;
@@ -50,6 +54,9 @@ public class MapEvidence {
                 maxKey = s;
                 maxExpectation = curExpectation;
             }
+        }
+        if(maxExpectation < minExpectation) {
+            return null;
         }
         return maxKey;
     }

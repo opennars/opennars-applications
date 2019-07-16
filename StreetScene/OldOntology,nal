@@ -13,7 +13,8 @@
 
 >>LocationNar:
 
-<(&|,<#1 --> pedestrian>,<(*,#1,$location) --> at>) =|> <$location --> [sidewalk]>>.
+<(&|,<#1 --> pedestrian>,(--,<#1 --> [crossing]>),<(*,#1,$location) --> at>) =|> <$location --> [sidewalk]>>.
+<(&|,<#1 --> pedestrian>,<#1 --> [crossing]>,<(*,#1,$location) --> at>) =|> <$location --> [crosswalk]>>.
 <(&|,<#1 --> car>,<(*,#1,$location) --> at>) =|> <$location --> [street]>>.
 <(&|,<#1 --> bike>,<(*,#1,$location) --> at>) =|> <$location --> [street]>>.
 //<(&|,<#1 --> bike>,<(*,#1,$location) --> at>) =|> <$location --> [bikelane]>>.

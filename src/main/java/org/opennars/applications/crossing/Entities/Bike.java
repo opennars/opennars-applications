@@ -23,7 +23,7 @@
  */
 package org.opennars.applications.crossing.Entities;
 
-public class Bike extends Car {
+public class Bike extends Entity {
 
     public Bike(int angle, double posX, double posY, String id) {
         super(angle, posX, posY, id);

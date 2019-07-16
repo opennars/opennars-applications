@@ -23,7 +23,6 @@
  */
 package org.opennars.applications.crossing.Encoders;
 
-import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
@@ -31,10 +30,13 @@ import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
+import org.opennars.applications.crossing.Entities.Car;
 import org.opennars.applications.crossing.Entities.Entity;
+import org.opennars.applications.crossing.Entities.Pedestrian;
 import org.opennars.applications.crossing.VisualReasoner;
 import org.opennars.applications.crossing.Util;
 import org.opennars.entity.Sentence;
+import org.opennars.entity.TruthValue;
 import org.opennars.io.Parser;
 import org.opennars.io.events.AnswerHandler;
 import org.opennars.language.Inheritance;
@@ -46,16 +48,39 @@ public class InformLocationNar {
     public String ontology = "";
     //Location labels estimated by reasoning
     public Map<String,MapEvidence> locationToLabel = new HashMap<String,MapEvidence>();
+    //Angles on locations estimated by reasoning
+    public Map<String,MapEvidence> locationToCarAngle = new HashMap<String,MapEvidence>();
     
     void inform(Nar locationNar, List<Entity> entities) {
         List<Entity> sortedEntX = entities.stream().sorted(Comparator.comparing(Entity::getPosX)).collect(Collectors.toList());
         for(Entity ent : sortedEntX) {
-            String typeInfo = EntityToNarsese.informType(ent)+". :|:";
-            locationNar.addInput(typeInfo);
+            String typeInfo = EntityToNarsese.informType(ent);
             //also give info about position at labelled locations
-            String locationnarInput = "<(*,"+EntityToNarsese.name(ent)+","+Util.positionToTerm((int)ent.posX,(int)ent.posY)+") --> at>. :|:";
-            locationNar.addInput(locationnarInput);
-            System.out.println("location nar input: " + locationnarInput);
+            String position = Util.positionToTerm((int)ent.posX,(int)ent.posY);
+            locationNar.addInput("(&|,<(*,"+EntityToNarsese.name(ent)+","+position+") --> at>,"+typeInfo+"). :|:");
+            String locationNarInput = "(--,<" + EntityToNarsese.name(ent) + " --> [crossing]>). :|:";
+            if (ent instanceof Pedestrian && locationToCarAngle.containsKey(position)) {
+                String carAngle = locationToCarAngle.get(position).choice();
+                boolean orthogonal = (ent.angle == 0 && "10".equals(carAngle)
+                        || ent.angle == 10 && "0".equals(carAngle)
+                        || ent.angle == 0 && "1".equals(carAngle)
+                        || ent.angle == 1 && "0".equals(carAngle)
+                        || ent.angle == 1 && "11".equals(carAngle)
+                        || ent.angle == 11 && "1".equals(carAngle)
+                        || ent.angle == 10 && "11".equals(carAngle)
+                        || ent.angle == 11 && "10".equals(carAngle));
+                if (carAngle != null && orthogonal) {
+                    locationNarInput = "<" + EntityToNarsese.name(ent) + " --> [crossing]>). :|:";
+                }
+            }
+            locationNar.addInput(locationNarInput);
+            if(ent instanceof Car) {
+                String[] labels = new String[] {"0","1","11","10"};
+                if(!locationToCarAngle.containsKey(position)) {
+                    locationToCarAngle.put(position, new MapEvidence(locationNar, labels));
+                }
+                locationToCarAngle.get(position).collect(locationNar, String.valueOf(ent.angle), new TruthValue(1.0f, 0.9f, locationNar.narParameters));
+            }
         }
     }
     
@@ -78,8 +103,7 @@ public class InformLocationNar {
                                 if(!locationToLabel.containsKey(subj)) {
                                     locationToLabel.put(subj, new MapEvidence(locationNar, labels));
                                 }
-                                MapEvidence mapval = locationToLabel.get(subj);
-                                mapval.collect(locationNar, type, belief.truth);
+                                locationToLabel.get(subj).collect(locationNar, type, belief.truth);
                             }
                         }
                     });
