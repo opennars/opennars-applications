@@ -4,7 +4,7 @@
 <(&/,(&|,<#1 --> pedestrian>,<#2 --> car>,<#2 --> [fast]>,<(*,#1,#2) --> closeTo>),+1,<(*,{SELF},#1,is_in_danger) --> ^say>,+1) =/> <{SELF} --> [informative]>>.
 <(&/,(&|,<#1 --> car>,<#1 --> [fast]>,<#2 --> bike>,<(*,#2,#1) --> closeTo>),+1,<(*,{SELF},#2,is_in_danger) --> ^say>,+1) =/> <{SELF} --> [informative]>>.
 <(&/,(&|,<#1 --> pedestrian>,<(*,#1,street) --> at>),+1,<(*,{SELF},#1,is_jaywalking) --> ^say>,+1) =/> <{SELF} --> [informative]>>.
-<(&/,(&|,<#1 --> pedestrian>,<(*,#1,crosswalk) --> at>),+1,<(*,{SELF},#1,is_crosswalking) --> ^say>,+1) =/> <{SELF} --> [informative]>>.
+//<(&/,(&|,<#1 --> pedestrian>,<(*,#1,crosswalk) --> at>),+1,<(*,{SELF},#1,is_crosswalking) --> ^say>,+1) =/> <{SELF} --> [informative]>>.
 
 //Motivations:
 <{SELF} --> [informative]>! :|:
