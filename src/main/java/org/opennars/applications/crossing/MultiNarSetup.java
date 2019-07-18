@@ -106,15 +106,15 @@ public class MultiNarSetup {
         }
     }
 
-    public void perceiveScene(int t, int perception_update, int relation_update) {
-        if(t % relation_update == 0) {
+    public void perceiveScene(int t, int perceptionUpdate, int relationUpdate) {
+        if(t % relationUpdate == 0) {
             System.out.println("TICK spatial");
             lock.lock();
             doWork.signal();
             lock.unlock();
         }
-        if (t % perception_update == 0) {
-            this.informLocationNar.askForLabels(locationNar, t, perception_update, entities);
+        if (t % perceptionUpdate == 0) {
+            this.informLocationNar.askForLabels(locationNar, t, perceptionUpdate, entities);
             for (Entity ent : entities) {
                 informer.informAboutEntity(predictionNar, ent);
             }

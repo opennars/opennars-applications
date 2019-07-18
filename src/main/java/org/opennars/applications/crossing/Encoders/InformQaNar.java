@@ -163,10 +163,6 @@ public class InformQaNar {
                 break;
             }
         }
-        inputOntology(qanar);
-    }
-    
-    private void inputOntology(Nar qanar) {
         if(!"".equals(ontology)) {
             qanar.addInput(ontology);
         }

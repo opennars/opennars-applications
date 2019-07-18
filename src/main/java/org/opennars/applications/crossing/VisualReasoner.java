@@ -63,8 +63,8 @@ public class VisualReasoner {
     List<Entity> entities = new ArrayList<>();
     //Perception&relation update with related counter
     public static int i = 0;
-    int perception_update = 1;
-    int relation_update = 5;
+    public static int perceptionUpdate = 1;
+    public static int relationUpdate = 5;
     //Movement thresholds for the entity classes
     public static double fastThreshold = 50;
     public static double movementThresholdCar = 30;
@@ -94,14 +94,16 @@ public class VisualReasoner {
     }
 
     private void cleanupAnomalies(HashMap<String,Integer> hashmap) {
-        List<String> cleanups = new ArrayList<String>();
-        for(String key : hashmap.keySet()) {
-            if(i - hashmap.get(key) > anomalyRetrieveDuration) {
-                cleanups.add(key);
+        synchronized(hashmap) {
+            List<String> cleanups = new ArrayList<String>();
+            for(String key : hashmap.keySet()) {
+                if(i - hashmap.get(key) > anomalyRetrieveDuration) {
+                    cleanups.add(key);
+                }
             }
-        }
-        for(String key : cleanups) {
-            hashmap.remove(key);
+            for(String key : cleanups) {
+                hashmap.remove(key);
+            }
         }
     }
     
@@ -141,7 +143,7 @@ public class VisualReasoner {
         cleanupAnomalies(relations);
         entities.clear(); //refresh detections
         AddEntitiesFromTracklets();
-        trafficMultiNar.perceiveScene(i, perception_update, relation_update);
+        trafficMultiNar.perceiveScene(i, perceptionUpdate, relationUpdate);
         trafficMultiNar.reason();
         List<String> msgs = new ArrayList<>();
         for (Prediction pred : trafficMultiNar.predictions) {
@@ -177,16 +179,20 @@ public class VisualReasoner {
                 msgs.add("is_crosswalking "+ent);
             }
         }
-        for(String key : trafficMultiNar.informLocationNar.locationToLabel.keySet()) {
-            String choice = trafficMultiNar.informLocationNar.locationToLabel.get(key).choice();
-            if(choice != null) {
-                msgs.add("location " + key + " " + choice);
+        synchronized(trafficMultiNar.informLocationNar.locationToLabel) {
+            for(String key : trafficMultiNar.informLocationNar.locationToLabel.keySet()) {
+                String choice = trafficMultiNar.informLocationNar.locationToLabel.get(key).choice();
+                if(choice != null) {
+                    msgs.add("location " + key + " " + choice);
+                }
             }
         }
-        for(String key : trafficMultiNar.informLocationNar.locationToCarAngle.keySet()) {
-            String choice = trafficMultiNar.informLocationNar.locationToCarAngle.get(key).choice();
-            if(choice != null) {
-                msgs.add("carDirection " + key + " " + choice);
+        synchronized(trafficMultiNar.informLocationNar.locationToCarAngle) {
+            for(String key : trafficMultiNar.informLocationNar.locationToCarAngle.keySet()) {
+                String choice = trafficMultiNar.informLocationNar.locationToCarAngle.get(key).choice();
+                if(choice != null) {
+                    msgs.add("carDirection " + key + " " + choice);
+                }
             }
         }
         MessagesToRedis(msgs);
@@ -291,8 +297,8 @@ public class VisualReasoner {
         }
         //</editor-fold>
         //</editor-fold>
-        System.out.println("args: discretization movementThresholdCar movementThresholdPedestrian movementThresholdBike fastThreshold veryClosenessThreshold OntologyNalFile AnomalyRetrieveDuration redisHost redisPort redisPassword QTrackletToNar QInfoFromNar");
-        System.out.println("example: java -cp \"*\" org.opennars.applications.crossing.RealCrossing 80 30 5 5 169 /home/tc/Dateien/CROSSING/StreetScene/AnomalyOntology.nal 30 locahost 6379 pwd Q_Tracklet_To_Nar Q_Info_From_Nar");
+        System.out.println("args: discretization movementThresholdCar movementThresholdPedestrian movementThresholdBike fastThreshold veryClosenessThreshold OntologyNalFile AnomalyRetrieveDuration redisHost redisPort redisPassword QTrackletToNar QInfoFromNar PerceptionUpdate RelationUpdate");
+        System.out.println("example: java -cp \"*\" org.opennars.applications.crossing.RealCrossing 80 30 5 5 169 /home/tc/Dateien/CROSSING/StreetScene/AnomalyOntology.nal 30 locahost 6379 pwd Q_Tracklet_To_Nar Q_Info_From_Nar 1 5");
         Util.discretization = Integer.valueOf(args[0]);
         VisualReasoner.movementThresholdCar = Integer.valueOf(args[1]); 
         VisualReasoner.movementThresholdPedestrian = Integer.valueOf(args[2]); 
@@ -306,6 +312,8 @@ public class VisualReasoner {
         String redispwd = args[10];
         QTrackletToNar = args[11];
         QInfoFromNar = args[12];
+        perceptionUpdate = Integer.valueOf(args[13]);
+        relationUpdate = Integer.valueOf(args[14]);
         JedisPool pool = new JedisPool(redishost, redisport);
         r = pool.getResource();
         if(!redispwd.isEmpty()) {

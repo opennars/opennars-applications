@@ -47,9 +47,9 @@ public class InformLocationNar {
     //user-given background knowledge
     public String ontology = "";
     //Location labels estimated by reasoning
-    public Map<String,MapEvidence> locationToLabel = new HashMap<String,MapEvidence>();
+    public final Map<String,MapEvidence> locationToLabel = new HashMap<String,MapEvidence>();
     //Angles on locations estimated by reasoning
-    public Map<String,MapEvidence> locationToCarAngle = new HashMap<String,MapEvidence>();
+    public final Map<String,MapEvidence> locationToCarAngle = new HashMap<String,MapEvidence>();
     
     void inform(Nar locationNar, List<Entity> entities) {
         List<Entity> sortedEntX = entities.stream().sorted(Comparator.comparing(Entity::getPosX)).collect(Collectors.toList());
@@ -59,27 +59,31 @@ public class InformLocationNar {
             String position = Util.positionToTerm((int)ent.posX,(int)ent.posY);
             locationNar.addInput("(&|,<(*,"+EntityToNarsese.name(ent)+","+position+") --> at>,"+typeInfo+"). :|:");
             String locationNarInput = "<" + EntityToNarsese.name(ent) + " --> [aligned]>. :|:";
-            if (ent instanceof Pedestrian && locationToCarAngle.containsKey(position)) {
-                String carAngle = locationToCarAngle.get(position).choice();
-                boolean orthogonal = (ent.angle == 0 && "10".equals(carAngle)
-                        || ent.angle == 10 && "0".equals(carAngle)
-                        || ent.angle == 0 && "1".equals(carAngle)
-                        || ent.angle == 1 && "0".equals(carAngle)
-                        || ent.angle == 1 && "11".equals(carAngle)
-                        || ent.angle == 11 && "1".equals(carAngle)
-                        || ent.angle == 10 && "11".equals(carAngle)
-                        || ent.angle == 11 && "10".equals(carAngle));
-                if (carAngle != null && orthogonal) {
-                    locationNarInput = "<" + EntityToNarsese.name(ent) + " --> [crossing]>. :|:";
+            synchronized(locationToCarAngle) {
+                if (ent instanceof Pedestrian && locationToCarAngle.containsKey(position)) {
+                    String carAngle = locationToCarAngle.get(position).choice();
+                    boolean orthogonal = (ent.angle == 0 && "10".equals(carAngle)
+                            || ent.angle == 10 && "0".equals(carAngle)
+                            || ent.angle == 0 && "1".equals(carAngle)
+                            || ent.angle == 1 && "0".equals(carAngle)
+                            || ent.angle == 1 && "11".equals(carAngle)
+                            || ent.angle == 11 && "1".equals(carAngle)
+                            || ent.angle == 10 && "11".equals(carAngle)
+                            || ent.angle == 11 && "10".equals(carAngle));
+                    if (carAngle != null && orthogonal) {
+                        locationNarInput = "<" + EntityToNarsese.name(ent) + " --> [crossing]>. :|:";
+                    }
                 }
             }
             locationNar.addInput(locationNarInput);
-            if(ent instanceof Car) {
-                String[] labels = new String[] {"0","1","11","10"};
-                if(!locationToCarAngle.containsKey(position)) {
-                    locationToCarAngle.put(position, new MapEvidence(locationNar, labels));
+            synchronized(locationToCarAngle) {
+                if(ent instanceof Car) {
+                    String[] labels = new String[] {"0","1","11","10"};
+                    if(!locationToCarAngle.containsKey(position)) {
+                        locationToCarAngle.put(position, new MapEvidence(locationNar, labels));
+                    }
+                    locationToCarAngle.get(position).collect(locationNar, String.valueOf(ent.angle), new TruthValue(1.0f, 0.9f, locationNar.narParameters));
                 }
-                locationToCarAngle.get(position).collect(locationNar, String.valueOf(ent.angle), new TruthValue(1.0f, 0.9f, locationNar.narParameters));
             }
         }
     }
@@ -99,11 +103,13 @@ public class InformLocationNar {
                                 return;
                             }
                             String subj = ((Inheritance) belief.getTerm()).getSubject().toString();
-                            if(subj.contains("_")) {
-                                if(!locationToLabel.containsKey(subj)) {
-                                    locationToLabel.put(subj, new MapEvidence(locationNar, labels));
+                            synchronized(locationToLabel) {
+                                if(subj.contains("_")) {
+                                    if(!locationToLabel.containsKey(subj)) {
+                                        locationToLabel.put(subj, new MapEvidence(locationNar, labels));
+                                    }
+                                    locationToLabel.get(subj).collect(locationNar, type, belief.truth);
                                 }
-                                locationToLabel.get(subj).collect(locationNar, type, belief.truth);
                             }
                         }
                     });
