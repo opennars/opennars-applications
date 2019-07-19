@@ -52,7 +52,10 @@ public class InformLocationNar {
     public final Map<String,MapEvidence> locationToCarAngle = new HashMap<String,MapEvidence>();
     
     void inform(Nar locationNar, List<Entity> entities) {
-        List<Entity> sortedEntX = entities.stream().sorted(Comparator.comparing(Entity::getPosX)).collect(Collectors.toList());
+        List<Entity> sortedEntX = null;
+        synchronized(entities) {
+            sortedEntX = entities.stream().sorted(Comparator.comparing(Entity::getPosX)).collect(Collectors.toList());
+        }
         for(Entity ent : sortedEntX) {
             String typeInfo = EntityToNarsese.informType(ent);
             //also give info about position at labelled locations

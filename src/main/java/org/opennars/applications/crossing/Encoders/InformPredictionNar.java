@@ -37,22 +37,26 @@ public class InformPredictionNar {
     String input = "";
     List<String> inputs = new ArrayList<>();
     
-    public void informAboutEntity(Nar nar, Entity ent) {
-        String id = String.valueOf(ent.angle);
-        String pos = Util.positionToTerm((int) ent.posX, (int) ent.posY);
-        if(ent instanceof Bike) {
-            inputs.add("<(*,bike" + id + ","+ pos + ") --> at>. :|:");
-            input += inputs.get(inputs.size()-1);
-        } else
-        if (ent instanceof Car) {
-            inputs.add("<(*,car" + id + ","+ pos + ") --> at>. :|:");
-            input += inputs.get(inputs.size()-1);
+    public void informAboutEntities(Nar nar, List<Entity> entities) {
+        synchronized(entities) {
+            for(Entity ent : entities) {
+                String id = String.valueOf(ent.angle);
+                String pos = Util.positionToTerm((int) ent.posX, (int) ent.posY);
+                if(ent instanceof Bike) {
+                    inputs.add("<(*,bike" + id + ","+ pos + ") --> at>. :|:");
+                    input += inputs.get(inputs.size()-1);
+                } else
+                if (ent instanceof Car) {
+                    inputs.add("<(*,car" + id + ","+ pos + ") --> at>. :|:");
+                    input += inputs.get(inputs.size()-1);
+                }
+                //prediction nar doesn't receive pedestrians for now as they behave too unpredictably
+                //if (ent instanceof Pedestrian) {
+                //    inputs.add("<(*,pedestrian" + id + "," + pos + ") --> at>. :|:");
+                //    input += inputs.get(inputs.size()-1);
+                //}
+            }
         }
-        //prediction nar doesn't receive pedestrians for now as they behave too unpredictably
-        //if (ent instanceof Pedestrian) {
-        //    inputs.add("<(*,pedestrian" + id + "," + pos + ") --> at>. :|:");
-        //    input += inputs.get(inputs.size()-1);
-        //}
     }
 
     public boolean Input(Nar nar) {

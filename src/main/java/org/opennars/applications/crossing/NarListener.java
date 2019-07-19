@@ -47,16 +47,14 @@ public class NarListener implements EventEmitter.EventObserver {
     Term bike = Term.get("bike");
     Term car = Term.get("car");
     Term at = Term.get("at");
-    List<Entity> entities;
     List<Prediction> predictions;
     List<Prediction> disappointments;
     Nar nar;
     
-    public NarListener(Nar nar, List<Prediction> predictions, List<Prediction> disappointments, List<Entity> entities) {
+    public NarListener(Nar nar, List<Prediction> predictions, List<Prediction> disappointments) {
         this.predictions = predictions;
         this.disappointments = disappointments;
         this.nar = nar;
-        this.entities = entities;
     }
     
     @Override

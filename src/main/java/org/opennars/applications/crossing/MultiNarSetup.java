@@ -82,7 +82,7 @@ public class MultiNarSetup {
             locationNar.narParameters.SEQUENCE_BAG_ATTEMPTS=0;
             predictionNar = new Nar();
             predictionNar.narParameters.DURATION*=10;
-            NarListener listener = new NarListener(predictionNar, predictions, disappointments, entities);
+            NarListener listener = new NarListener(predictionNar, predictions, disappointments);
             predictionNar.on(Events.TaskAdd.class, listener);
             predictionNar.on(OutputHandler.DISAPPOINT.class, listener);
         } catch (Exception ex) {
@@ -115,9 +115,7 @@ public class MultiNarSetup {
         }
         if (t % perceptionUpdate == 0) {
             this.informLocationNar.askForLabels(locationNar, t, perceptionUpdate, entities);
-            for (Entity ent : entities) {
-                informer.informAboutEntity(predictionNar, ent);
-            }
+            informer.informAboutEntities(predictionNar, entities);
             informer.Input(predictionNar);
         }
     }

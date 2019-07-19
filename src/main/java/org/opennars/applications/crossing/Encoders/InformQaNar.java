@@ -79,9 +79,12 @@ public class InformQaNar {
         }
         qanar.reset();
         //inform NARS about the spatial relationships between objects and which categories they belong to according to the Tracker
-        List<Entity> sortedEntX = entities.stream().sorted(Comparator.comparing(Entity::getPosX)).collect(Collectors.toList());
+        List<Entity> sortedEntX = null;
+        synchronized(entities) {
+            sortedEntX = entities.stream().sorted(Comparator.comparing(Entity::getPosX)).collect(Collectors.toList());
+        }
         for(Entity ent : sortedEntX) {
-            for(Entity entity : entities) {
+            for(Entity entity : sortedEntX) {
                 if(ent != entity && near(ent, entity)) {
                     ArrayList<String> QAInfo = new ArrayList<String>();
                     if(relate_pedestrians || !(entity instanceof Pedestrian && ent instanceof Pedestrian)) {

@@ -141,8 +141,10 @@ public class VisualReasoner {
         cleanupAnomalies(jaywalkers);
         cleanupAnomalies(indangers);
         cleanupAnomalies(relations);
-        entities.clear(); //refresh detections
-        AddEntitiesFromTracklets();
+        synchronized(entities) {
+            entities.clear(); //refresh detections
+            AddEntitiesFromTracklets();
+        }
         trafficMultiNar.perceiveScene(i, perceptionUpdate, relationUpdate);
         trafficMultiNar.reason();
         List<String> msgs = new ArrayList<>();
