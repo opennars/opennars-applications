@@ -108,7 +108,7 @@ public class MultiNarSetup {
 
     public void perceiveScene(int t, int perceptionUpdate, int relationUpdate) {
         if(t % relationUpdate == 0) {
-            System.out.println("TICK spatial");
+            //System.out.println("TICK spatial");
             lock.lock();
             doWork.signal();
             lock.unlock();

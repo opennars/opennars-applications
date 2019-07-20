@@ -143,7 +143,7 @@ public class InformQaNar {
             if(locationToLabel.containsKey(position)) {
                 String label = locationToLabel.get(position).choice();
                 if(label != null) {
-                    System.out.println("QA INFO: <(*,"+name(ent)+","+label+") --> at>. :|:");
+                    //System.out.println("QA INFO: <(*,"+name(ent)+","+label+") --> at>. :|:");
                     ArrayList<String> Atinfo = new ArrayList<>();
                     Atinfo.add(typeInfo);
                     Atinfo.add("<(*,"+name(ent)+","+locationToLabel.get(position).choice()+") --> at>. :|:");
@@ -155,7 +155,7 @@ public class InformQaNar {
         int k = 0;
         for(ArrayList<String> info : QAinformation) {
             for(String s : info) {
-                System.out.println(s);
+                //System.out.println(s);
                 qanar.addInput(s);
                 k++;
                 if(k >= take_k) {
