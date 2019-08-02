@@ -29,6 +29,8 @@
 
 //Atoms:
 //bikeID, carID, pedestrianID
+//Classes:
+//bike, car, pedestrian
 //Annotation classes:
 //street, sidewalk, crosswalk
 //bikelane (currently unused)
