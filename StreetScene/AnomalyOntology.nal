@@ -29,7 +29,7 @@
 
 //Atoms:
 //bikeID, carID, pedestrianID
-//Classes:
+//Entity classes:
 //bike, car, pedestrian
 //Annotation classes:
 //street, sidewalk, crosswalk
