@@ -21,59 +21,37 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package org.opennars.applications.crossing;
+package org.opennars.applications.crossing.Entities;
 
-import org.opennars.applications.streetscene.OperatorPanel;
-import java.util.List;
 import org.opennars.applications.Util;
 import org.opennars.entity.TruthValue;
 import processing.core.PApplet;
 
-public class Pedestrian extends Entity {
+public class Car extends Entity {
 
-    double initialAngle;
-    double prevX = 0;
-    double prevY = 0;
-    public final static float pedestrianScale = 0.75f;
-    
-    public Pedestrian(int id, double posX, double posY, double velocity, double angle, String label) {
+    public Car(int id, double posX, double posY, double velocity, double angle, String label) {
         this(id, posX, posY, velocity, angle);
         this.label = label;
     }
     
-    public Pedestrian(int id, double posX, double posY, double velocity, double angle) {
+    public Car(int id, double posX, double posY, double velocity, double angle) {
         super(id, posX, posY, velocity, angle);
-        initialAngle = angle;
-        scale = pedestrianScale;
-        maxSpeed = 1;
+        maxSpeed = 2;
     }
 
     public void draw(PApplet applet, TruthValue truth, long time) {
-        prevX = posX;
-        prevY = posY;
-        if(isPredicted && !OperatorPanel.showPredictions) {
-            return;
-        }
         float mul = Util.truthToValue(truth) * Util.timeToValue(time);
-        applet.fill(0, 255, 255, mul*255.0f);
+        applet.fill(255, 0, 255, mul*255.0f);
+
+        if (!isPredicted && isAnomaly()) {
+            applet.stroke(255,0,0);
+        }
+        else {
+            applet.stroke(127);
+        }
+
         super.draw(applet, truth, time);
-    }
-    
-    public void simulate(List<TrafficLight> trafficLights, List<Entity> entities, List<Street> streets) {
-        super.simulate(trafficLights, entities, streets);
-        angle+=(Util.rnd.nextFloat()*0.1-0.05);
-        //ok pedestrian, don't go on grass
-        boolean forPedestrians = false;
-        for(Street street : streets) {
-            if(!street.forCarsOnly && this.posX > street.startX && this.posX < street.endX && this.posY > street.startY && this.posY < street.endY) {
-                forPedestrians = true;
-                break;
-            }
-        }
-        if(!forPedestrians) {
-            this.angle = this.initialAngle;
-            this.posX = prevX;
-            this.posY = prevY;
-        }
+
+        applet.stroke(127);
     }
 }

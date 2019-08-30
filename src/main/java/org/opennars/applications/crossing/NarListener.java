@@ -23,6 +23,9 @@
  */
 package org.opennars.applications.crossing;
 
+import org.opennars.applications.crossing.Entities.Car;
+import org.opennars.applications.crossing.Entities.Entity;
+import org.opennars.applications.crossing.Entities.Pedestrian;
 import java.util.List;
 import org.opennars.applications.Util;
 import org.opennars.entity.Sentence;

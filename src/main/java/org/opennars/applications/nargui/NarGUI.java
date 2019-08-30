@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package org.opennars.applications.gui;
+package org.opennars.applications.nargui;
 
 import javax.swing.text.DefaultCaret;
 import static javax.swing.text.DefaultCaret.ALWAYS_UPDATE;
@@ -18,7 +18,7 @@ import org.opennars.operator.Operator;
  *
  * @author patha
  */
-public class NarSimpleGUI extends javax.swing.JFrame {
+public class NarGUI extends javax.swing.JFrame {
 
     String narText = "";
     public class NarListener implements EventEmitter.EventObserver {  
@@ -62,7 +62,7 @@ public class NarSimpleGUI extends javax.swing.JFrame {
     /**
      * Creates new form NARSimpleGUI
      */
-    public NarSimpleGUI(Nar nar) {
+    public NarGUI(Nar nar) {
         this.nar = nar;
         initComponents();
         DefaultCaret caret = (DefaultCaret) jTextPane2.getCaret();
@@ -152,7 +152,7 @@ public class NarSimpleGUI extends javax.swing.JFrame {
         });
 
         jCheckBox1.setSelected(true);
-        jCheckBox1.setText("show derivations");
+        jCheckBox1.setText("Show derivaitons");
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
@@ -256,13 +256,13 @@ public class NarSimpleGUI extends javax.swing.JFrame {
                 }
             }
         } catch (ClassNotFoundException ex) {
-            java.util.logging.Logger.getLogger(NarSimpleGUI.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+            java.util.logging.Logger.getLogger(NarGUI.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
         } catch (InstantiationException ex) {
-            java.util.logging.Logger.getLogger(NarSimpleGUI.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+            java.util.logging.Logger.getLogger(NarGUI.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
         } catch (IllegalAccessException ex) {
-            java.util.logging.Logger.getLogger(NarSimpleGUI.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+            java.util.logging.Logger.getLogger(NarGUI.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
         } catch (javax.swing.UnsupportedLookAndFeelException ex) {
-            java.util.logging.Logger.getLogger(NarSimpleGUI.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+            java.util.logging.Logger.getLogger(NarGUI.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
         }
         //</editor-fold>
         //</editor-fold>
@@ -277,7 +277,7 @@ public class NarSimpleGUI extends javax.swing.JFrame {
         /* Create and display the form */
         java.awt.EventQueue.invokeLater(new Runnable() {
             public void run() {
-                new NarSimpleGUI(narForGui).setVisible(true);
+                new NarGUI(narForGui).setVisible(true);
             }
         });
     }

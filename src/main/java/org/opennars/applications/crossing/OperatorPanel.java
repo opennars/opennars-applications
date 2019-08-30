@@ -5,16 +5,18 @@
  */
 package org.opennars.applications.crossing;
 
+import org.opennars.applications.crossing.Entities.Entity;
+
 /**
  *
  * @author patha
  */
-public class IncidentSimulator extends javax.swing.JFrame {
+public class OperatorPanel extends javax.swing.JFrame {
 
     /**
      * Creates new form IncidentSimulator
      */
-    public IncidentSimulator() {
+    public OperatorPanel() {
         initComponents();
         jCheckBox3.setVisible(false);
     }

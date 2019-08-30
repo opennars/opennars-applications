@@ -23,8 +23,11 @@
  */
 package org.opennars.applications.crossing;
 
+import org.opennars.applications.crossing.Entities.Pedestrian;
+import org.opennars.applications.crossing.Entities.Entity;
+import org.opennars.applications.crossing.Entities.Car;
 import org.opennars.applications.crossing.NarListener.Prediction;
-import org.opennars.applications.gui.NarSimpleGUI;
+import org.opennars.applications.nargui.NarGUI;
 import java.util.ArrayList;
 import java.util.List;
 import org.opennars.io.events.Events;
@@ -44,7 +47,7 @@ public class Crossing extends PApplet {
     final int fps = 50;
     @Override
     public void setup() {
-        new IncidentSimulator().show();
+        new OperatorPanel().show();
         cameras.add(new Camera(500+streetWidth/2, 500+streetWidth/2));
         try {
             nar = new Nar();
@@ -83,7 +86,7 @@ public class Crossing extends PApplet {
         
         size(1000, 1000);
         frameRate(fps);
-        new NarSimpleGUI(nar);
+        new NarGUI(nar);
     }
 
     List<Street> streets = new ArrayList<Street>();
@@ -208,7 +211,7 @@ public class Crossing extends PApplet {
                 }
             }
         } catch (ClassNotFoundException | InstantiationException | IllegalAccessException | javax.swing.UnsupportedLookAndFeelException ex) {
-            java.util.logging.Logger.getLogger(NarSimpleGUI.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+            java.util.logging.Logger.getLogger(NarGUI.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
         }
         //</editor-fold>
         //</editor-fold>

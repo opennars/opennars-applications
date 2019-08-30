@@ -21,10 +21,13 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package org.opennars.applications.crossing;
+package org.opennars.applications.crossing.Entities;
 
 import java.util.List;
 import org.opennars.applications.Util;
+import org.opennars.applications.crossing.Crossing;
+import org.opennars.applications.crossing.Street;
+import org.opennars.applications.crossing.TrafficLight;
 import org.opennars.entity.TruthValue;
 import processing.core.PApplet;
 

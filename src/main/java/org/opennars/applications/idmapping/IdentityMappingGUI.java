@@ -5,7 +5,7 @@
  */
 package org.opennars.applications.idmapping;
 
-import org.opennars.applications.gui.NarSimpleGUI;
+import org.opennars.applications.nargui.NarGUI;
 import java.awt.Color;
 import java.util.HashMap;
 import java.util.List;
@@ -113,7 +113,7 @@ public class IdentityMappingGUI extends javax.swing.JFrame {
         //nar.narParameters.ANTICIPATION_CONFIDENCE = 0.9f;
         //nar.narParameters.SEQUENCE_BAG_ATTEMPTS*=10;
         //nar.narParameters.SEQUENCE_BAG_ATTEMPTS*=20;
-        NarSimpleGUI narsgui = new NarSimpleGUI(nar);
+        NarGUI narsgui = new NarGUI(nar);
         timer.schedule(new TimerTask(){
             @Override
             public void run(){
