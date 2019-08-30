@@ -23,13 +23,13 @@
  */
 package org.opennars.applications.streetscene;
 
+import org.opennars.applications.Util;
 import org.opennars.applications.streetscene.Entities.Entity;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import org.opennars.applications.crossing.OperatorPanel;
 import org.opennars.applications.streetscene.Entities.Bike;
 import org.opennars.applications.streetscene.Entities.Car;
 import org.opennars.applications.streetscene.Entities.Pedestrian;
@@ -47,6 +47,7 @@ import static org.opennars.applications.streetscene.VisualReasonerHeadless.perce
 import static org.opennars.applications.streetscene.VisualReasonerHeadless.questionUpdate;
 import static org.opennars.applications.streetscene.VisualReasonerHeadless.relationUpdate;
 import static org.opennars.applications.streetscene.VisualReasonerHeadless.trafficMultiNar;
+import org.opennars.entity.TruthValue;
 import processing.core.PApplet;
 import processing.core.PImage;
 
@@ -56,6 +57,7 @@ public class VisualReasonerWithGUI extends PApplet {
     public static String trackletpath = "/home/tc/Dateien/CROSSING/Test003/";
     boolean drawPlaces = false;
     OperatorPanel panel = null;
+    public static int discretization = 80;
     
     public void setup() {
         size(1280, 720);
@@ -69,6 +71,122 @@ public class VisualReasonerWithGUI extends PApplet {
         panel.show();
         frameRate(fps);
     }
+    
+    public void drawEntity(PApplet applet, Entity e, TruthValue truth, long time) {
+        boolean isPredicted = truth != null;
+        float scale = 1.0f;
+        applet.pushMatrix();
+        //float posXDiscrete = (((int) this.posX)/Util.discretization * Util.discretization);
+        //float posYDiscrete = (((int) this.posY)/Util.discretization * Util.discretization);
+        applet.translate((float) e.posX, (float) e.posY);
+        //name by type
+        String name = "";
+        {
+            if(e instanceof Bike) {
+                name = "bike"+e.id;
+            }
+            else
+            if(e instanceof Pedestrian) {
+                name = "pedestrian"+e.id;
+            }
+            else { //this instanceof Bike
+                name = "car"+e.id;
+            }
+        }
+        //stroke color by type
+        {
+            if(e instanceof Car) {
+                applet.stroke(200,0,200);
+            }
+            if(e instanceof Pedestrian) {
+                applet.stroke(0,200,0);
+            }
+            if(e instanceof Bike) {
+                applet.stroke(0,0,200);
+            }
+        }
+        //fill color by anomaly
+        if(VisualReasonerHeadless.indangers.containsKey(name)) {
+            applet.fill(255,0,0,128);
+        } else
+        if(VisualReasonerHeadless.jaywalkers.containsKey(name)) {
+            applet.fill(255,255,0,128);
+        }
+        else {
+            applet.fill(128,0,0,0);
+        }
+        //it's not a prediction, draw ellipse
+        if(!isPredicted) {
+            applet.ellipse(0.0f, 0.0f, VisualReasonerHeadless.discretization*scale, VisualReasonerHeadless.discretization*scale);
+        }
+        //arrow stroke color by type modulated by truth
+        float mul = isPredicted ? Util.truthToValue(truth) * Util.timeToValue(time) : 1.0f;
+        int alpha = (int) (mul * 255);
+        if(e instanceof Car) {
+            applet.stroke(255,0,255, alpha);
+        }
+        if(e instanceof Pedestrian) {
+            applet.stroke(0,255,0, alpha);
+        }
+        if(e instanceof Bike) {
+            applet.stroke(0,0,255, alpha);
+        }
+        applet.fill(128,0,0,0);
+
+        //Draw arrow
+        {
+            //applet.stroke(255,0,0);
+            //applet.fill(255,0,0);
+            applet.pushMatrix();
+            applet.strokeWeight(5.0f);
+            applet.scale(0.3f);
+            if(e.angle == 0) {
+                applet.rotate((float) (-PI/4.0f- PI/2.0f));
+                applet.line(0, 0,   100, 0);
+                applet.line(70, 30, 100, 0);
+                applet.line(70,-30, 100, 0);
+            }
+            else
+            if(e.angle == 11) {
+                applet.rotate((float) (-PI/4.0f + PI/2.0f));
+                applet.line(0, 0,   100, 0);
+                applet.line(70, 30, 100, 0);
+                applet.line(70,-30, 100, 0);
+            }
+            else
+            if(e.angle == 10) {
+                applet.rotate((float) (-PI/4.0f));
+                applet.line(0, 0,   100, 0);
+                applet.line(70, 30, 100, 0);
+                applet.line(70,-30, 100, 0);
+            }
+            else { //1
+                applet.rotate((float) (-PI/4.0f + PI));
+                applet.line(0, 0,   100, 0);
+                applet.line(70, 30, 100, 0);
+                applet.line(70,-30, 100, 0);
+            }
+            applet.popMatrix();
+            applet.strokeWeight(1.0f);
+        }
+        applet.popMatrix();
+        //draw instance ID
+        applet.fill(0,255,255);
+        if(applet instanceof VisualReasonerWithGUI) {
+            applet.textSize(20);
+        }
+        if(e.id.isEmpty()) {
+            if(!isPredicted) {
+                applet.text(String.valueOf(e.angle), (float)e.posX, (float)e.posY - VisualReasonerHeadless.discretization/2);
+            }
+        } else {
+            if(applet instanceof VisualReasonerWithGUI) {
+                applet.text(name, (float)e.posX- VisualReasonerHeadless.discretization/2, (float)e.posY - VisualReasonerHeadless.discretization/2);
+            } else {
+                applet.text(name, (float)e.posX, (float)e.posY);
+            }
+        }
+    }
 
     public void draw() {
         frame.setTitle("RealCrossing (frame=" + i +")");
@@ -80,30 +198,14 @@ public class VisualReasonerWithGUI extends PApplet {
         trafficMultiNar.perceiveScene(i, perceptionUpdate, questionUpdate, relationUpdate);
         trafficMultiNar.reason();
         for(Entity e : entities) {
-            if(e instanceof Car) {
-                new org.opennars.applications.crossing.Car(e.angle, e.posX, e.posY, e.speed, 0, e.id).draw(this, null, 0);
-            }
-            if(e instanceof Pedestrian) {
-                new org.opennars.applications.crossing.Pedestrian(e.angle, e.posX, e.posY, e.speed, 0, e.id).draw(this, null, 0);
-            }
-            if(e instanceof Bike) {
-                new org.opennars.applications.crossing.Bike(e.angle, e.posX, e.posY, e.speed, 0, e.id).draw(this, null, 0);
-            }
+            drawEntity(this, e, null, 0);
         }
         for (Prediction pred : trafficMultiNar.predictions) {
             Entity e = pred.ent;
             pushMatrix();
-            translate(Util.discretization/2,Util.discretization/2);
+            translate(VisualReasonerHeadless.discretization/2,VisualReasonerHeadless.discretization/2);
             long dt = pred.time - trafficMultiNar.predictionNar.time();
-            if("car".equals(pred.type)) {
-                new org.opennars.applications.crossing.Car(e.angle, e.posX, e.posY, e.speed, 0, e.id).draw(this, pred.truth, dt);
-            }
-            if("pedestrian".equals(pred.type)) {
-                new org.opennars.applications.crossing.Pedestrian(e.angle, e.posX, e.posY, e.speed, 0, e.id).draw(this, pred.truth, dt);
-            }
-            if("bike".equals(pred.type)) {
-                new org.opennars.applications.crossing.Bike(e.angle, e.posX, e.posY, e.speed, 0, e.id).draw(this, pred.truth, dt);
-            }
+            drawEntity(this, e, pred.truth, dt);
             popMatrix();
         }
         synchronized(indangers) {
@@ -114,7 +216,7 @@ public class VisualReasonerWithGUI extends PApplet {
         }
         synchronized(jaywalkers) {
             for(String ent : jaywalkers.keySet()) {
-                String s = "is_jwaylking "+ent;
+                String s = "is_jaywalking "+ent;
                 panel.jTextArea5.setText(s + " (frame=" + i + ")" + "\n" + panel.jTextArea5.getText());
             }
         }
@@ -149,7 +251,7 @@ public class VisualReasonerWithGUI extends PApplet {
                     if(choice.equals("crosswalk")) {
                         fill(0,0,128,alpha);
                     }
-                    rect(X*Util.discretization,Y*Util.discretization,Util.discretization,Util.discretization);
+                    rect(X*VisualReasonerHeadless.discretization,Y*VisualReasonerHeadless.discretization,VisualReasonerHeadless.discretization,VisualReasonerHeadless.discretization);
                 }
             }
         }

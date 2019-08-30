@@ -6,6 +6,7 @@
 package org.opennars.applications.crossing;
 
 import java.util.List;
+import org.opennars.applications.Util;
 import org.opennars.main.Nar;
 import processing.core.PApplet;
 

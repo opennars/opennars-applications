@@ -23,13 +23,12 @@
  */
 package org.opennars.applications.crossing;
 
-import java.util.ArrayList;
 import java.util.List;
+import org.opennars.applications.Util;
 import org.opennars.entity.Sentence;
 import org.opennars.entity.Stamp;
 import org.opennars.entity.Task;
 import org.opennars.entity.TruthValue;
-import org.opennars.interfaces.Timable;
 import org.opennars.io.Symbols;
 import org.opennars.io.events.EventEmitter;
 import org.opennars.io.events.Events;
@@ -38,7 +37,6 @@ import org.opennars.language.Inheritance;
 import org.opennars.language.Product;
 import org.opennars.language.Term;
 import org.opennars.main.Nar;
-import org.opennars.storage.Memory;
 
 public class NarListener implements EventEmitter.EventObserver {
     public class Prediction
@@ -112,8 +110,8 @@ public class NarListener implements EventEmitter.EventObserver {
                     String position = prod.term[1].toString();
                     if(position.contains("_")) {
                         try {
-                            int posX = camera.minX + Util.discretization * Integer.valueOf(position.split("_")[0]);
-                            int posY = camera.minY + Util.discretization * Integer.valueOf(position.split("_")[1]);
+                            int posX = camera.minX + Crossing.discretization * Integer.valueOf(position.split("_")[0]);
+                            int posY = camera.minY + Crossing.discretization * Integer.valueOf(position.split("_")[1]);
                             //int id = 0; //Integer.valueOf(idStr.toString()); often a dep var
                             Entity pred;
                             if(type.toString().startsWith(car.toString())) {

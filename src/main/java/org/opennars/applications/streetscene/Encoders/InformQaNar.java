@@ -35,7 +35,8 @@ import org.opennars.applications.streetscene.Entities.Entity;
 import org.opennars.applications.streetscene.Entities.Pedestrian;
 import static org.opennars.applications.streetscene.Encoders.EntityToNarsese.informType;
 import static org.opennars.applications.streetscene.Encoders.EntityToNarsese.name;
-import org.opennars.applications.streetscene.Util;
+import org.opennars.applications.Util;
+import org.opennars.applications.streetscene.VisualReasonerHeadless;
 import static org.opennars.applications.streetscene.VisualReasonerHeadless.fastThreshold;
 import org.opennars.main.Nar;
 
@@ -137,8 +138,8 @@ public class InformQaNar {
             }
             String typeInfo = informType(ent)+". :|:";
             //also give info about position at labelled locations
-            int X = (int) (ent.posX / Util.discretization);
-            int Y = (int) (ent.posY / Util.discretization);
+            int X = (int) (ent.posX / VisualReasonerHeadless.discretization);
+            int Y = (int) (ent.posY / VisualReasonerHeadless.discretization);
             String position = X + "_" + Y;
             if(locationToLabel.containsKey(position)) {
                 String label = locationToLabel.get(position).choice();

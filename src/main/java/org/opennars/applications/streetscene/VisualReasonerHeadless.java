@@ -41,7 +41,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import static org.opennars.applications.streetscene.Util.distanceSum;
+import static org.opennars.applications.Util.distanceSum;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
 
@@ -70,6 +70,8 @@ public class VisualReasonerHeadless {
     public static String customOntologyPath = "";
     //How long anomalies persist
     public static int anomalyRetrieveDuration = 5;
+    //Discretization
+    public static int discretization = 80;
     //Instance to use Redis
     static Jedis r = null;
     //The related queue names for communication
@@ -267,7 +269,7 @@ public class VisualReasonerHeadless {
         //</editor-fold>
         System.out.println("args: discretization movementThresholdCar movementThresholdPedestrian movementThresholdBike fastThreshold veryClosenessThreshold OntologyNalFile AnomalyRetrieveDuration redisHost redisPort redisPassword QTrackletToNar QInfoFromNar PerceptionUpdate RelationUpdate [QuestionUpdate]");
         System.out.println("example: java -cp \"*\" org.opennars.applications.crossing.RealCrossing 80 30 5 5 169 /home/tc/Dateien/CROSSING/StreetScene/AnomalyOntology.nal 30 locahost 6379 pwd Q_Tracklet_To_Nar Q_Info_From_Nar 1 5");
-        Util.discretization = Integer.valueOf(args[0]);
+        VisualReasonerHeadless.discretization = Integer.valueOf(args[0]);
         VisualReasonerHeadless.movementThresholdCar = Integer.valueOf(args[1]); 
         VisualReasonerHeadless.movementThresholdPedestrian = Integer.valueOf(args[2]); 
         VisualReasonerHeadless.movementThresholdBike = Integer.valueOf(args[3]); 

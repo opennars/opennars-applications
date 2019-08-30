@@ -96,8 +96,8 @@ public class NarListener implements EventEmitter.EventObserver {
                     String position = prod.term[1].toString();
                     if(position.contains("_")) {
                         try {
-                            int posX = Util.discretization * Integer.valueOf(position.split("_")[0]);
-                            int posY = Util.discretization * Integer.valueOf(position.split("_")[1]);
+                            int posX = VisualReasonerHeadless.discretization * Integer.valueOf(position.split("_")[0]);
+                            int posY = VisualReasonerHeadless.discretization * Integer.valueOf(position.split("_")[1]);
                             if(type.toString().startsWith(car.toString())) {
                                 String id = type.toString().substring(car.toString().length(), type.toString().length());
                                 Entity pred = new Car(Integer.valueOf(id), posX, posY, "");

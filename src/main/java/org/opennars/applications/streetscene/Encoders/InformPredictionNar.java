@@ -28,7 +28,8 @@ import java.util.List;
 import org.opennars.applications.streetscene.Entities.Bike;
 import org.opennars.applications.streetscene.Entities.Car;
 import org.opennars.applications.streetscene.Entities.Entity;
-import org.opennars.applications.streetscene.Util;
+import org.opennars.applications.Util;
+import org.opennars.applications.streetscene.VisualReasonerHeadless;
 import org.opennars.main.Nar;
 
 public class InformPredictionNar {
@@ -41,7 +42,7 @@ public class InformPredictionNar {
         synchronized(entities) {
             for(Entity ent : entities) {
                 String id = String.valueOf(ent.angle);
-                String pos = Util.positionToTerm((int) ent.posX, (int) ent.posY);
+                String pos = Util.positionToTerm((int) ent.posX, (int) ent.posY, VisualReasonerHeadless.discretization);
                 if(ent instanceof Bike) {
                     inputs.add("<(*,bike" + id + ","+ pos + ") --> at>. :|:");
                     input += inputs.get(inputs.size()-1);

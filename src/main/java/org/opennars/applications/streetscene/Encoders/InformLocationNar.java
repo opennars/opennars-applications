@@ -34,7 +34,8 @@ import org.opennars.applications.streetscene.Entities.Car;
 import org.opennars.applications.streetscene.Entities.Entity;
 import org.opennars.applications.streetscene.Entities.Pedestrian;
 import org.opennars.applications.streetscene.VisualReasonerWithGUI;
-import org.opennars.applications.streetscene.Util;
+import org.opennars.applications.Util;
+import org.opennars.applications.streetscene.VisualReasonerHeadless;
 import org.opennars.entity.Sentence;
 import org.opennars.entity.TruthValue;
 import org.opennars.io.Parser;
@@ -59,7 +60,7 @@ public class InformLocationNar {
         for(Entity ent : sortedEntX) {
             String typeInfo = EntityToNarsese.informType(ent);
             //also give info about position at labelled locations
-            String position = Util.positionToTerm((int)ent.posX,(int)ent.posY);
+            String position = Util.positionToTerm((int)ent.posX,(int)ent.posY, VisualReasonerHeadless.discretization);
             locationNar.addInput("(&|,<(*,"+EntityToNarsese.name(ent)+","+position+") --> at>,"+typeInfo+"). :|:");
             String locationNarInput = "<" + EntityToNarsese.name(ent) + " --> [aligned]>. :|:";
             synchronized(locationToCarAngle) {

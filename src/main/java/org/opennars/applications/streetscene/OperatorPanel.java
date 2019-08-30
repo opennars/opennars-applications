@@ -21,7 +21,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package org.opennars.applications.crossing;
+package org.opennars.applications.streetscene;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -33,7 +33,6 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.JFileChooser;
-import org.opennars.applications.streetscene.VisualReasonerHeadless;
 import org.opennars.entity.Task;
 import org.opennars.io.Narsese;
 import org.opennars.io.Parser;
@@ -123,7 +122,6 @@ public class OperatorPanel extends javax.swing.JFrame {
             }
         }
         VisualReasonerHeadless.trafficMultiNar.informQaNar.ontology = narsese;
-        Crossing.questions = narsese; //will also work for crosssing
     }
 
     /**
@@ -349,14 +347,13 @@ public class OperatorPanel extends javax.swing.JFrame {
                 .addComponent(jScrollPane5, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                            .addComponent(savePredictionNarButton)
-                            .addComponent(stopSavePredictionNarButton)
-                            .addComponent(logOutputCheckBox))
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                            .addComponent(saveLocationNarButton)
-                            .addComponent(stopSaveLocationNarButton)))
+                    .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                        .addComponent(savePredictionNarButton)
+                        .addComponent(stopSavePredictionNarButton)
+                        .addComponent(logOutputCheckBox))
+                    .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                        .addComponent(saveLocationNarButton)
+                        .addComponent(stopSaveLocationNarButton))
                     .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                         .addComponent(saveQANarButton)
                         .addComponent(stopSaveQANarButton)))

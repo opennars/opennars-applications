@@ -23,7 +23,9 @@
  */
 package org.opennars.applications.crossing;
 
+import org.opennars.applications.streetscene.OperatorPanel;
 import java.util.List;
+import org.opennars.applications.Util;
 import org.opennars.entity.TruthValue;
 import processing.core.PApplet;
 

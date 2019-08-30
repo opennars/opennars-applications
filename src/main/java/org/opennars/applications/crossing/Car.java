@@ -23,8 +23,7 @@
  */
 package org.opennars.applications.crossing;
 
-import java.util.List;
-import org.opennars.applications.streetscene.VisualReasonerWithGUI;
+import org.opennars.applications.Util;
 import org.opennars.entity.TruthValue;
 import processing.core.PApplet;
 
@@ -44,9 +43,6 @@ public class Car extends Entity {
         float mul = Util.truthToValue(truth) * Util.timeToValue(time);
         applet.fill(255, 0, 255, mul*255.0f);
 
-        if((applet instanceof VisualReasonerWithGUI) && isPredicted && !OperatorPanel.showPredictions) {
-            return;
-        }
         if (!isPredicted && isAnomaly()) {
             applet.stroke(255,0,0);
         }

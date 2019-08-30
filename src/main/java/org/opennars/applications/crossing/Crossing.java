@@ -37,6 +37,7 @@ public class Crossing extends PApplet {
     static Nar nar;
     int entityID = 1;
     
+    public static int discretization = 10;
     List<Prediction> predictions = new ArrayList<Prediction>();
     List<Prediction> disappointments = new ArrayList<Prediction>();
     final int streetWidth = 40;
@@ -66,13 +67,13 @@ public class Crossing extends PApplet {
         trafficLights.add(new TrafficLight(trafficLightID++, trafficLightRadius/2, 500, 500 - trafficLightRadius, 1));
         int cars = 4; //cars and pedestrians
         for (float i = 0; i < cars/2; i += 1.05) {
-            entities.add(new Car(entityID++, 500 + streetWidth - Util.discretization+1, 900 - i * 100, 0.3, -PI / 2));
-            entities.add(new Car(entityID++, 500 + Util.discretization, 900 - i * 100, 0.3, PI / 2));
+            entities.add(new Car(entityID++, 500 + streetWidth - discretization+1, 900 - i * 100, 0.3, -PI / 2));
+            entities.add(new Car(entityID++, 500 + discretization, 900 - i * 100, 0.3, PI / 2));
         }
         int pedestrians = 4;//4;
         for (float i = 0; i < pedestrians/2; i += 1.05) {
-            entities.add(new Pedestrian(entityID++, 900 - i * 100, 500 + streetWidth - Util.discretization, 0.3, 0));
-            entities.add(new Pedestrian(entityID++, 900 - i * 100, 500 + Util.discretization, 0.3, -PI));
+            entities.add(new Pedestrian(entityID++, 900 - i * 100, 500 + streetWidth - discretization, 0.3, 0));
+            entities.add(new Pedestrian(entityID++, 900 - i * 100, 500 + discretization, 0.3, -PI));
         }
         /*for (TrafficLight l : trafficLights) { //it can't move anyway, so why would the coordinates matter to NARS?
             String pos = Util.positionToTerm(l.posX, l.posY);
@@ -112,7 +113,7 @@ public class Crossing extends PApplet {
                 nar.addInput(questions);
             }
         }
-        for (int i = 0; i < 1000; i += Util.discretization) {
+        for (int i = 0; i < 1000; i += discretization) {
             stroke(128);
             line(0, i, 1000, i);
             line(i, 0, i, 1000);
