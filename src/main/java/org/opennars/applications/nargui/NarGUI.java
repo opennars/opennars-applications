@@ -152,7 +152,7 @@ public class NarGUI extends javax.swing.JFrame {
         });
 
         jCheckBox1.setSelected(true);
-        jCheckBox1.setText("Show derivaitons");
+        jCheckBox1.setText("Show derivations");
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
