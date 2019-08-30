@@ -28,24 +28,20 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
-import java.nio.file.StandardOpenOption;
-import org.opennars.applications.crossing.RealCrossing.RealCrossing;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.JFileChooser;
-import org.opennars.applications.crossing.RealCrossing.TrafficMultiNar;
+import org.opennars.applications.streetscene.VisualReasonerHeadless;
 import org.opennars.entity.Task;
 import org.opennars.io.Narsese;
 import org.opennars.io.Parser;
 import org.opennars.io.events.EventEmitter;
 import org.opennars.io.events.Events;
 import org.opennars.io.events.Events.TaskAdd;
-import org.opennars.io.events.OutputHandler.IN;
 import org.opennars.language.Term;
 import org.opennars.main.Nar;
-import org.opennars.main.NarNode;
 
 /**
  *
@@ -53,6 +49,7 @@ import org.opennars.main.NarNode;
  */
 public class OperatorPanel extends javax.swing.JFrame {
 
+    public static boolean showPredictions = true;
     public Nar nar;
     /**
      * Creates new form OperatorPanel
@@ -62,7 +59,7 @@ public class OperatorPanel extends javax.swing.JFrame {
         this.nar = nar;
         OperatorPanel.NarListener handler = new OperatorPanel.NarListener();
         nar.on(Events.Answer.class, handler);
-        String ontology = RealCrossing.trafficMultiNar.informQaNar.ontology;
+        String ontology = VisualReasonerHeadless.trafficMultiNar.informQaNar.ontology;
         String knowledge = ontology.split("//Anomaly ontology:")[1].split("//Motivations:")[0].trim();
         String motivations = ontology.split("//Motivations:")[1].split("//Questions:")[0].trim();
         String questions = ontology.split("//Questions:")[1].split(">>LocationNar:")[0].trim();
@@ -84,7 +81,7 @@ public class OperatorPanel extends javax.swing.JFrame {
                         //if(Math.abs(nar.time() - t.sentence.getOccurenceTime()) < 10000) { //not too long ago //outcommented as system reports newest result anyway
                             for(int i = 0; i<filter.size(); i++) {
                                 if(filter.get(i).equals(t.getTerm())) {
-                                    narText = "Q"+i+": "+t.getBestSolution() + " (frame=" + RealCrossing.i + ")\n" + narText;
+                                    narText = "Q"+i+": "+t.getBestSolution() + " (frame=" + VisualReasonerHeadless.i + ")\n" + narText;
                                     if(narText.length() > 2000) {
                                         narText = "";
                                     }
@@ -125,7 +122,7 @@ public class OperatorPanel extends javax.swing.JFrame {
                 }
             }
         }
-        RealCrossing.trafficMultiNar.informQaNar.ontology = narsese;
+        VisualReasonerHeadless.trafficMultiNar.informQaNar.ontology = narsese;
         Crossing.questions = narsese; //will also work for crosssing
     }
 
@@ -374,17 +371,17 @@ public class OperatorPanel extends javax.swing.JFrame {
     }//GEN-LAST:event_jButton1ActionPerformed
 
     private void jCheckBox1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBox1ActionPerformed
-        RealCrossing.showPredictions = jCheckBox1.isSelected();
-        if(jCheckBox1.isSelected()) {
-            RealCrossing.trafficMultiNar.nar.narParameters.SEQUENCE_BAG_ATTEMPTS = RealCrossing.trafficMultiNar.SEQUENCE_BAG_ATTEMPTS;
+        showPredictions = jCheckBox1.isSelected();
+        /*if(jCheckBox1.isSelected()) {
+            RealCrossing.trafficMultiNar.predictionNar.narParameters.SEQUENCE_BAG_ATTEMPTS = VisualReasoner.trafficMultiNar.SEQUENCE_BAG_ATTEMPTS;
         }
         if(!jCheckBox1.isSelected()) {
             RealCrossing.trafficMultiNar.nar.narParameters.SEQUENCE_BAG_ATTEMPTS = 0;
-        }
+        }*/
     }//GEN-LAST:event_jCheckBox1ActionPerformed
 
     private void jCheckBox2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBox2ActionPerformed
-        RealCrossing.trafficMultiNar.informQaNar.RELATIVE_LOCATION_RELATIONS = jCheckBox2.isSelected();
+        //RealCrossing.trafficMultiNar.informQaNar.RELATIVE_LOCATION_RELATIONS = jCheckBox2.isSelected();
     }//GEN-LAST:event_jCheckBox2ActionPerformed
 
     JFileChooser chooser = new JFileChooser(); 
@@ -406,17 +403,17 @@ public class OperatorPanel extends javax.swing.JFrame {
     FileOutputStream[] locationNarStream = new FileOutputStream[] { null };
     FileOutputStream[] predictionNarStream = new FileOutputStream[] { null };
     private void saveQANarButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_saveQANarButtonActionPerformed
-        LogOutput(qaNarStream, writeQANar, RealCrossing.trafficMultiNar.qanar, "  QANAR");
+        LogOutput(qaNarStream, writeQANar, VisualReasonerHeadless.trafficMultiNar.qanar, "  QANAR");
         writeQANar[0] = true;
     }//GEN-LAST:event_saveQANarButtonActionPerformed
 
     private void saveLocationNarButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_saveLocationNarButtonActionPerformed
-        LogOutput(locationNarStream, writeLocationNar, TrafficMultiNar.locationNar, " LocNAR");
+        LogOutput(locationNarStream, writeLocationNar, VisualReasonerHeadless.trafficMultiNar.locationNar, " LocNAR");
         writeLocationNar[0] = true;
     }//GEN-LAST:event_saveLocationNarButtonActionPerformed
 
     private void savePredictionNarButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_savePredictionNarButtonActionPerformed
-        LogOutput(predictionNarStream, writePredictionNar, RealCrossing.trafficMultiNar.nar, "PredNAR");
+        LogOutput(predictionNarStream, writePredictionNar, VisualReasonerHeadless.trafficMultiNar.predictionNar, "PredNAR");
         writePredictionNar[0] = true;
     }//GEN-LAST:event_savePredictionNarButtonActionPerformed
 
@@ -463,7 +460,7 @@ public class OperatorPanel extends javax.swing.JFrame {
                                     synchronized(fsl) {
                                         if(write[0]) {
                                             String attachment = task.isInput() ? "IN:  " : "OUT: ";
-                                            fsl[0].write(("(frame="+RealCrossing.i+")"+prefix + "-" + attachment + task.toString()).getBytes("UTF8"));
+                                            fsl[0].write(("(frame="+VisualReasonerHeadless.i+")"+prefix + "-" + attachment + task.toString()).getBytes("UTF8"));
                                             fsl[0].write("\n".getBytes("UTF8"));
                                         }
                                     }

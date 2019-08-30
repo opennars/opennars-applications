@@ -21,41 +21,21 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package org.opennars.applications.crossing.RealCrossing;
+package org.opennars.applications.streetscene;
 
-import org.opennars.applications.crossing.Bike;
-import org.opennars.applications.crossing.Car;
-import org.opennars.applications.crossing.Entity;
-import org.opennars.applications.crossing.Pedestrian;
+import org.opennars.applications.streetscene.Entities.Entity;
+import org.opennars.entity.TruthValue;
 
-/**
- *
- * @author tc
- */
-public class EntityToNarsese {
-    public static String informType(Entity entity) {
-        if(entity instanceof Bike) {
-            return "<" + name(entity) + " --> bike>";
-        }
-        if(entity instanceof Car) {
-            return "<" + name(entity) + " --> car>";
-        }
-        if(entity instanceof Pedestrian) {
-            return "<" +name(entity) + " --> pedestrian>";
-        }
-        return "<" +name(entity) + " --> entity>";
-    }
-    
-    public static String name(Entity entity) { //TODO put in class
-        if(entity instanceof Bike) {
-            return "bike" + entity.label;
-        }
-        if(entity instanceof Car) {
-            return "car" + entity.label;
-        }
-        if(entity instanceof Pedestrian) {
-            return "pedestrian" + entity.label;
-        }
-        return "entity";
+public class Prediction
+{
+    public Entity ent;
+    public long time;
+    public TruthValue truth;
+    public String type;
+    public Prediction(Entity ent, TruthValue truth, long time, String type) {
+        this.ent = ent;
+        this.time = time;
+        this.truth = truth;
+        this.type = type;
     }
 }

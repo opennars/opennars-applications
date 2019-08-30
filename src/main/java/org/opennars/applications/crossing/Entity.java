@@ -23,9 +23,10 @@
  */
 package org.opennars.applications.crossing;
 
-import org.opennars.applications.crossing.RealCrossing.RealCrossing;
 import static java.lang.Math.PI;
 import java.util.List;
+import org.opennars.applications.streetscene.VisualReasonerHeadless;
+import org.opennars.applications.streetscene.VisualReasonerWithGUI;
 import org.opennars.entity.TruthValue;
 import processing.core.PApplet;
 
@@ -85,6 +86,7 @@ public class Entity {
     public static boolean DrawDirection = true;
     public static boolean DrawID = true;
     public void draw(PApplet applet, TruthValue truth, long time) {
+        isPredicted = applet instanceof VisualReasonerWithGUI ? truth != null : isPredicted;
         applet.pushMatrix();
         //float posXDiscrete = (((int) this.posX)/Util.discretization * Util.discretization);
         //float posYDiscrete = (((int) this.posY)/Util.discretization * Util.discretization);
@@ -103,10 +105,10 @@ public class Entity {
             name = "car"+label;
         }
         
-        if(truth == null && DrawDirection) {
+        if(truth == null && DrawDirection && !(applet instanceof VisualReasonerWithGUI)) {
             applet.rect(0, 0, Util.discretization*scale, Util.discretization/2*scale);
         }
-        if(RealCrossing.running) {
+        if(applet instanceof VisualReasonerWithGUI) {
             if(this instanceof Car) {
                 applet.stroke(200,0,200);
             }
@@ -117,27 +119,27 @@ public class Entity {
                 applet.stroke(0,0,200);
             }
             
-            if(RealCrossing.indangers.containsKey(name)) {
+            if(VisualReasonerHeadless.indangers.containsKey(name)) {
                 applet.fill(255,0,0,128);
             } else
-            if(RealCrossing.jaywalkers.containsKey(name)) {
-                applet.fill(255,0,0,128);
+            if(VisualReasonerHeadless.jaywalkers.containsKey(name)) {
+                applet.fill(255,255,0,128);
             }
             else {
                 applet.fill(128,0,0,0);
             }
         }
-        if(!isPredicted) {
+        if(!isPredicted || !(applet instanceof VisualReasonerWithGUI)) {
             //applet.rect((float) (0.0f-width/2.0f), (float) (0.0f-height/2.0f), (float) width, (float) height);
-            float mul2 = 1.0f; //80.0f/100.0f;
-            if(RealCrossing.running) {
+            float mul2 = org.opennars.applications.streetscene.Util.discretization / org.opennars.applications.crossing.Util.discretization;
+            if(applet instanceof VisualReasonerWithGUI) {
                 applet.ellipse(0.0f, 0.0f, Util.discretization*scale*mul2, Util.discretization*scale*mul2);
             } else {
                 applet.ellipse(2.5f, 2.5f, Util.discretization*scale, Util.discretization*scale);
             }
         }
         
-        if(RealCrossing.running) {
+        if(applet instanceof VisualReasonerWithGUI) {
             float mul = isPredicted ? Util.truthToValue(truth) * Util.timeToValue(time) : 1.0f;
             int alpha = (int) (mul * 255);
             
@@ -153,7 +155,7 @@ public class Entity {
             applet.fill(128,0,0,0);
         }
         
-        if(DrawID && RealCrossing.running) {
+        if(DrawID && applet instanceof VisualReasonerWithGUI) {
             //applet.stroke(255,0,0);
             //applet.fill(255,0,0);
             applet.pushMatrix();
@@ -191,13 +193,13 @@ public class Entity {
         }
         
         applet.popMatrix();
-        if(!RealCrossing.running) {
+        if(!(applet instanceof VisualReasonerWithGUI)) {
             applet.fill(0,0,0);
         } else {
             applet.fill(0,255,255);
         }
         if(DrawID) {
-            if(RealCrossing.running) {
+            if(applet instanceof VisualReasonerWithGUI) {
                 applet.textSize(20);
             }
             if(label.isEmpty()) {
@@ -205,7 +207,7 @@ public class Entity {
                     applet.text(String.valueOf(id), (float)posX, (float)posY - Util.discretization/2);
                 }
             } else {
-                if(RealCrossing.running) {
+                if(applet instanceof VisualReasonerWithGUI) {
                     applet.text(name, (float)posX- Util.discretization/2, (float)posY - Util.discretization/2);
                 } else {
                     applet.text(name, (float)posX, (float)posY);

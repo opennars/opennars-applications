@@ -21,41 +21,32 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package org.opennars.applications.crossing;
+package org.opennars.applications.streetscene;
 
-import java.util.List;
-import org.opennars.applications.streetscene.VisualReasonerWithGUI;
-import org.opennars.entity.TruthValue;
-import processing.core.PApplet;
 
-public class Car extends Entity {
+public class Util {
 
-    public Car(int id, double posX, double posY, double velocity, double angle, String label) {
-        this(id, posX, posY, velocity, angle);
-        this.label = label;
+    public static int discretization = 80;
+    
+    public static double distance(double posX, double posY, double posX2, double posY2) {
+        double dx = posX - posX2;
+        double dy = posY - posY2;
+        return Math.sqrt(dx * dx + dy * dy);
     }
     
-    public Car(int id, double posX, double posY, double velocity, double angle) {
-        super(id, posX, posY, velocity, angle);
-        maxSpeed = 2;
+    public static String positionToTerm(int X, int Y) {
+        int posX = X / discretization;
+        int posY = Y / discretization;
+        return posX + "_" + posY;
+    }
+    
+    public static double distanceSum(double[] X, double[] Y) {
+        double SX = 0.0f, SY = 0.0f;
+        for(int i=1; i<X.length; i++) { //same length as Y
+            SX += X[i] - X[i-1];
+            SY += Y[i] - Y[i-1];
+        }
+        return Math.sqrt(SX*SX + SY*SY);
     }
 
-    public void draw(PApplet applet, TruthValue truth, long time) {
-        float mul = Util.truthToValue(truth) * Util.timeToValue(time);
-        applet.fill(255, 0, 255, mul*255.0f);
-
-        if((applet instanceof VisualReasonerWithGUI) && isPredicted && !OperatorPanel.showPredictions) {
-            return;
-        }
-        if (!isPredicted && isAnomaly()) {
-            applet.stroke(255,0,0);
-        }
-        else {
-            applet.stroke(127);
-        }
-
-        super.draw(applet, truth, time);
-
-        applet.stroke(127);
-    }
 }
