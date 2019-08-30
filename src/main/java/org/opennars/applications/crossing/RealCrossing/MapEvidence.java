@@ -35,12 +35,25 @@ import org.opennars.entity.TruthValue;
         public TruthValue pedestrian = new TruthValue(1.0f, 0.001f,locationNar.narParameters);
         public TruthValue bike = new TruthValue(1.0f, 0.001f,locationNar.narParameters);
         public String choice() {
+            double minConf = 0.55f;
             if(bike.getExpectation() > pedestrian.getExpectation() && bike.getExpectation() > car.getExpectation()) {
-                return "street"; //TODO bikelane
+                if(bike.getExpectation() > minConf) {
+                    return "street"; //TODO bikelane
+                }
+                return null;
             }
             if(pedestrian.getExpectation() > bike.getExpectation() && pedestrian.getExpectation() > car.getExpectation()) {
-                return "sidewalk";
+                if(pedestrian.getExpectation() > minConf) {
+                    return "sidewalk";
+                }
+                return null;
             }
-            return "street";
+            if(car.getExpectation() > bike.getExpectation() && car.getExpectation() > pedestrian.getExpectation()) {
+                if(car.getExpectation() > minConf) {
+                    return "car";
+                }
+                return null;
+            }
+            return null;
         }
     }

@@ -129,7 +129,7 @@ public class InformQaNar {
             int X = (int) (ent.posX / Util.discretization);
             int Y = (int) (ent.posY / Util.discretization);
             String subj = X + "_" + Y;
-            if(locationToLabel.containsKey(subj)) {
+            if(locationToLabel.containsKey(subj) && locationToLabel.get(subj) != null) {
                 System.out.println("QA INFO: <(*,"+name(ent)+","+locationToLabel.get(subj).choice()+") --> at>. :|:");
                 ArrayList<String> Atinfo = new ArrayList<String>();
                 Atinfo.add(typeInfo);
