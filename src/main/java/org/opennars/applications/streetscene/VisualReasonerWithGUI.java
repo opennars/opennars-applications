@@ -30,6 +30,7 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import static org.opennars.applications.Util.distanceSum;
 import org.opennars.applications.streetscene.Entities.Bike;
 import org.opennars.applications.streetscene.Entities.Car;
 import org.opennars.applications.streetscene.Entities.Pedestrian;
@@ -293,11 +294,13 @@ public class VisualReasonerWithGUI extends PApplet {
             if(Y < Y2) {
                 angle += 1;
             }
-            
-            double movement = Math.sqrt((X-X2)*(X-X2) + (Y - Y2)*(Y - Y2)); //TODO like in LiveVideo2
+            //speed calc:
+            double[] XAll = new double[]{ X, Integer.valueOf(unwrap(props[7])), Integer.valueOf(unwrap(props[11])), Integer.valueOf(unwrap(props[15])), X2 };
+            double[] YAll = new double[]{ Y, Integer.valueOf(unwrap(props[8])), Integer.valueOf(unwrap(props[12])), Integer.valueOf(unwrap(props[16])), Y2 };
+            double speed = distanceSum(XAll, YAll);
             Entity added = null;
             if(props[0].equals("0")) { //person or vehicle for now
-                if(movement < (double)movementThresholdPedestrian) {
+                if(speed < (double)movementThresholdPedestrian) {
                     continue;
                 }
                 Pedestrian toAdd = new Pedestrian(angle, X2, Y2, label);
@@ -305,14 +308,14 @@ public class VisualReasonerWithGUI extends PApplet {
                 added = toAdd;
             } else {
                 if(!props[0].equals("1")) {
-                    if(movement < (double)movementThresholdCar) {
+                    if(speed < (double)movementThresholdCar) {
                         continue;
                     }
                     Car toAdd = new Car(angle, X2, Y2, label);
                     entities.add(toAdd);
                     added = toAdd;
                 } else {
-                    if(movement < (double)movementThresholdBike) {
+                    if(speed < (double)movementThresholdBike) {
                         continue;
                     }
                     Bike toAdd = new Bike(angle, X2, Y2, label);
@@ -320,7 +323,7 @@ public class VisualReasonerWithGUI extends PApplet {
                     added = toAdd;
                 }
             }
-            added.speed = movement;
+            added.speed = speed;
         }
         i++;
     }
