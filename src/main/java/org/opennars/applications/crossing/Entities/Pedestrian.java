@@ -21,10 +21,13 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package org.opennars.applications.crossing;
+package org.opennars.applications.crossing.Entities;
 
-import org.opennars.applications.crossing.RealCrossing.RealCrossing;
+import org.opennars.applications.streetscene.OperatorPanel;
 import java.util.List;
+import org.opennars.applications.Util;
+import org.opennars.applications.crossing.Street;
+import org.opennars.applications.crossing.TrafficLight;
 import org.opennars.entity.TruthValue;
 import processing.core.PApplet;
 
@@ -50,7 +53,7 @@ public class Pedestrian extends Entity {
     public void draw(PApplet applet, TruthValue truth, long time) {
         prevX = posX;
         prevY = posY;
-        if(isPredicted && !RealCrossing.showPredictions) {
+        if(isPredicted && !OperatorPanel.showPredictions) {
             return;
         }
         float mul = Util.truthToValue(truth) * Util.timeToValue(time);

@@ -21,10 +21,16 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package org.opennars.applications.crossing;
+package org.opennars.applications.crossing.Encoders;
 
+import org.opennars.applications.crossing.Entities.Entity;
+import org.opennars.applications.crossing.Entities.Car;
+import org.opennars.applications.crossing.Entities.Bike;
 import java.util.ArrayList;
 import java.util.List;
+import org.opennars.applications.Util;
+import org.opennars.applications.crossing.Crossing;
+import org.opennars.applications.crossing.TrafficLight;
 import org.opennars.main.Nar;
 
 public class InformPredictionNar {
@@ -38,7 +44,7 @@ public class InformPredictionNar {
         if(!useMultipleIDs) {
             id = "0";
         }
-        String pos = Util.positionToTerm((int) ent.posX-minX, (int) ent.posY-minY);
+        String pos = Util.positionToTerm((int) ent.posX-minX, (int) ent.posY-minY, Crossing.discretization);
         if(ent instanceof Bike) {
             inputs.add("<(*,bike" + id + ","+ pos + ") --> at>. :|:");
             input += inputs.get(inputs.size()-1);

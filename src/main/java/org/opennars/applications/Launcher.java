@@ -28,7 +28,8 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.JFileChooser;
 import org.opennars.applications.crossing.Crossing;
-import org.opennars.applications.crossing.RealCrossing.RealCrossing;
+import org.opennars.applications.streetscene.VisualReasonerHeadless;
+import org.opennars.applications.streetscene.VisualReasonerWithGUI;
 
 /**
  *
@@ -119,7 +120,7 @@ public class Launcher extends javax.swing.JFrame {
     }// </editor-fold>//GEN-END:initComponents
 
     private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
-        org.opennars.applications.gui.NarSimpleGUI.main(null);
+        org.opennars.applications.nargui.NarGUI.main(null);
         this.dispose();
     }//GEN-LAST:event_jButton1ActionPerformed
 
@@ -158,15 +159,15 @@ public class Launcher extends javax.swing.JFrame {
     }
     
     private void jButton4ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton4ActionPerformed
-        File videoFolder = chooseFolder(RealCrossing.videopath, "Select folder to video image files, for instance Test002");
-        File trackletFolder = chooseFolder(RealCrossing.trackletpath, "Select folder to tracklet text files, for instance Test002");
-        RealCrossing.videopath = videoFolder.toString()+"/";
-        RealCrossing.trackletpath = trackletFolder.toString()+"/";
-        String ret = javax.swing.JOptionPane.showInputDialog("Enter frame offset", RealCrossing.i);
-        RealCrossing.i = Math.max(2, Integer.valueOf(ret));
+        File videoFolder = chooseFolder(VisualReasonerWithGUI.videopath, "Select folder to video image files, for instance Test002");
+        File trackletFolder = chooseFolder(VisualReasonerWithGUI.trackletpath, "Select folder to tracklet text files, for instance Test002");
+        VisualReasonerWithGUI.videopath = videoFolder.toString()+"/";
+        VisualReasonerWithGUI.trackletpath = trackletFolder.toString()+"/";
+        String ret = javax.swing.JOptionPane.showInputDialog("Enter frame offset", VisualReasonerHeadless.i);
+        VisualReasonerHeadless.i = Math.max(2, Integer.valueOf(ret));
         try {
             new Thread(() -> {
-                RealCrossing.main(new String[0]);
+                VisualReasonerWithGUI.main(new String[0]);
             }, "RealCrossing").start();
             this.dispose();
         } catch (Exception ex) {

@@ -1,9 +1,10 @@
 >>QANar:
 
 //Anomaly ontology:
-<(&/,(&|,<#1 --> pedestrian>,<#2 --> car>,<(*,#1,#2) --> closeTo>),+1,<(*,{SELF},#1,is_in_danger) --> ^say>,+1) =/> <{SELF} --> [informative]>>.
-<(&/,(&|,<#1 --> car>,<#2 --> bike>,<(*,#2,#1) --> closeTo>),+1,<(*,{SELF},#2,is_in_danger) --> ^say>,+1) =/> <{SELF} --> [informative]>>.
+<(&/,(&|,<#1 --> pedestrian>,<#2 --> car>,<#2 --> [fast]>,<(*,#1,#2) --> closeTo>),+1,<(*,{SELF},#1,is_in_danger) --> ^say>,+1) =/> <{SELF} --> [informative]>>.
+<(&/,(&|,<#1 --> car>,<#1 --> [fast]>,<#2 --> bike>,<(*,#2,#1) --> closeTo>),+1,<(*,{SELF},#2,is_in_danger) --> ^say>,+1) =/> <{SELF} --> [informative]>>.
 <(&/,(&|,<#1 --> pedestrian>,<(*,#1,street) --> at>),+1,<(*,{SELF},#1,is_jaywalking) --> ^say>,+1) =/> <{SELF} --> [informative]>>.
+//<(&/,(&|,<#1 --> pedestrian>,<(*,#1,crosswalk) --> at>),+1,<(*,{SELF},#1,is_crosswalking) --> ^say>,+1) =/> <{SELF} --> [informative]>>.
 
 //Motivations:
 <{SELF} --> [informative]>! :|:
@@ -13,7 +14,8 @@
 
 >>LocationNar:
 
-<(&|,<#1 --> pedestrian>,<(*,#1,$location) --> at>) =|> <$location --> [sidewalk]>>.
+<(&|,<#1 --> pedestrian>,<#1 --> [aligned]>,<(*,#1,$location) --> at>) =|> <$location --> [sidewalk]>>.
+<(&|,<#1 --> pedestrian>,<#1 --> [crossing]>,<(*,#1,$location) --> at>) =|> <$location --> [crosswalk]>>.
 <(&|,<#1 --> car>,<(*,#1,$location) --> at>) =|> <$location --> [street]>>.
 <(&|,<#1 --> bike>,<(*,#1,$location) --> at>) =|> <$location --> [street]>>.
 //<(&|,<#1 --> bike>,<(*,#1,$location) --> at>) =|> <$location --> [bikelane]>>.
@@ -27,10 +29,15 @@
 
 //Atoms:
 //bikeID, carID, pedestrianID
+//Entity classes:
+//bike, car, pedestrian
 //Annotation classes:
-//street, sidewalk
+//street, sidewalk, crosswalk
 //bikelane (currently unused)
 //x_y to indicate position
+//[fast] to indicate fast speed
+//[crossing] indicating moving orthogonal to the street
+//[aligned] indicating moving aligned to the street
 
 //Operators:
 //^say
@@ -38,5 +45,4 @@
 //Anomaly alerts:
 //is_in_danger
 //is_jaywalking
-
-
+//is_crosswalking

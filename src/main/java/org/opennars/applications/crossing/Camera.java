@@ -5,7 +5,10 @@
  */
 package org.opennars.applications.crossing;
 
+import org.opennars.applications.crossing.Encoders.InformPredictionNar;
+import org.opennars.applications.crossing.Entities.Entity;
 import java.util.List;
+import org.opennars.applications.Util;
 import org.opennars.main.Nar;
 import processing.core.PApplet;
 

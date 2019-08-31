@@ -21,11 +21,13 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package org.opennars.applications.crossing;
+package org.opennars.applications.crossing.Entities;
 
-import org.opennars.applications.crossing.RealCrossing.RealCrossing;
-import static java.lang.Math.PI;
 import java.util.List;
+import org.opennars.applications.Util;
+import org.opennars.applications.crossing.Crossing;
+import org.opennars.applications.crossing.Street;
+import org.opennars.applications.crossing.TrafficLight;
 import org.opennars.entity.TruthValue;
 import processing.core.PApplet;
 
@@ -104,112 +106,18 @@ public class Entity {
         }
         
         if(truth == null && DrawDirection) {
-            applet.rect(0, 0, Util.discretization*scale, Util.discretization/2*scale);
+            applet.rect(0, 0, Crossing.discretization*scale, Crossing.discretization/2*scale);
         }
-        if(RealCrossing.running) {
-            if(this instanceof Car) {
-                applet.stroke(200,0,200);
-            }
-            if(this instanceof Pedestrian) {
-                applet.stroke(0,200,0);
-            }
-            if(this instanceof Bike) {
-                applet.stroke(0,0,200);
-            }
-            
-            if(RealCrossing.indangers.containsKey(name)) {
-                applet.fill(255,0,0,128);
-            } else
-            if(RealCrossing.jaywalkers.containsKey(name)) {
-                applet.fill(255,0,0,128);
-            }
-            else {
-                applet.fill(128,0,0,0);
-            }
-        }
-        if(!isPredicted) {
-            //applet.rect((float) (0.0f-width/2.0f), (float) (0.0f-height/2.0f), (float) width, (float) height);
-            float mul2 = 1.0f; //80.0f/100.0f;
-            if(RealCrossing.running) {
-                applet.ellipse(0.0f, 0.0f, Util.discretization*scale*mul2, Util.discretization*scale*mul2);
-            } else {
-                applet.ellipse(2.5f, 2.5f, Util.discretization*scale, Util.discretization*scale);
-            }
-        }
-        
-        if(RealCrossing.running) {
-            float mul = isPredicted ? Util.truthToValue(truth) * Util.timeToValue(time) : 1.0f;
-            int alpha = (int) (mul * 255);
-            
-            if(this instanceof Car) {
-                applet.stroke(255,0,255, alpha);
-            }
-            if(this instanceof Pedestrian) {
-                applet.stroke(0,255,0, alpha);
-            }
-            if(this instanceof Bike) {
-                applet.stroke(0,0,255, alpha);
-            }
-            applet.fill(128,0,0,0);
-        }
-        
-        if(DrawID && RealCrossing.running) {
-            //applet.stroke(255,0,0);
-            //applet.fill(255,0,0);
-            applet.pushMatrix();
-            applet.strokeWeight(5.0f);
-            applet.scale(0.3f);
-            if(id == 0) {
-                applet.rotate((float) (-PI/4.0f- PI/2.0f));
-                applet.line(0, 0,   100, 0);
-                applet.line(70, 30, 100, 0);
-                applet.line(70,-30, 100, 0);
-            }
-            else
-            if(id == 11) {
-                applet.rotate((float) (-PI/4.0f + PI/2.0f));
-                applet.line(0, 0,   100, 0);
-                applet.line(70, 30, 100, 0);
-                applet.line(70,-30, 100, 0);
-            }
-            else
-            if(id == 10) {
-                applet.rotate((float) (-PI/4.0f));
-                applet.line(0, 0,   100, 0);
-                applet.line(70, 30, 100, 0);
-                applet.line(70,-30, 100, 0);
-            }
-            else { //1
-                applet.rotate((float) (-PI/4.0f + PI));
-                applet.line(0, 0,   100, 0);
-                applet.line(70, 30, 100, 0);
-                applet.line(70,-30, 100, 0);
-            }
-            applet.popMatrix();
-            applet.strokeWeight(1.0f);
-            //applet.text(String.valueOf(id) + " ("+label+")", (float)posX, (float)posY);
-        }
-        
+        applet.ellipse(2.5f, 2.5f, Crossing.discretization*scale, Crossing.discretization*scale);
         applet.popMatrix();
-        if(!RealCrossing.running) {
-            applet.fill(0,0,0);
-        } else {
-            applet.fill(0,255,255);
-        }
+        applet.fill(0,0,0);
         if(DrawID) {
-            if(RealCrossing.running) {
-                applet.textSize(20);
-            }
             if(label.isEmpty()) {
                 if(!isPredicted) {
-                    applet.text(String.valueOf(id), (float)posX, (float)posY - Util.discretization/2);
+                    applet.text(String.valueOf(id), (float)posX, (float)posY - Crossing.discretization/2);
                 }
             } else {
-                if(RealCrossing.running) {
-                    applet.text(name, (float)posX- Util.discretization/2, (float)posY - Util.discretization/2);
-                } else {
-                    applet.text(name, (float)posX, (float)posY);
-                }
+                applet.text(name, (float)posX, (float)posY);
             }
         }
     }

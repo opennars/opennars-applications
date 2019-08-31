@@ -21,18 +21,15 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package org.opennars.applications.crossing.RealCrossing;
+package org.opennars.applications.streetscene.Encoders;
 
-import org.opennars.applications.crossing.Bike;
-import org.opennars.applications.crossing.Car;
-import org.opennars.applications.crossing.Entity;
-import org.opennars.applications.crossing.Pedestrian;
+import org.opennars.applications.streetscene.Entities.Bike;
+import org.opennars.applications.streetscene.Entities.Car;
+import org.opennars.applications.streetscene.Entities.Entity;
+import org.opennars.applications.streetscene.Entities.Pedestrian;
 
-/**
- *
- * @author tc
- */
 public class EntityToNarsese {
+    
     public static String informType(Entity entity) {
         if(entity instanceof Bike) {
             return "<" + name(entity) + " --> bike>";
@@ -48,14 +45,15 @@ public class EntityToNarsese {
     
     public static String name(Entity entity) { //TODO put in class
         if(entity instanceof Bike) {
-            return "bike" + entity.label;
+            return "bike" + entity.id;
         }
         if(entity instanceof Car) {
-            return "car" + entity.label;
+            return "car" + entity.id;
         }
         if(entity instanceof Pedestrian) {
-            return "pedestrian" + entity.label;
+            return "pedestrian" + entity.id;
         }
         return "entity";
     }
+    
 }

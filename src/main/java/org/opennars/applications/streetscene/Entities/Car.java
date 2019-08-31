@@ -21,10 +21,11 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package org.opennars.applications.crossing;
+package org.opennars.applications.streetscene.Entities;
 
-public class Bike extends Car {
-    public Bike(int id, double posX, double posY, double velocity, double angle, String label) {
-        super(id, posX, posY, velocity, angle, label);
-    }
+public class Car extends Entity {
+
+    public Car(int angle, double posX, double posY, String id) {
+        super(angle, posX, posY, id);
+    } 
 }
