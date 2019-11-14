@@ -47,7 +47,7 @@ public class NarListener implements EventEmitter.EventObserver {
     Term bike = Term.get("bike");
     Term car = Term.get("car");
     Term at = Term.get("at");
-    List<Prediction> predictions;
+    public static List<Prediction> predictions;
     List<Prediction> disappointments;
     Nar nar;
     

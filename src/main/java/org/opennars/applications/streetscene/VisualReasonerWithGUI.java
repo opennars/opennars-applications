@@ -34,6 +34,9 @@ import static org.opennars.applications.Util.distanceSum;
 import org.opennars.applications.streetscene.Entities.Bike;
 import org.opennars.applications.streetscene.Entities.Car;
 import org.opennars.applications.streetscene.Entities.Pedestrian;
+import static org.opennars.applications.streetscene.MultiNarSetup.failures;
+import static org.opennars.applications.streetscene.MultiNarSetup.successes;
+import static org.opennars.applications.streetscene.NarListener.predictions;
 import static org.opennars.applications.streetscene.VisualReasonerHeadless.cleanupAllAnomalies;
 import static org.opennars.applications.streetscene.VisualReasonerHeadless.crosswalkers;
 import static org.opennars.applications.streetscene.VisualReasonerHeadless.entities;
@@ -74,6 +77,14 @@ public class VisualReasonerWithGUI extends PApplet {
     }
     
     public void drawEntity(PApplet applet, Entity e, TruthValue truth, long time) {
+        for(Prediction p : predictions) {
+            if(!p.confirmed && (e.posX-p.ent.posX)<=2*discretization && (e.posY-p.ent.posY)<=2*discretization) {
+                if(p.ent.getClass().equals(e.getClass())) {
+                    p.confirmed = true;
+                    successes++;
+                }
+            }
+        } 
         boolean isPredicted = truth != null;
         float scale = 1.0f;
         applet.pushMatrix();
@@ -190,6 +201,9 @@ public class VisualReasonerWithGUI extends PApplet {
     }
 
     public void draw() {
+        double ratio = ((double) successes) / (double) (successes+failures);
+        String stats = "STAT: ("+i+","+ratio + ");("+i+","+(successes+failures)+")";
+        System.out.println(stats);
         frame.setTitle("RealCrossing (frame=" + i +")");
         cleanupAllAnomalies();
         synchronized(entities) {

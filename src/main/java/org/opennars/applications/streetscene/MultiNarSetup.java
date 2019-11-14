@@ -120,11 +120,16 @@ public class MultiNarSetup {
         }
     }
     
+    public static int successes = 0;
+    public static int failures = 0;
     public void removeOutdatedPredictions(List<Prediction> predictions) {
         List<Prediction> toDelete = new ArrayList<Prediction>();
         for(Prediction pred : predictions) {
             if(pred.time <= predictionNar.time()) {
                 toDelete.add(pred);
+                if(!pred.confirmed) {
+                    failures++;
+                }
             }
         }
         predictions.removeAll(toDelete);

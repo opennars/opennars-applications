@@ -32,6 +32,7 @@ public class Prediction
     public long time;
     public TruthValue truth;
     public String type;
+    public boolean confirmed;
     public Prediction(Entity ent, TruthValue truth, long time, String type) {
         this.ent = ent;
         this.time = time;
