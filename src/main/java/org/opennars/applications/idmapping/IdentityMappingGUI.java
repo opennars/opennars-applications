@@ -168,8 +168,17 @@ public class IdentityMappingGUI extends javax.swing.JFrame {
                 //nar.memory.seq_current.clear();
                 //nar.addInput(jTextArea2.getText());
                 jTextArea1.setText("");
-                for(Task t : nar.memory.seq_current) {
-                    jTextArea1.setText(jTextArea1.getText() + t.sentence.toString()+ " (priority="+t.getPriority()+")\n");
+                boolean useGlob = true;
+                if(nar.memory.globalBuffer.seq_current != null) {
+                    for(Task t : nar.memory.globalBuffer.seq_current) {
+                        jTextArea1.setText(jTextArea1.getText() + t.sentence.toString()+ " (priority="+t.getPriority()+", event bag)\n");
+                        useGlob = false;
+                    }
+                }
+                if(useGlob) {
+                    for(Task t : nar.memory.globalBuffer) {
+                        jTextArea1.setText(jTextArea1.getText() + t.sentence.toString()+ " (priority="+t.getPriority()+", global buffer)\n");
+                    }
                 }
                 executed = false;
                 nar.cycles(1);
